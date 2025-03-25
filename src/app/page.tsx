@@ -297,10 +297,10 @@ export default function Home() {
               Find Your Gym
             </Link>
             <Link
-              href="/profile/me"
+              href="/auth/signup"
               className="inline-block bg-transparent text-white border border-white px-8 py-3 rounded-lg font-bold text-lg hover:bg-indigo-600 transition-all"
             >
-              Create Profile
+              Sign Up Free
             </Link>
           </div>
         </div>

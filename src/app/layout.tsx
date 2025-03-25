@@ -78,9 +78,15 @@ export default function RootLayout({
                         </Link>
                       </li>
                       <li>
-                        <Link href="#" className="text-neutral-400 hover:text-white transition-colors flex items-center">
+                        <Link href="/auth/signin" className="text-neutral-400 hover:text-white transition-colors flex items-center">
                           <FiArrowRight className="mr-2 h-3 w-3" />
-                          About Us
+                          Sign In
+                        </Link>
+                      </li>
+                      <li>
+                        <Link href="/auth/signup" className="text-neutral-400 hover:text-white transition-colors flex items-center">
+                          <FiArrowRight className="mr-2 h-3 w-3" />
+                          Sign Up
                         </Link>
                       </li>
                     </ul>
