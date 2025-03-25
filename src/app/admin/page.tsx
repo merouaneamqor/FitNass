@@ -315,21 +315,16 @@ export default function AdminDashboard() {
   );
 }
 
-function StatCard({ 
-  icon: Icon, 
-  title, 
-  value, 
-  color 
-}: { 
-  icon: React.ElementType; 
-  title: string; 
-  value: number; 
+function StatCard({ icon: Icon, title, value, color }: { 
+  icon: React.ElementType;
+  title: string;
+  value: string | number;
   color: 'coral' | 'pink' | 'neon'; 
 }) {
   const colorClasses = {
-    coral: 'bg-indigo-600 text-white',
-    pink: 'bg-indigo-500 text-white',
-    neon: 'bg-indigo-400 text-indigo-900',
+    coral: 'bg-fitnass-coral text-white',
+    pink: 'bg-fitnass-pink text-white',
+    neon: 'bg-fitnass-blue text-white',
   };
   
   return (
