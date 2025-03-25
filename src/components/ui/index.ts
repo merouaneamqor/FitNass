@@ -6,6 +6,7 @@ export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as ViewToggle } from './ViewToggle';
 export { default as HeaderSection } from './HeaderSection';
 export { default as ErrorAlert } from './ErrorAlert';
+export { default as ClientSideHeader } from './ClientSideHeader';
 
 export { default as ProfileHeader } from './ProfileHeader';
 export { default as ProfileTabs } from './ProfileTabs';
