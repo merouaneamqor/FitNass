@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiUsers, FiHome, FiStar, FiActivity, FiShield, FiAlertTriangle } from 'react-icons/fi';
 import { useSession } from 'next-auth/react';
-import { mockStats, mockRecentActivity, mockSystemHealth } from '@/lib/mockData';
 
 // Define interfaces for the stats and activity data types
 interface Stats {
@@ -36,7 +35,6 @@ export default function AdminDashboard() {
   const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [usedFallback, setUsedFallback] = useState(false);
   
   useEffect(() => {
     // Only fetch data if user is authenticated as admin
@@ -44,8 +42,6 @@ export default function AdminDashboard() {
       const fetchDashboardData = async () => {
         setLoading(true);
         setError(null);
-        setUsedFallback(false);
-        let hasError = false;
         
         try {
           // Fetch stats and recent activity with timeout to prevent hanging
@@ -114,19 +110,8 @@ export default function AdminDashboard() {
           }
           
         } catch (err) {
-          hasError = true;
           console.error('Error fetching dashboard data:', err);
-          
-          // Use mock data as fallback in dev environment
-          if (process.env.NODE_ENV === 'development') {
-            console.log('Using mock data as fallback');
-            setStats(mockStats);
-            setRecentActivity(mockRecentActivity);
-            setSystemHealth(mockSystemHealth);
-            setUsedFallback(true);
-          } else {
-            setError('Failed to load dashboard data. Please try again or contact support if this persists.');
-          }
+          setError('Failed to load dashboard data. Please try again or contact support if this persists.');
         } finally {
           setLoading(false);
         }
@@ -158,7 +143,7 @@ export default function AdminDashboard() {
     </div>;
   }
   
-  if (error && !usedFallback) {
+  if (error) {
     return <div className="flex justify-center items-center h-screen p-6 bg-neutral-50">
       <div className="bg-white p-8 rounded-xl shadow-md max-w-md w-full text-center">
         <FiAlertTriangle className="mx-auto h-12 w-12 text-red-500 mb-4" />
@@ -187,12 +172,6 @@ export default function AdminDashboard() {
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-neutral-900">Admin Dashboard</h1>
         <p className="text-neutral-600">Welcome back, {session?.user?.name || 'Admin'}!</p>
-        {usedFallback && (
-          <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm">
-            <FiAlertTriangle className="inline-block mr-2 h-4 w-4" />
-            Note: Using demonstration data as live data could not be loaded. Some features may be limited.
-          </div>
-        )}
       </header>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
