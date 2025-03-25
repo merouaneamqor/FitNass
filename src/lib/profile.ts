@@ -1,5 +1,18 @@
 import { prisma, prismaExec } from './db';
 import { UserProfile } from '@/types/user';
+import { Prisma } from '@prisma/client';
+
+// Define types
+type UserWithRelations = Prisma.UserGetPayload<{
+  include: {
+    favorites: true;
+    reviews: {
+      include: {
+        gym: true;
+      }
+    }
+  }
+}>;
 
 // Map Prisma User model to UserProfile type
 const mapUserToProfile = async (user: any): Promise<UserProfile> => {
@@ -90,25 +103,24 @@ const mapRole = (role: string): string => {
 };
 
 // Get user profile by ID
-export const getUserProfile = async (id: string): Promise<UserProfile | null> => {
+export async function getUserProfile(userId: string): Promise<UserProfile | null> {
   try {
-    const user = await prismaExec(
-      () => prisma.user.findUnique({
-        where: { id },
+    const user = await prismaExec(() => 
+      prisma.user.findUnique({
+        where: { id: userId },
       }),
       'Error fetching user profile'
     );
 
-    if (!user) {
-      return null;
-    }
+    if (!user) return null;
 
+    // Use the existing mapUserToProfile function
     return mapUserToProfile(user);
   } catch (error) {
-    console.error('Error fetching user profile:', error);
+    console.error('Error in getUserProfile:', error);
     throw error;
   }
-};
+}
 
 // Get user profile by email
 export const getUserProfileByEmail = async (email: string): Promise<UserProfile | null> => {
@@ -238,4 +250,15 @@ export const removeFavoriteGym = async (userId: string, gymId: string): Promise<
     console.error('Error removing favorite gym:', error);
     throw error;
   }
-}; 
+};
+
+function mapRoleToString(role: any): "user" | "admin" | "gym-owner" {
+  switch (role) {
+    case 'ADMIN':
+      return 'admin';
+    case 'GYM_OWNER':
+      return 'gym-owner';
+    default:
+      return 'user';
+  }
+} 

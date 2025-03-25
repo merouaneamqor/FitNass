@@ -47,6 +47,25 @@ interface EditGymModalProps {
   onSave: (gym: Partial<Gym>) => Promise<void>;
 }
 
+interface UpdateData {
+  name?: string;
+  description?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  latitude?: number;
+  longitude?: number;
+  phone?: string;
+  website?: string;
+  email?: string;
+  priceRange?: string;
+  facilities?: string[];
+  images?: string[];
+  isVerified?: boolean;
+  owner?: { connect: { id: string } };
+}
+
 export default function EditGymModal({ gym, isOpen, onClose, onSave }: EditGymModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -138,7 +157,26 @@ export default function EditGymModal({ gym, isOpen, onClose, onSave }: EditGymMo
     setError(null);
 
     try {
-      await onSave(formData);
+      const updateData: UpdateData = {
+        name: formData.name,
+        description: formData.description,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.zipCode,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+        phone: formData.phone,
+        website: formData.website,
+        email: formData.email,
+        priceRange: formData.priceRange,
+        facilities: formData.facilities,
+        images: formData.images,
+        isVerified: formData.isVerified,
+        owner: { connect: { id: formData.ownerId } }
+      };
+
+      await onSave(updateData);
       onClose();
     } catch (err: any) {
       console.error('Error saving gym:', err);

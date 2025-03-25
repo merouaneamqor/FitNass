@@ -1,0 +1,24 @@
+# Node modules
+node_modules/
+
+# Next.js build outputs
+.next/
+out/
+build/
+dist/
+
+# Cache directories
+.cache/
+.vercel/
+
+# Public assets
+public/
+
+# Config files
+next.config.js
+postcss.config.js
+tailwind.config.js
+
+# Test files
+**/*.test.js
+**/*.spec.js 

@@ -303,7 +303,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="bg-indigo-100 p-4 rounded-lg">
                   <p className="text-sm font-medium text-indigo-800">
-                    Last Backup: {systemHealth?.lastBackup || 'Unknown'}
+                    Last Backup: {systemHealth?.lastBackup || "Unknown"}
                   </p>
                 </div>
               </div>
