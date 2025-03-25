@@ -1,138 +1,290 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { FiSearch, FiMapPin, FiStar, FiFilter } from 'react-icons/fi';
+import { useState, useRef } from 'react';
+import Map, { Marker, Popup, NavigationControl } from 'react-map-gl/mapbox';
+import 'mapbox-gl/dist/mapbox-gl.css';
 
-// Mock data for demonstration
-const mockGyms = [
-  {
-    id: 1,
-    name: 'FitLife Gym',
-    description: 'State-of-the-art equipment and personal trainers',
-    location: 'Downtown, City',
-    rating: 4.8,
-    reviewCount: 120,
-    priceRange: '$$',
-    facilities: ['Cardio', 'Weights', 'Classes', 'Pool'],
-    image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 2,
-    name: 'PowerFit Center',
-    description: '24/7 access with modern equipment',
-    location: 'Westside, City',
-    rating: 4.6,
-    reviewCount: 85,
-    priceRange: '$$$',
-    facilities: ['Cardio', 'Weights', 'Classes', 'Spa'],
-    image: 'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 3,
-    name: 'CrossFit Zone',
-    description: 'CrossFit certified trainers and programs',
-    location: 'Eastside, City',
-    rating: 4.9,
-    reviewCount: 150,
-    priceRange: '$$',
-    facilities: ['CrossFit', 'Weights', 'Classes', 'Nutrition'],
-    image: 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-  },
-];
+// Import types
+import { Gym } from '@/types/gym';
+
+// Import hooks
+import { useGyms } from '@/hooks';
+
+// Import UI components
+import {
+  HeaderSection,
+  SearchBar,
+  GymFilters,
+  StatsBar,
+  LoadingSpinner,
+  ErrorAlert,
+  GymCard
+} from '@/components/ui';
+
+// Mapbox token - use environment variable
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || 'pk.eyJ1IjoiZml0bmFzcyIsImEiOiJjbGtqcnhiNHMwMXpjM2ZwYzEwOHVzM3F0In0.aBCbCWRsUZBbZ9YEys4aJQ';
 
 export default function GymsPage() {
+  // UI state
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  
+  // Filter states
+  const [cityFilter, setCityFilter] = useState('');
+  const [ratingFilter, setRatingFilter] = useState(0);
+  const [facilitiesFilter, setFacilitiesFilter] = useState<string[]>([]);
+  const [priceFilter, setPriceFilter] = useState<string[]>([]);
 
-  const filteredGyms = mockGyms.filter((gym) =>
-    gym.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    gym.location.toLowerCase().includes(searchQuery.toLowerCase())
+  // Map states
+  const [viewState, setViewState] = useState({
+    latitude: 31.7917, // Morocco's approximate center
+    longitude: -7.0926,
+    zoom: 5
+  });
+  const [selectedGym, setSelectedGym] = useState<Gym | null>(null);
+  const mapRef = useRef(null);
+
+  // Use our custom hook to fetch gyms data
+  const { 
+    gyms, 
+    loading, 
+    error, 
+    uniqueCities, 
+    allFacilities, 
+    totalReviews,
+    filterGyms 
+  } = useGyms();
+
+  // Apply all filters
+  const filteredGyms = filterGyms(
+    searchQuery,
+    cityFilter,
+    ratingFilter,
+    facilitiesFilter,
+    priceFilter
   );
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Search and Filter Section */}
-        <div className="mb-8">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search gyms by name or location..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <FiSearch className="absolute right-3 top-2.5 text-gray-400" />
-              </div>
-            </div>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              <FiFilter className="mr-2" />
-              Filters
-            </button>
-          </div>
-        </div>
+  const handleGymClick = (gym: Gym) => {
+    setSelectedGym(gym);
+    setViewState({
+      latitude: gym.latitude,
+      longitude: gym.longitude,
+      zoom: 14
+    });
+    if (viewMode === 'list') {
+      setViewMode('map');
+    }
+  };
 
-        {/* Gym Listings */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredGyms.map((gym) => (
-            <div key={gym.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="relative h-48">
-                <img
-                  src={gym.image}
-                  alt={gym.name}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute top-4 right-4 bg-blue-600 text-white px-2 py-1 rounded-full text-sm">
-                  {gym.priceRange}
+  // Get price range color for map markers
+  const getPriceRangeColor = (range: string) => {
+    switch(range) {
+      case '€': return 'bg-emerald-500';
+      case '€€': return 'bg-amber-500';
+      case '€€€': return 'bg-rose-500';
+      default: return 'bg-emerald-500';
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-neutral-50 flex flex-col">
+      {/* Header */}
+      <HeaderSection 
+        title="Find Your Gym" 
+        viewMode={viewMode} 
+        setViewMode={setViewMode}
+        showViewToggle={true}
+      />
+
+      {/* Search Bar */}
+      <SearchBar 
+        searchQuery={searchQuery} 
+        setSearchQuery={setSearchQuery} 
+        placeholder="Search gyms by name, city or features..."
+        showFiltersButton={true}
+        showFilters={showFilters}
+        setShowFilters={setShowFilters}
+      />
+
+      {/* Filters Section */}
+      {showFilters && (
+        <GymFilters
+          cityFilter={cityFilter}
+          setCityFilter={setCityFilter}
+          ratingFilter={ratingFilter}
+          setRatingFilter={setRatingFilter}
+          facilitiesFilter={facilitiesFilter}
+          setFacilitiesFilter={setFacilitiesFilter}
+          priceFilter={priceFilter}
+          setPriceFilter={setPriceFilter}
+          uniqueCities={uniqueCities}
+          allFacilities={allFacilities}
+        />
+      )}
+
+      {/* Stats Bar */}
+      {!loading && !error && (
+        <StatsBar 
+          filteredCount={filteredGyms.length}
+          citiesCount={uniqueCities.length}
+          reviewsCount={totalReviews}
+        />
+      )}
+
+      {/* Loading and Error States */}
+      {loading && <LoadingSpinner />}
+      {error && <ErrorAlert message={error} />}
+
+      {/* Main Content Area */}
+      {!loading && !error && (
+        <div className="flex-1 flex flex-col">
+          {/* View Mode: List */}
+          {viewMode === 'list' && (
+            <div className="max-w-7xl mx-auto px-6 py-8">
+              {filteredGyms.length === 0 ? (
+                <div className="text-center py-28">
+                  <p className="text-neutral-500 text-lg">No gyms found matching your search criteria.</p>
                 </div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-gray-900">{gym.name}</h3>
-                <div className="mt-2 flex items-center text-gray-600">
-                  <FiMapPin className="h-5 w-5 mr-1" />
-                  <span>{gym.location}</span>
-                </div>
-                <div className="mt-2 flex items-center">
-                  <FiStar className="h-5 w-5 text-yellow-400" />
-                  <span className="ml-1 text-gray-600">{gym.rating} ({gym.reviewCount} reviews)</span>
-                </div>
-                <p className="mt-4 text-gray-600">{gym.description}</p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {gym.facilities.map((facility) => (
-                    <span
-                      key={facility}
-                      className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-sm"
-                    >
-                      {facility}
-                    </span>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {filteredGyms.map((gym) => (
+                    <GymCard
+                      key={gym.id}
+                      gym={gym}
+                      onCardClick={handleGymClick}
+                    />
                   ))}
                 </div>
-                <Link
-                  href={`/gyms/${gym.id}`}
-                  className="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                >
-                  View Details
-                </Link>
-              </div>
+              )}
             </div>
-          ))}
-        </div>
+          )}
 
-        {filteredGyms.length === 0 && (
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-gray-900">No gyms found</h3>
-            <p className="mt-2 text-gray-600">
-              Try adjusting your search to find what you're looking for.
-            </p>
-          </div>
-        )}
-      </div>
+          {/* View Mode: Map */}
+          {viewMode === 'map' && (
+            <div className="flex-1">
+              <Map
+                {...viewState}
+                ref={mapRef}
+                onMoveEnd={(evt: any) => setViewState(evt.viewState)}
+                mapStyle="mapbox://styles/mapbox/light-v11"
+                mapboxAccessToken={MAPBOX_TOKEN}
+                style={{ width: '100%', height: '100%', minHeight: 'calc(100vh - 200px)' }}
+                {...{} as any}
+              >
+                <NavigationControl position="bottom-right" showCompass={false} />
+                
+                {filteredGyms.map((gym) => (
+                  <Marker
+                    key={gym.id}
+                    latitude={gym.latitude}
+                    longitude={gym.longitude}
+                  >
+                    <div 
+                      className={`cursor-pointer w-12 h-12 rounded-full flex items-center justify-center ${
+                        selectedGym?.id === gym.id 
+                          ? 'bg-indigo-600' 
+                          : getPriceRangeColor(gym.priceRange)
+                      } hover:bg-indigo-600 text-white shadow-lg transform transition-transform ${
+                        selectedGym?.id === gym.id ? 'scale-125 z-10' : 'scale-100'
+                      } pulse-marker`}
+                      onClick={(e: any) => {
+                        e.stopPropagation();
+                        setSelectedGym(gym);
+                      }}
+                    >
+                      {gym.priceRange}
+                    </div>
+                  </Marker>
+                ))}
+
+                {selectedGym && (
+                  <Popup
+                    latitude={selectedGym.latitude}
+                    longitude={selectedGym.longitude}
+                    anchor="bottom"
+                    onClose={() => setSelectedGym(null)}
+                    closeOnClick={false}
+                    closeButton
+                    className="gym-popup"
+                  >
+                    <div className="p-2 w-72">
+                      <img 
+                        src={selectedGym.images[0] || 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48'} 
+                        alt={selectedGym.name} 
+                        className="w-full h-40 object-cover rounded-lg mb-3"
+                      />
+                      <h3 className="font-semibold text-neutral-900 text-lg">{selectedGym.name}</h3>
+                      <div className="flex items-center mt-2 text-sm text-neutral-600">
+                        <span className="truncate">{selectedGym.address}, {selectedGym.city}</span>
+                      </div>
+                      <div className="mt-3">
+                        <a 
+                          href={`/gyms/${selectedGym.id}`}
+                          className="block text-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-sm"
+                        >
+                          View Details
+                        </a>
+                      </div>
+                    </div>
+                  </Popup>
+                )}
+              </Map>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Custom styles */}
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+          height: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f5f5f5;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #e0e0e0;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #6366f1;
+        }
+        
+        .gym-popup .mapboxgl-popup-content {
+          padding: 16px;
+          border-radius: 16px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+          border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .gym-popup .mapboxgl-popup-close-button {
+          font-size: 20px;
+          padding: 4px 8px;
+          color: #4b5563;
+          right: 8px;
+          top: 8px;
+        }
+        
+        .pulse-marker {
+          box-shadow: 0 0 0 rgba(99, 102, 241, 0.4);
+          animation: pulse-ring 1.5s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+        }
+        
+        @keyframes pulse-ring {
+          0% {
+            box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+          }
+          70% {
+            box-shadow: 0 0 0 15px rgba(99, 102, 241, 0);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+          }
+        }
+      `}</style>
     </div>
   );
 } 
