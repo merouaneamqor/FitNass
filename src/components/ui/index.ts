@@ -5,4 +5,13 @@ export { default as StatsBar } from './StatsBar';
 export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as ViewToggle } from './ViewToggle';
 export { default as HeaderSection } from './HeaderSection';
-export { default as ErrorAlert } from './ErrorAlert'; 
+export { default as ErrorAlert } from './ErrorAlert';
+
+export { default as ProfileHeader } from './ProfileHeader';
+export { default as ProfileTabs } from './ProfileTabs';
+export { default as ProfileEditForm } from './ProfileEditForm';
+export { default as FavoriteGyms } from './FavoriteGyms';
+export { default as UserReviews } from './UserReviews';
+export { default as UserBookings } from './UserBookings';
+export { default as UserSubscriptions } from './UserSubscriptions';
+export { default as ProfileSettings } from './ProfileSettings'; 

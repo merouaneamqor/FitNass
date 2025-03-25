@@ -20,6 +20,8 @@ model User {
   role          Role      @default(USER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  bio           String?   // User bio for profile
+  city          String?   // User city for profile
 
   // Relations
   reviews       Review[]

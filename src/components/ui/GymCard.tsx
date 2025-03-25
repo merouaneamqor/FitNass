@@ -53,7 +53,7 @@ export const GymCard: React.FC<GymCardProps> = ({ gym, onCardClick, featured = f
     >
       <div className="relative h-60">
         <img
-          src={gym.images[0] || 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48'}
+          src={gym.images?.[0] || 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48'}
           alt={gym.name}
           className="w-full h-full object-cover"
         />
