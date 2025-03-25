@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FiUsers, FiHome, FiStar, FiActivity, FiShield, FiAlertTriangle } from 'react-icons/fi';
+import { FiUsers, FiHome, FiStar, FiActivity, FiShield, FiAlertTriangle, FiGrid, FiTag, FiSettings } from 'react-icons/fi';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 
 // Define interfaces for the stats and activity data types
 interface Stats {
@@ -182,6 +183,37 @@ export default function AdminDashboard() {
         <StatCard icon={FiActivity} title="Active Promotions" value={stats?.activePromotions || 0} color="pink" />
       </div>
       
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <AdminNavCard 
+          icon={FiUsers} 
+          title="User Management" 
+          description="Manage users, roles, and permissions"
+          href="/admin/users"
+          color="coral"
+        />
+        <AdminNavCard 
+          icon={FiHome} 
+          title="Gym Management" 
+          description="Manage gym listings and verifications"
+          href="/admin/gyms"
+          color="pink"
+        />
+        <AdminNavCard 
+          icon={FiTag} 
+          title="Promotions" 
+          description="Manage promotions and special offers"
+          href="/admin/promotions"
+          color="neon"
+        />
+        <AdminNavCard 
+          icon={FiSettings} 
+          title="Settings" 
+          description="System configuration and preferences"
+          href="/admin/settings"
+          color="coral"
+        />
+      </div>
+      
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <div className="px-6 py-4 bg-gradient-to-r from-indigo-600 to-indigo-500 border-b border-neutral-100">
@@ -308,5 +340,37 @@ function StatCard({
       <h3 className="text-neutral-500 text-sm font-medium">{title}</h3>
       <p className="text-2xl font-bold text-neutral-900">{value.toLocaleString()}</p>
     </div>
+  );
+}
+
+function AdminNavCard({ 
+  icon: Icon, 
+  title, 
+  description,
+  href,
+  color 
+}: { 
+  icon: React.ElementType; 
+  title: string; 
+  description: string;
+  href: string;
+  color: 'coral' | 'pink' | 'neon'; 
+}) {
+  const colorClasses = {
+    coral: 'bg-indigo-600 text-white hover:bg-indigo-700',
+    pink: 'bg-indigo-500 text-white hover:bg-indigo-600',
+    neon: 'bg-indigo-400 text-indigo-900 hover:bg-indigo-500 hover:text-white',
+  };
+  
+  return (
+    <Link href={href} className={`rounded-xl shadow-md overflow-hidden ${colorClasses[color]} transition-colors`}>
+      <div className="p-6">
+        <div className="flex items-center mb-3">
+          <Icon className="h-6 w-6 mr-3" />
+          <h3 className="text-lg font-semibold">{title}</h3>
+        </div>
+        <p className="opacity-90">{description}</p>
+      </div>
+    </Link>
   );
 } 

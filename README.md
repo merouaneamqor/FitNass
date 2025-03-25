@@ -180,3 +180,129 @@ Contributions are welcome! Please follow the coding conventions and submit a pul
 ## License
 
 [MIT](LICENSE)
+
+## Database and Authentication Architecture
+
+### Database Access Layer
+
+The application uses Prisma ORM for database access, with a unified approach to connection management and error handling.
+
+#### Key Files:
+
+- **`src/lib/db.ts`** - Central database access layer with:
+  - Singleton Prisma client to prevent connection pool exhaustion
+  - `prismaExec` helper function for consistent error handling
+  - Type-safe database operations
+
+#### Usage Pattern:
+
+```typescript
+import { prisma, prismaExec } from '@/lib/db';
+
+// Example of using prismaExec for safe database operations
+const users = await prismaExec(
+  () => prisma.user.findMany({
+    where: { status: 'ACTIVE' },
+    select: { id: true, name: true, email: true }
+  }),
+  'Error fetching active users'
+);
+```
+
+### Authentication System
+
+Authentication is handled using NextAuth.js with JWT strategy.
+
+#### Key Files:
+
+- **`src/lib/auth.ts`** - Authentication configuration with:
+  - Credentials provider for email/password login
+  - JWT-based session management
+  - Role-based authorization
+  - bcrypt for password hashing
+
+#### Authentication Flow:
+
+1. User submits credentials via login form
+2. Credentials are validated against database using bcrypt
+3. JWT token is generated with user info and role
+4. Token is stored in cookies for session management
+5. Role-based access controls are enforced using session data
+
+### User Profile System
+
+The application includes a comprehensive user profile system for managing user data.
+
+#### Key Files:
+
+- **`src/lib/profile.ts`** - User profile management with:
+  - Functions to fetch, update, and manage user profiles
+  - Methods for handling user-gym relationships (favorites, reviews, etc.)
+  - Data transformation between database models and frontend DTOs
+
+#### Key Functions:
+
+- `getUserProfile(id)` - Get a user's profile by ID
+- `getUserProfileByEmail(email)` - Get a user's profile by email
+- `updateUserProfile(id, data)` - Update a user's profile
+- `addFavoriteGym(userId, gymId)` - Add a gym to a user's favorites
+- `removeFavoriteGym(userId, gymId)` - Remove a gym from a user's favorites
+
+## Admin Dashboard
+
+The admin dashboard provides management interfaces for:
+
+- **User Management** - Add, edit, and manage user accounts
+- **Gym Management** - Manage gym listings, verifications, and details
+- **Promotions** - Manage special offers and promotions
+- **System Settings** - Configure application settings
+
+### Gym Management
+
+Admin users can manage gyms through a dedicated interface at `/admin/gyms` with features including:
+
+- Listing gyms with filtering and search
+- Adding new gyms with detailed information
+- Editing existing gym details
+- Managing verification status
+- Viewing gym analytics
+
+## Development
+
+### Requirements
+
+- Node.js >= 18.0.0
+- npm >= 9.0.0
+
+### Setup
+
+1. Clone the repository
+2. Install dependencies:
+   ```
+   npm install
+   ```
+3. Set up environment variables (copy `.env.example` to `.env.local`)
+4. Set up the database:
+   ```
+   npx prisma migrate dev
+   ```
+5. Start the development server:
+   ```
+   npm run dev
+   ```
+
+### Database Commands
+
+- Create migration: `npx prisma migrate dev --name <migration_name>`
+- Apply migrations: `npx prisma migrate deploy`
+- Generate client: `npx prisma generate`
+- Reset database: `npx prisma migrate reset`
+- Seed database: `npx prisma db seed`
+
+## Architecture Patterns
+
+- **Server Components** - For data fetching and rendering
+- **Client Components** - For interactive elements (marked with 'use client')
+- **Singleton Pattern** - For database connections
+- **Repository Pattern** - For data access abstraction
+- **DTO Pattern** - For data transformation between layers

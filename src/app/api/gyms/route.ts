@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma, prismaExec } from '@/lib/db'; // Update to use our singleton client
 
 export async function GET(request: Request) {
   try {
@@ -36,32 +34,61 @@ export async function GET(request: Request) {
       };
     }
 
-    const gyms = await prisma.gym.findMany({
-      where,
-      include: {
-        owner: {
-          select: {
-            name: true,
+    // Use a try-catch block specifically for the database query
+    try {
+      // Use prismaExec for safe database operations
+      const gyms = await prismaExec(
+        () => prisma.gym.findMany({
+          where,
+          include: {
+            owner: {
+              select: {
+                name: true,
+              },
+            },
+            reviews: {
+              select: {
+                rating: true,
+              },
+            },
+            _count: {
+              select: {
+                reviews: true,
+                promotions: true,
+              },
+            },
           },
-        },
-        reviews: {
-          select: {
-            rating: true,
+          orderBy: {
+            rating: 'desc',
           },
+        }),
+        'Error fetching gyms'
+      );
+      
+      return NextResponse.json(gyms);
+    } catch (dbError) {
+      console.error('Database error:', dbError);
+      
+      // Fallback query without problematic fields/relations
+      const simpleGyms = await prisma.gym.findMany({
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          address: true,
+          city: true,
+          rating: true,
+          priceRange: true,
+          facilities: true,
+          images: true,
         },
-        _count: {
-          select: {
-            reviews: true,
-            promotions: true,
-          },
+        orderBy: {
+          rating: 'desc',
         },
-      },
-      orderBy: {
-        rating: 'desc',
-      },
-    });
-
-    return NextResponse.json(gyms);
+      });
+      
+      return NextResponse.json(simpleGyms);
+    }
   } catch (error) {
     console.error('Error fetching gyms:', error);
     return NextResponse.json(

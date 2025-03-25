@@ -17,6 +17,18 @@
       "client": "Client components for interactive elements marked with 'use client'",
       "auth": "NextAuth.js for authentication and session management",
       "data": "Prisma for database access and modeling"
+    },
+    "database": {
+      "orm": "Prisma ORM",
+      "client": "Singleton Prisma client in src/lib/db.ts",
+      "helper": "prismaExec utility function for safe database operations with error handling",
+      "models": {
+        "user": "Users with roles (USER, ADMIN, GYM_OWNER)",
+        "gym": "Gym listings with details, location, and relationships",
+        "review": "User reviews for gyms",
+        "booking": "User bookings for gyms",
+        "subscription": "User subscriptions to gyms"
+      }
     }
   },
   "conventions": {
@@ -65,6 +77,47 @@
       "client": "useState for simple component state",
       "server": "Server components for data fetching",
       "session": "useSession for authentication state"
+    },
+    "database": {
+      "access": "Use prismaExec helper for all database operations",
+      "error": "Provide descriptive error messages in prismaExec calls",
+      "types": "Use proper type annotations for database models",
+      "mapping": "Use mapper functions to translate database models to DTOs"
+    }
+  },
+  "modules": {
+    "auth": {
+      "file": "src/lib/auth.ts",
+      "provider": "NextAuth.js with Credentials provider",
+      "strategy": "JWT for session management",
+      "options": {
+        "callbacks": "Session and JWT callbacks for role-based auth",
+        "pages": "Custom pages for login, signup, and errors"
+      },
+      "usage": "Use getServerSession for server-side auth and useSession for client-side"
+    },
+    "database": {
+      "client": {
+        "file": "src/lib/db.ts",
+        "export": "Default export: prisma, Named export: prismaExec",
+        "pattern": "Singleton pattern with global instance in development"
+      },
+      "usage": {
+        "query": "prisma.model.operation(...)",
+        "safety": "Wrap queries in prismaExec(() => query, 'Error message')",
+        "transaction": "Use Prisma transactions for multi-step operations"
+      }
+    },
+    "profile": {
+      "file": "src/lib/profile.ts",
+      "functions": [
+        "getUserProfile(id): Get profile by ID",
+        "getUserProfileByEmail(email): Get profile by email",
+        "updateUserProfile(id, data): Update user profile",
+        "addFavoriteGym(userId, gymId): Add gym to favorites",
+        "removeFavoriteGym(userId, gymId): Remove gym from favorites"
+      ],
+      "mapping": "mapUserToProfile transforms database user to UserProfile DTO"
     }
   },
   "navigation": {
@@ -137,13 +190,13 @@
   },
   "dataStructures": {
     "user": {
-      "core": ["id", "name", "email", "image", "role"],
-      "profile": ["bio", "city", "memberSince"],
+      "core": ["id", "name", "email", "image", "role", "password"],
+      "profile": ["bio", "city", "memberSince", "status"],
       "relations": ["favoriteGyms", "reviews", "bookings", "subscriptions"]
     },
     "gym": {
       "core": ["id", "name", "address", "city", "rating"],
-      "details": ["description", "facilities", "images", "priceRange", "latitude", "longitude"],
+      "details": ["description", "facilities", "images", "priceRange", "latitude", "longitude", "status", "isVerified"],
       "relations": ["reviews", "owner"]
     },
     "review": {
@@ -160,7 +213,8 @@
     "auth": {
       "provider": "NextAuth.js",
       "strategies": ["credentials", "oauth"],
-      "sessionManagement": "jwt"
+      "sessionManagement": "jwt",
+      "passwordStorage": "bcrypt hashing for secure password storage"
     },
     "data": {
       "validation": "Server-side validation for all inputs",
@@ -172,7 +226,12 @@
     "optimizations": {
       "images": "Next.js Image component with proper sizing",
       "code": "Dynamic imports for large components",
-      "rendering": "Server components for static content"
+      "rendering": "Server components for static content",
+      "database": "Optimized queries with specific field selection"
+    },
+    "prisma": {
+      "singleton": "Single instance of PrismaClient to avoid connection pool exhaustion",
+      "errorHandling": "prismaExec wrapper for clean error handling and logging"
     }
   },
   "deployment": {

@@ -1,6 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import prisma from "./db";
+import { prisma, prismaExec } from "./db";
+import { compare } from "bcrypt";
 
 // Use a fallback secret for development
 const FALLBACK_SECRET = "a_development_secret_for_testing_purposes_only";
@@ -28,76 +29,58 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        try {
-          // In development, accept any credentials for testing
-          if (process.env.NODE_ENV === 'development') {
-            console.log('Development mode: Allowing any credentials');
-            return {
-              id: '1',
-              email: credentials.email,
-              name: 'Development User',
-              image: 'https://randomuser.me/api/portraits/lego/1.jpg',
-              role: 'USER',
-            };
-          }
+        const user = await prismaExec(
+          () => prisma.user.findUnique({
+            where: { email: credentials.email },
+          }),
+          'Error fetching user during authentication'
+        );
 
-          // Production auth logic
-          const user = await prisma.user.findUnique({
-            where: {
-              email: credentials.email,
-            },
-          });
-
-          if (!user || !user.password) {
-            return null;
-          }
-
-          // Compare password (would use bcrypt here)
-          const isPasswordValid = user.password === credentials.password;
-
-          if (!isPasswordValid) {
-            return null;
-          }
-
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name || '',
-            image: user.image || '',
-            role: user.role,
-          };
-        } catch (error) {
-          console.error('Auth error:', error);
-          // In development, allow fallback
-          if (process.env.NODE_ENV === 'development') {
-            return {
-              id: '1',
-              email: credentials.email,
-              name: 'Development User',
-              image: 'https://randomuser.me/api/portraits/lego/1.jpg',
-              role: 'USER',
-            };
-          }
+        if (!user) {
           return null;
         }
+
+        // Add this check to handle users without passwords (e.g. OAuth users)
+        if (!user.password) {
+          return null;
+        }
+
+        const isPasswordValid = await compare(
+          credentials.password,
+          user.password
+        );
+
+        if (!isPasswordValid) {
+          return null;
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        };
       },
     }),
   ],
   callbacks: {
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string;
-        session.user.name = token.name as string;
-        session.user.email = token.email as string;
-        session.user.image = token.picture as string;
-        session.user.role = token.role as string;
-      }
-      return session;
+    session: ({ session, token }) => {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.id,
+          role: token.role,
+        },
+      };
     },
-    async jwt({ token, user }) {
+    jwt: ({ token, user }) => {
       if (user) {
-        token.id = user.id;
-        token.role = user.role;
+        return {
+          ...token,
+          id: user.id,
+          role: user.role,
+        };
       }
       return token;
     },
