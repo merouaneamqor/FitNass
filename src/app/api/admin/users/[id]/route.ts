@@ -7,23 +7,18 @@ import { authOptions } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
-const userCreateSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  role: z.enum(['USER', 'GYM_OWNER', 'ADMIN']),
-});
-
 const userUpdateSchema = z.object({
-  id: z.string(),
   name: z.string().min(2, 'Name must be at least 2 characters').optional(),
   email: z.string().email('Invalid email address').optional(),
   password: z.string().min(6, 'Password must be at least 6 characters').optional(),
   role: z.enum(['USER', 'GYM_OWNER', 'ADMIN']).optional(),
 });
 
-// Get all users
-export async function GET(request: Request) {
+// GET admin/users/[id]
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -34,34 +29,12 @@ export async function GET(request: Request) {
       );
     }
     
-    const { searchParams } = new URL(request.url);
-    const role = searchParams.get('role');
-    const status = searchParams.get('status');
-    const search = searchParams.get('search');
+    const userId = params.id;
     
-    // Build where clause for filtering
-    let where = {};
-    
-    if (role) {
-      where = { ...where, role };
-    }
-    
-    if (status) {
-      where = { ...where, status };
-    }
-    
-    if (search) {
-      where = {
-        ...where,
-        OR: [
-          { name: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } },
-        ],
-      };
-    }
-    
-    const users = await prisma.user.findMany({
-      where,
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
       select: {
         id: true,
         name: true,
@@ -71,14 +44,18 @@ export async function GET(request: Request) {
         updatedAt: true,
         image: true,
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
     });
     
-    return NextResponse.json(users);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json(user);
   } catch (error) {
-    console.error('Error fetching users:', error);
+    console.error('Error fetching user:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -86,8 +63,11 @@ export async function GET(request: Request) {
   }
 }
 
-// Create a new user
-export async function POST(request: Request) {
+// PUT admin/users/[id]
+export async function PUT(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -98,80 +78,16 @@ export async function POST(request: Request) {
       );
     }
     
+    const userId = params.id;
     const body = await request.json();
-    const validatedData = userCreateSchema.parse(body);
     
-    // Check if user with this email already exists
-    const existingUser = await prisma.user.findUnique({
-      where: {
-        email: validatedData.email,
-      },
-    });
-    
-    if (existingUser) {
-      return NextResponse.json(
-        { error: 'User with this email already exists' },
-        { status: 400 }
-      );
-    }
-    
-    // Hash password
-    const hashedPassword = await bcrypt.hash(validatedData.password, 10);
-    
-    // Create the user
-    const user = await prisma.user.create({
-      data: {
-        name: validatedData.name,
-        email: validatedData.email,
-        password: hashedPassword,
-        role: validatedData.role,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-    
-    return NextResponse.json(user, { status: 201 });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: error.errors },
-        { status: 400 }
-      );
-    }
-    
-    console.error('Error creating user:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-// Update a user
-export async function PUT(request: Request) {
-  try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-    
-    const body = await request.json();
+    // Validate data
     const validatedData = userUpdateSchema.parse(body);
     
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
       where: {
-        id: validatedData.id,
+        id: userId,
       },
     });
     
@@ -213,7 +129,7 @@ export async function PUT(request: Request) {
     // Update the user
     const user = await prisma.user.update({
       where: {
-        id: validatedData.id,
+        id: userId,
       },
       data: updateData,
       select: {
@@ -244,8 +160,11 @@ export async function PUT(request: Request) {
   }
 }
 
-// Delete a user
-export async function DELETE(request: Request) {
+// DELETE admin/users/[id]
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -256,20 +175,12 @@ export async function DELETE(request: Request) {
       );
     }
     
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-    
-    if (!id) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
-    }
+    const userId = params.id;
     
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
       where: {
-        id,
+        id: userId,
       },
     });
     
@@ -283,7 +194,7 @@ export async function DELETE(request: Request) {
     // Delete the user
     await prisma.user.delete({
       where: {
-        id,
+        id: userId,
       },
     });
     
