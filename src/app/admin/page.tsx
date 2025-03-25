@@ -1,120 +1,299 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { FiUsers, FiHome, FiStar, FiActivity, FiShield } from 'react-icons/fi';
+import React, { useState, useEffect } from 'react';
+import { FiUsers, FiHome, FiStar, FiActivity, FiShield, FiAlertTriangle } from 'react-icons/fi';
 import { useSession } from 'next-auth/react';
+import { mockStats, mockRecentActivity, mockSystemHealth } from '@/lib/mockData';
 
-// Mock data for the dashboard
-const mockStats = {
-  totalUsers: 1254,
-  totalGyms: 87,
-  pendingApprovals: 12,
-  reviewsThisWeek: 156,
-  activePromotions: 34,
-};
+// Define interfaces for the stats and activity data types
+interface Stats {
+  totalUsers: number;
+  totalGyms: number;
+  pendingApprovals: number;
+  reviewsThisWeek: number;
+  activePromotions: number;
+}
 
-const mockRecentActivity = [
-  { id: 1, action: 'New gym registered', time: '2 hours ago', user: 'FitLife Gym' },
-  { id: 2, action: 'User reported a review', time: '5 hours ago', user: 'John Smith' },
-  { id: 3, action: 'New promotion created', time: '1 day ago', user: 'PowerFit Center' },
-  { id: 4, action: 'User account deleted', time: '1 day ago', user: 'Emily Johnson' },
-  { id: 5, action: 'Gym information updated', time: '2 days ago', user: 'CoreStrength Studio' },
-];
+interface ActivityItem {
+  id: string;
+  action: string;
+  time: string;
+  user: string;
+}
+
+interface SystemHealth {
+  serverLoad: number;
+  databaseUsage: number;
+  storageUsage: number;
+  systemStatus: string;
+  lastBackup: string;
+}
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
-  const [stats, setStats] = useState(mockStats);
-  const [recentActivity, setRecentActivity] = useState(mockRecentActivity);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
+  const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [usedFallback, setUsedFallback] = useState(false);
   
-  if (status === 'loading') {
-    return <div className="flex justify-center items-center h-full">Loading...</div>;
+  useEffect(() => {
+    // Only fetch data if user is authenticated as admin
+    if (status === 'authenticated' && session?.user?.role === 'ADMIN') {
+      const fetchDashboardData = async () => {
+        setLoading(true);
+        setError(null);
+        setUsedFallback(false);
+        let hasError = false;
+        
+        try {
+          // Fetch stats and recent activity with timeout to prevent hanging
+          const statsPromise = Promise.race([
+            fetch('/api/admin/stats', { 
+              headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+              }
+            }),
+            new Promise<Response>((_, reject) => 
+              setTimeout(() => reject(new Error('Stats API request timeout')), 10000)
+            )
+          ]);
+          
+          const statsResponse = await statsPromise as Response;
+          
+          if (!statsResponse.ok) {
+            console.error(`Stats API error status: ${statsResponse.status}`);
+            const errorText = await statsResponse.text();
+            console.error(`Stats API error: ${errorText}`);
+            throw new Error(`API error: ${statsResponse.status} - ${errorText}`);
+          }
+          
+          // Parse stats data
+          let statsData;
+          try {
+            statsData = await statsResponse.json();
+            setStats(statsData.stats);
+            setRecentActivity(statsData.recentActivity);
+          } catch (parseError) {
+            console.error('Error parsing stats data:', parseError);
+            throw new Error('Failed to parse API response');
+          }
+          
+          // Fetch system health with same pattern
+          const healthPromise = Promise.race([
+            fetch('/api/admin/system-health', {
+              headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+              }
+            }),
+            new Promise<Response>((_, reject) => 
+              setTimeout(() => reject(new Error('Health API request timeout')), 10000)
+            )
+          ]);
+          
+          const healthResponse = await healthPromise as Response;
+          
+          if (!healthResponse.ok) {
+            console.error(`Health API error status: ${healthResponse.status}`);
+            const errorText = await healthResponse.text();
+            console.error(`Health API error: ${errorText}`);
+            throw new Error(`API error: ${healthResponse.status} - ${errorText}`);
+          }
+          
+          // Parse health data
+          let healthData;
+          try {
+            healthData = await healthResponse.json();
+            setSystemHealth(healthData);
+          } catch (parseError) {
+            console.error('Error parsing health data:', parseError);
+            throw new Error('Failed to parse API response');
+          }
+          
+        } catch (err) {
+          hasError = true;
+          console.error('Error fetching dashboard data:', err);
+          
+          // Use mock data as fallback in dev environment
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Using mock data as fallback');
+            setStats(mockStats);
+            setRecentActivity(mockRecentActivity);
+            setSystemHealth(mockSystemHealth);
+            setUsedFallback(true);
+          } else {
+            setError('Failed to load dashboard data. Please try again or contact support if this persists.');
+          }
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      fetchDashboardData();
+    }
+  }, [status, session]);
+  
+  if (status === 'loading' || loading) {
+    return <div className="flex justify-center items-center h-screen p-6">
+      <div className="flex flex-col items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
+        <p className="text-neutral-600">Loading dashboard data...</p>
+      </div>
+    </div>;
   }
   
-  if (!session || session.user.role !== 'ADMIN') {
-    return <div className="flex justify-center items-center h-full">Access denied. Admin privileges required.</div>;
+  if (status === 'unauthenticated' || (session && session.user.role !== 'ADMIN')) {
+    return <div className="flex justify-center items-center h-screen p-6 bg-neutral-50">
+      <div className="bg-white p-8 rounded-xl shadow-md max-w-md w-full text-center">
+        <FiAlertTriangle className="mx-auto h-12 w-12 text-amber-500 mb-4" />
+        <h2 className="text-2xl font-bold text-neutral-800 mb-2">Access Denied</h2>
+        <p className="text-neutral-600 mb-6">You don't have permission to access the admin dashboard.</p>
+        <a href="/" className="inline-flex items-center justify-center px-5 py-2 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+          Return to Homepage
+        </a>
+      </div>
+    </div>;
+  }
+  
+  if (error && !usedFallback) {
+    return <div className="flex justify-center items-center h-screen p-6 bg-neutral-50">
+      <div className="bg-white p-8 rounded-xl shadow-md max-w-md w-full text-center">
+        <FiAlertTriangle className="mx-auto h-12 w-12 text-red-500 mb-4" />
+        <h2 className="text-2xl font-bold text-neutral-800 mb-2">Error</h2>
+        <p className="text-neutral-600 mb-6">{error}</p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <button 
+            onClick={() => window.location.reload()}
+            className="inline-flex items-center justify-center px-5 py-2 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+          >
+            Retry
+          </button>
+          <a 
+            href="/"
+            className="inline-flex items-center justify-center px-5 py-2 border border-indigo-600 text-base font-medium rounded-md text-indigo-600 hover:bg-indigo-50"
+          >
+            Return to Home
+          </a>
+        </div>
+      </div>
+    </div>;
   }
   
   return (
-    <div>
+    <div className="p-6">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-fitnass-dark">Admin Dashboard</h1>
-        <p className="text-gray-600">Welcome back, {session.user.name}!</p>
+        <h1 className="text-3xl font-bold text-neutral-900">Admin Dashboard</h1>
+        <p className="text-neutral-600">Welcome back, {session?.user?.name || 'Admin'}!</p>
+        {usedFallback && (
+          <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm">
+            <FiAlertTriangle className="inline-block mr-2 h-4 w-4" />
+            Note: Using demonstration data as live data could not be loaded. Some features may be limited.
+          </div>
+        )}
       </header>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-        <StatCard icon={FiUsers} title="Total Users" value={stats.totalUsers} color="coral" />
-        <StatCard icon={FiHome} title="Gym Listings" value={stats.totalGyms} color="pink" />
-        <StatCard icon={FiShield} title="Pending Approvals" value={stats.pendingApprovals} color="neon" />
-        <StatCard icon={FiStar} title="New Reviews" value={stats.reviewsThisWeek} color="coral" />
-        <StatCard icon={FiActivity} title="Active Promotions" value={stats.activePromotions} color="pink" />
+        <StatCard icon={FiUsers} title="Total Users" value={stats?.totalUsers || 0} color="coral" />
+        <StatCard icon={FiHome} title="Gym Listings" value={stats?.totalGyms || 0} color="pink" />
+        <StatCard icon={FiShield} title="Pending Approvals" value={stats?.pendingApprovals || 0} color="neon" />
+        <StatCard icon={FiStar} title="New Reviews" value={stats?.reviewsThisWeek || 0} color="coral" />
+        <StatCard icon={FiActivity} title="Active Promotions" value={stats?.activePromotions || 0} color="pink" />
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <div className="px-6 py-4 bg-gradient-to-r from-fitnass-start to-fitnass-end border-b border-gray-100">
+          <div className="px-6 py-4 bg-gradient-to-r from-indigo-600 to-indigo-500 border-b border-neutral-100">
             <h3 className="font-semibold text-lg text-white">Recent Activity</h3>
           </div>
           <div className="p-6">
-            <ul className="divide-y divide-gray-100">
-              {recentActivity.map((activity) => (
-                <li key={activity.id} className="py-3 flex items-start">
-                  <div className="bg-fitnass-neon p-2 rounded-lg mr-4">
-                    <FiActivity className="text-fitnass-dark" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{activity.action}</p>
-                    <p className="text-sm text-gray-500">
-                      <span>{activity.user}</span> • <span>{activity.time}</span>
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            {recentActivity.length > 0 ? (
+              <ul className="divide-y divide-neutral-100">
+                {recentActivity.map((activity) => (
+                  <li key={activity.id} className="py-3 flex items-start">
+                    <div className="bg-indigo-100 p-2 rounded-lg mr-4">
+                      <FiActivity className="text-indigo-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-neutral-900">{activity.action}</p>
+                      <p className="text-sm text-neutral-500">
+                        <span>{activity.user}</span> • <span>{activity.time}</span>
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="text-center py-6 text-neutral-500">
+                No recent activity found.
+              </div>
+            )}
           </div>
         </div>
         
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <div className="px-6 py-4 bg-gradient-to-r from-fitnass-start to-fitnass-end border-b border-gray-100">
+          <div className="px-6 py-4 bg-gradient-to-r from-indigo-600 to-indigo-500 border-b border-neutral-100">
             <h3 className="font-semibold text-lg text-white">System Health</h3>
           </div>
           <div className="p-6">
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700">Server Load</span>
-                  <span className="text-sm font-medium text-gray-700">24%</span>
+                  <span className="text-sm font-medium text-neutral-700">Server Load</span>
+                  <span className="text-sm font-medium text-neutral-700">{systemHealth?.serverLoad || 0}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-fitnass-coral h-2.5 rounded-full" style={{ width: '24%' }}></div>
-                </div>
-              </div>
-              
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700">Database</span>
-                  <span className="text-sm font-medium text-gray-700">62%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-fitnass-pink h-2.5 rounded-full" style={{ width: '62%' }}></div>
+                <div className="w-full bg-neutral-200 rounded-full h-2.5">
+                  <div 
+                    className="bg-indigo-600 h-2.5 rounded-full" 
+                    style={{ width: `${systemHealth?.serverLoad || 0}%` }}
+                  ></div>
                 </div>
               </div>
               
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700">Storage</span>
-                  <span className="text-sm font-medium text-gray-700">38%</span>
+                  <span className="text-sm font-medium text-neutral-700">Database</span>
+                  <span className="text-sm font-medium text-neutral-700">{systemHealth?.databaseUsage || 0}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-fitnass-neon h-2.5 rounded-full" style={{ width: '38%' }}></div>
+                <div className="w-full bg-neutral-200 rounded-full h-2.5">
+                  <div 
+                    className="bg-indigo-500 h-2.5 rounded-full" 
+                    style={{ width: `${systemHealth?.databaseUsage || 0}%` }}
+                  ></div>
+                </div>
+              </div>
+              
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm font-medium text-neutral-700">Storage</span>
+                  <span className="text-sm font-medium text-neutral-700">{systemHealth?.storageUsage || 0}%</span>
+                </div>
+                <div className="w-full bg-neutral-200 rounded-full h-2.5">
+                  <div 
+                    className="bg-indigo-400 h-2.5 rounded-full" 
+                    style={{ width: `${systemHealth?.storageUsage || 0}%` }}
+                  ></div>
                 </div>
               </div>
               
               <div className="mt-4 grid grid-cols-2 gap-4">
-                <div className="bg-fitnass-neon bg-opacity-20 p-4 rounded-lg">
-                  <p className="text-sm font-medium text-fitnass-dark">All Systems Operational</p>
+                <div className={`p-4 rounded-lg ${
+                  systemHealth?.systemStatus === 'operational' 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-amber-100 text-amber-800'
+                }`}>
+                  <p className="text-sm font-medium">
+                    {systemHealth?.systemStatus === 'operational' 
+                      ? 'All Systems Operational' 
+                      : 'System Issues Detected'}
+                  </p>
                 </div>
-                <div className="bg-fitnass-coral bg-opacity-20 p-4 rounded-lg">
-                  <p className="text-sm font-medium text-fitnass-dark">Last Backup: 2 hours ago</p>
+                <div className="bg-indigo-100 p-4 rounded-lg">
+                  <p className="text-sm font-medium text-indigo-800">
+                    Last Backup: {systemHealth?.lastBackup || 'Unknown'}
+                  </p>
                 </div>
               </div>
             </div>
@@ -125,11 +304,21 @@ export default function AdminDashboard() {
   );
 }
 
-function StatCard({ icon: Icon, title, value, color }) {
+function StatCard({ 
+  icon: Icon, 
+  title, 
+  value, 
+  color 
+}: { 
+  icon: React.ElementType; 
+  title: string; 
+  value: number; 
+  color: 'coral' | 'pink' | 'neon'; 
+}) {
   const colorClasses = {
-    coral: 'bg-fitnass-coral text-white',
-    pink: 'bg-fitnass-pink text-white',
-    neon: 'bg-fitnass-neon text-fitnass-dark',
+    coral: 'bg-indigo-600 text-white',
+    pink: 'bg-indigo-500 text-white',
+    neon: 'bg-indigo-400 text-indigo-900',
   };
   
   return (
@@ -137,8 +326,8 @@ function StatCard({ icon: Icon, title, value, color }) {
       <div className={`inline-flex p-3 rounded-lg ${colorClasses[color]} mb-4`}>
         <Icon className="h-6 w-6" />
       </div>
-      <h3 className="text-gray-500 text-sm font-medium">{title}</h3>
-      <p className="text-2xl font-bold text-gray-900">{value.toLocaleString()}</p>
+      <h3 className="text-neutral-500 text-sm font-medium">{title}</h3>
+      <p className="text-2xl font-bold text-neutral-900">{value.toLocaleString()}</p>
     </div>
   );
 } 
