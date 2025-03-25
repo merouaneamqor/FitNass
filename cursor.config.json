@@ -1,0 +1,184 @@
+{
+  "project": {
+    "name": "FitNass",
+    "description": "A platform for discovering and booking gyms across Morocco",
+    "version": "0.1.0"
+  },
+  "architecture": {
+    "framework": "Next.js 14",
+    "structure": {
+      "app": "App router structure with route directories",
+      "components": "UI components organized by domain and reusability",
+      "lib": "Utility functions and service layer",
+      "types": "TypeScript interfaces and type definitions"
+    },
+    "patterns": {
+      "server": "Server components for data fetching and rendering",
+      "client": "Client components for interactive elements marked with 'use client'",
+      "auth": "NextAuth.js for authentication and session management",
+      "data": "Prisma for database access and modeling"
+    }
+  },
+  "conventions": {
+    "code": {
+      "naming": {
+        "files": "PascalCase for components, camelCase for utilities",
+        "components": "PascalCase",
+        "functions": "camelCase",
+        "interfaces": "PascalCase prefixed with 'I' (IUser)",
+        "types": "PascalCase (UserRole)"
+      },
+      "typescript": {
+        "strictMode": true,
+        "typeExports": "Use type-only exports where possible",
+        "interfaces": "Prefer interfaces for object shapes",
+        "types": "Use type for unions and complex types"
+      },
+      "styling": {
+        "framework": "Tailwind CSS",
+        "organization": "Use className with consistent ordering",
+        "patterns": {
+          "layout": "Flex and grid with responsive classes",
+          "spacing": "Use Tailwind spacing scale consistently",
+          "colors": "Use Tailwind colors with consistent palette"
+        }
+      }
+    },
+    "components": {
+      "structure": {
+        "ui": "Reusable UI components in /components/ui",
+        "layouts": "Layout components for section/page structure",
+        "features": "Feature-specific components grouped by domain"
+      },
+      "props": {
+        "naming": "Clear, descriptive prop names",
+        "defaults": "Provide default props where appropriate",
+        "typing": "Always type props with interfaces"
+      }
+    },
+    "hooks": {
+      "naming": "use* prefix for all hooks",
+      "placement": "Custom hooks in separate files under /hooks directory",
+      "auth": "Use nextAuth useSession hook for auth state"
+    },
+    "state": {
+      "client": "useState for simple component state",
+      "server": "Server components for data fetching",
+      "session": "useSession for authentication state"
+    }
+  },
+  "navigation": {
+    "routing": {
+      "structure": "App router with directory-based routes",
+      "dynamicRoutes": "Use [param] syntax for dynamic routes",
+      "loading": "loading.tsx for loading states",
+      "error": "error.tsx for error boundaries"
+    },
+    "auth": {
+      "protection": "Use middleware for route protection",
+      "roles": {
+        "user": "Regular user access",
+        "admin": "Admin dashboard access",
+        "owner": "Gym owner features access"
+      },
+      "redirects": {
+        "unauthenticated": "/auth/signin",
+        "unauthorized": "/unauthorized"
+      }
+    }
+  },
+  "uiGuidelines": {
+    "colors": {
+      "primary": "indigo-600",
+      "secondary": "neutral-700",
+      "accent": "amber-400",
+      "background": "neutral-50",
+      "error": "red-600",
+      "success": "green-500"
+    },
+    "spacing": {
+      "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+      "section": "py-12 md:py-16"
+    },
+    "components": {
+      "buttons": {
+        "primary": "bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-all",
+        "secondary": "border border-indigo-600 text-indigo-600 hover:bg-indigo-50 px-4 py-2 rounded-lg font-medium transition-all",
+        "icon": "inline-flex items-center"
+      },
+      "inputs": {
+        "standard": "w-full px-4 py-2 rounded-lg border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-indigo-500",
+        "search": "pl-10 pr-4 py-2 rounded-lg"
+      },
+      "cards": {
+        "standard": "bg-white rounded-xl shadow-sm p-6 border border-neutral-100",
+        "hover": "transition-all duration-300 hover:shadow-md"
+      }
+    },
+    "typography": {
+      "headings": {
+        "h1": "text-4xl font-bold sm:text-5xl lg:text-6xl",
+        "h2": "text-3xl font-bold",
+        "h3": "text-xl font-semibold"
+      },
+      "body": {
+        "standard": "text-neutral-700",
+        "muted": "text-neutral-500 text-sm"
+      },
+      "fonts": {
+        "sans": "font-sans"
+      }
+    },
+    "icons": {
+      "library": "react-icons/fi",
+      "standard": "h-5 w-5",
+      "small": "h-4 w-4"
+    }
+  },
+  "dataStructures": {
+    "user": {
+      "core": ["id", "name", "email", "image", "role"],
+      "profile": ["bio", "city", "memberSince"],
+      "relations": ["favoriteGyms", "reviews", "bookings", "subscriptions"]
+    },
+    "gym": {
+      "core": ["id", "name", "address", "city", "rating"],
+      "details": ["description", "facilities", "images", "priceRange", "latitude", "longitude"],
+      "relations": ["reviews", "owner"]
+    },
+    "review": {
+      "core": ["id", "gymId", "userId", "rating", "comment", "date"]
+    },
+    "booking": {
+      "core": ["id", "gymId", "userId", "date", "time", "status"]
+    },
+    "subscription": {
+      "core": ["id", "gymId", "userId", "plan", "startDate", "endDate", "status"]
+    }
+  },
+  "security": {
+    "auth": {
+      "provider": "NextAuth.js",
+      "strategies": ["credentials", "oauth"],
+      "sessionManagement": "jwt"
+    },
+    "data": {
+      "validation": "Server-side validation for all inputs",
+      "sanitization": "Sanitize user inputs before storage",
+      "permissions": "Role-based access control for routes and data"
+    }
+  },
+  "performance": {
+    "optimizations": {
+      "images": "Next.js Image component with proper sizing",
+      "code": "Dynamic imports for large components",
+      "rendering": "Server components for static content"
+    }
+  },
+  "deployment": {
+    "requirements": {
+      "node": ">=18.0.0",
+      "npm": ">=9.0.0"
+    }
+  }
+} 
