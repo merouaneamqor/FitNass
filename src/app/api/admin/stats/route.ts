@@ -105,10 +105,22 @@ export async function GET() {
 }
 
 async function getRecentActivity() {
+  // Add explicit type annotations for each array
   let recentUsers: Array<{id: string, name: string | null, createdAt: Date}> = [];
   let recentGyms: Array<{id: string, name: string, createdAt: Date}> = [];
-  let recentReviews: any[] = [];
-  let recentPromotions: any[] = [];
+  let recentReviews: Array<{
+    id: string;
+    rating: number;
+    createdAt: Date;
+    user: { name: string | null };
+    gym: { name: string | null };
+  }> = [];
+  let recentPromotions: Array<{
+    id: string;
+    title: string;
+    createdAt: Date;
+    gym: { name: string | null };
+  }> = [];
   
   try {
     // Recent user registrations
