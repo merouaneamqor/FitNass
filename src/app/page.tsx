@@ -273,6 +273,12 @@ export default function Home() {
               </div>
             ))}
           </div>
+          <blockquote className="p-4 my-4 border-l-4 border-fitnass-coral bg-neutral-50 dark:bg-neutral-800 dark:border-fitnass-pink">
+            <p className="text-lg font-medium leading-relaxed text-neutral-900 dark:text-white">
+              &quot;FitNass helped me discover amazing gyms in my area. The detailed reviews and photos made choosing the right place so easy!&quot;
+            </p>
+            <cite className="block mt-2 text-sm text-neutral-600 dark:text-neutral-400">— Nadia M., Rabat</cite>
+          </blockquote>
         </div>
       </section>
 

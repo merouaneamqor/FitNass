@@ -42,6 +42,12 @@ export default function NewGymPage() {
   const [newFacility, setNewFacility] = useState('');
   const [newImage, setNewImage] = useState('');
 
+  interface FormErrorsType {
+    [key: string]: string;
+  }
+
+  const [formErrors, setFormErrors] = useState<FormErrorsType>({});
+
   // Fetch gym owners (users with GYM_OWNER role)
   useEffect(() => {
     if (status === 'authenticated' && session?.user?.role === 'ADMIN') {
@@ -140,9 +146,10 @@ export default function NewGymPage() {
 
       // Redirect to gyms list on success
       router.push('/admin/gyms');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error creating gym:', err);
-      setError(err.message || 'Failed to create gym. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create gym. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

@@ -1,17 +1,15 @@
-# Node modules
+# Dependencies
 node_modules/
 
-# Next.js build outputs
+# Build outputs
 .next/
 out/
 build/
 dist/
-
-# Cache directories
 .cache/
 .vercel/
 
-# Public assets
+# Static files
 public/
 
 # Config files

@@ -22,7 +22,7 @@ export const UserSubscriptions: React.FC<UserSubscriptionsProps> = ({
         <FiCreditCard className="mx-auto text-neutral-300 h-12 w-12 mb-4" />
         <h3 className="text-lg font-medium text-neutral-700">No Active Subscriptions</h3>
         <p className="text-neutral-500 mt-2">
-          You don't have any active gym memberships or subscriptions.
+          You don&apos;t have any active gym memberships or subscriptions.
         </p>
         <Link 
           href="/gyms" 
