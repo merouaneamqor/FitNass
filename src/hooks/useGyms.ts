@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Gym } from '@/types/gym';
+import { fetchGyms } from '@/actions/gymActions';
 
 interface UseGymsResult {
   gyms: Gym[];
@@ -17,14 +18,10 @@ export const useGyms = (): UseGymsResult => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchGyms() {
+    async function loadGyms() {
       try {
         setLoading(true);
-        const response = await fetch('/api/gyms');
-        if (!response.ok) {
-          throw new Error('Failed to fetch gyms');
-        }
-        const data = await response.json();
+        const data = await fetchGyms();
         setGyms(data);
       } catch (err) {
         setError('Error loading gyms. Please try again later.');
@@ -34,7 +31,7 @@ export const useGyms = (): UseGymsResult => {
       }
     }
 
-    fetchGyms();
+    loadGyms();
   }, []);
 
   // Extract all unique cities
