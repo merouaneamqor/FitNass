@@ -1,7 +1,9 @@
 // Add your custom augmentations here
 // import NextAuth from 'next-auth';
 
-declare module 'next-auth' {
+import "next-auth";
+
+declare module "next-auth" {
   /**
    * Returned by `useSession`, `getSession` and received as a prop on the `SessionProvider` React Context
    */
@@ -22,10 +24,10 @@ declare module 'next-auth' {
 
   interface User {
     id: string;
-    name: string;
-    email: string;
-    image?: string;
-    role: string;
+    role: "USER" | "GYM_OWNER" | "ADMIN";
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
   }
 }
 
@@ -35,6 +37,6 @@ declare module "next-auth/jwt" {
     /** The user's id */
     id: string;
     /** The user's role */
-    role: string;
+    role: "USER" | "GYM_OWNER" | "ADMIN";
   }
 } 
