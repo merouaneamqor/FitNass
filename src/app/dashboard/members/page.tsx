@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { FiMail, FiPhone, FiUser, FiCalendar, FiSearch } from 'react-icons/fi';
+import { FiMail, FiPhone, FiUser, FiCalendar, FiSearch, FiUserPlus, FiEdit2, FiTrash2, FiUsers } from 'react-icons/fi';
+import { PageHeader, Card, Button, Modal, Search } from '@/components/dashboard';
 
 // For initial development - will be replaced with real data fetching
 interface Member {
@@ -75,6 +76,7 @@ export default function MembersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // Filter members based on search term
   const filteredMembers = members.filter(member => 
@@ -99,30 +101,81 @@ export default function MembersPage() {
     setIsModalOpen(true);
   };
 
+  const handleAddMember = () => {
+    setIsAddModalOpen(true);
+  };
+
+  const handleSubmitNewMember = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    const newMember: Member = {
+      id: `member-${Date.now()}`,
+      name: formData.get('name') as string,
+      email: formData.get('email') as string,
+      phone: formData.get('phone') as string,
+      joinDate: new Date().toISOString().split('T')[0],
+      status: 'active',
+      membershipType: formData.get('membershipType') as string,
+      lastVisit: new Date().toISOString().split('T')[0],
+    };
+    
+    setMembers([...members, newMember]);
+    setIsAddModalOpen(false);
+  };
+
+  const deleteMember = (id: string) => {
+    setMembers(members.filter(member => member.id !== id));
+    setIsModalOpen(false);
+  };
+
+  const headerActions = (
+    <Button icon={FiUserPlus} onClick={handleAddMember}>
+      Add New Member
+    </Button>
+  );
+
+  const memberDetailModalFooter = (
+    <div className="flex justify-end space-x-3">
+      <Button variant="danger" icon={FiTrash2} onClick={() => selectedMember && deleteMember(selectedMember.id)}>
+        Delete Member
+      </Button>
+      <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+        Close
+      </Button>
+    </div>
+  );
+
+  const addMemberModalFooter = (
+    <div className="flex justify-end space-x-3">
+      <Button variant="secondary" onClick={() => setIsAddModalOpen(false)}>
+        Cancel
+      </Button>
+      <Button type="submit" form="add-member-form">
+        Add Member
+      </Button>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Members</h1>
-        <p className="text-gray-600 mt-2">Manage your gym membership.</p>
+    <div className="space-y-6">
+      <PageHeader
+        title="Members"
+        description="Manage your gym membership."
+        icon={FiUsers}
+        actions={headerActions}
+      />
+
+      <div className="flex mb-6">
+        <Search
+          onSearch={setSearchTerm}
+          placeholder="Search members..."
+          initialValue={searchTerm}
+          className="w-full sm:w-64"
+        />
       </div>
 
-      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="relative w-full sm:w-64">
-          <input
-            type="text"
-            placeholder="Search members..."
-            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-        </div>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto">
-          Add New Member
-        </button>
-      </div>
-
-      <div className="bg-white shadow rounded-lg overflow-hidden">
+      <Card noPadding>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -192,80 +245,136 @@ export default function MembersPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
-                    <button className="text-red-600 hover:text-red-900">Delete</button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={FiEdit2}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMemberClick(member);
+                      }}
+                      className="mr-2"
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={FiTrash2}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteMember(member.id);
+                      }}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      Delete
+                    </Button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
       {/* Member Detail Modal */}
-      {isModalOpen && selectedMember && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">{selectedMember.name}</h2>
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                &times;
-              </button>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={selectedMember?.name || "Member Details"}
+        footer={memberDetailModalFooter}
+      >
+        {selectedMember && (
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-gray-500">Email</p>
+              <p className="font-medium">{selectedMember.email}</p>
             </div>
             
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-500">Email</p>
-                <p className="font-medium">{selectedMember.email}</p>
-              </div>
-              
-              <div>
-                <p className="text-sm text-gray-500">Phone</p>
-                <p className="font-medium">{selectedMember.phone}</p>
-              </div>
-              
-              <div>
-                <p className="text-sm text-gray-500">Membership</p>
-                <p className="font-medium">{selectedMember.membershipType}</p>
-              </div>
-              
-              <div>
-                <p className="text-sm text-gray-500">Join Date</p>
-                <p className="font-medium">{new Date(selectedMember.joinDate).toLocaleDateString()}</p>
-              </div>
-              
-              <div>
-                <p className="text-sm text-gray-500">Last Visit</p>
-                <p className="font-medium">{new Date(selectedMember.lastVisit).toLocaleDateString()}</p>
-              </div>
-              
-              <div>
-                <p className="text-sm text-gray-500">Status</p>
-                <p className={`font-medium ${
-                  selectedMember.status === 'active' ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {selectedMember.status.charAt(0).toUpperCase() + selectedMember.status.slice(1)}
-                </p>
-              </div>
+            <div>
+              <p className="text-sm text-gray-500">Phone</p>
+              <p className="font-medium">{selectedMember.phone}</p>
             </div>
             
-            <div className="mt-6 flex justify-end space-x-3">
-              <button 
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
-                onClick={() => setIsModalOpen(false)}
-              >
-                Close
-              </button>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                Edit Member
-              </button>
+            <div>
+              <p className="text-sm text-gray-500">Membership</p>
+              <p className="font-medium">{selectedMember.membershipType}</p>
+            </div>
+            
+            <div>
+              <p className="text-sm text-gray-500">Join Date</p>
+              <p className="font-medium">{new Date(selectedMember.joinDate).toLocaleDateString()}</p>
+            </div>
+            
+            <div>
+              <p className="text-sm text-gray-500">Last Visit</p>
+              <p className="font-medium">{new Date(selectedMember.lastVisit).toLocaleDateString()}</p>
+            </div>
+            
+            <div>
+              <p className="text-sm text-gray-500">Status</p>
+              <p className={`font-medium ${
+                selectedMember.status === 'active' ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {selectedMember.status.charAt(0).toUpperCase() + selectedMember.status.slice(1)}
+              </p>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
+
+      {/* Add Member Modal */}
+      <Modal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        title="Add New Member"
+        footer={addMemberModalFooter}
+      >
+        <form id="add-member-form" className="space-y-4" onSubmit={handleSubmitNewMember}>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Name</label>
+            <input
+              type="text"
+              name="name"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <input
+              type="email"
+              name="email"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Phone</label>
+            <input
+              type="tel"
+              name="phone"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Membership Type</label>
+            <select
+              name="membershipType"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              required
+            >
+              <option value="Premium">Premium</option>
+              <option value="Standard">Standard</option>
+              <option value="Basic">Basic</option>
+            </select>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 } 

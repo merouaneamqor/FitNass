@@ -7,6 +7,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import { PageHeader, Card, Button, Modal } from '@/components/dashboard';
 
 // Define interface for class type
 interface ClassType {
@@ -343,39 +344,49 @@ export default function SchedulePage() {
     );
   };
 
-  return (
-    <div className="min-h-screen">
-      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Schedule</h1>
-          <p className="text-gray-600 mt-2">Manage your gym&apos;s classes and sessions.</p>
-        </div>
-        
-        <div className="mt-4 sm:mt-0 flex space-x-2">
-          <button
-            className={`px-4 py-2 rounded-lg ${viewMode === 'timeGridWeek' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-            onClick={() => setViewMode('timeGridWeek')}
-          >
-            Week View
-          </button>
-          <button
-            className={`px-4 py-2 rounded-lg ${viewMode === 'dayGridMonth' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-            onClick={() => setViewMode('dayGridMonth')}
-          >
-            Month View
-          </button>
-          <button
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
-            onClick={handleAddClass}
-          >
-            <FiPlus className="mr-2" />
-            Add Class
-          </button>
-        </div>
-      </div>
+  const headerActions = (
+    <>
+      <Button
+        variant={viewMode === 'timeGridWeek' ? 'primary' : 'outline'}
+        onClick={() => setViewMode('timeGridWeek')}
+        size="sm"
+      >
+        Week View
+      </Button>
+      <Button
+        variant={viewMode === 'dayGridMonth' ? 'primary' : 'outline'}
+        onClick={() => setViewMode('dayGridMonth')}
+        size="sm"
+      >
+        Month View
+      </Button>
+      <Button icon={FiPlus} onClick={handleAddClass}>
+        Add Class
+      </Button>
+    </>
+  );
 
-      {/* FullCalendar Component */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+  const modalFooter = (
+    <div className="flex justify-end space-x-3">
+      <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+        Cancel
+      </Button>
+      <Button type="submit" form="class-form">
+        {currentClass && !currentClass.id.startsWith('new-') ? 'Update Class' : 'Create Class'}
+      </Button>
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Schedule"
+        description="Manage your gym's classes and sessions."
+        icon={FiCalendar}
+        actions={headerActions}
+      />
+
+      <Card noPadding>
         <div className="p-4">
           <FullCalendar
             ref={calendarRef}
@@ -413,11 +424,9 @@ export default function SchedulePage() {
             }}
           />
         </div>
-      </div>
+      </Card>
 
-      {/* List View of Classes */}
-      <div className="bg-white rounded-lg shadow overflow-hidden mt-6">
-        <h2 className="text-xl font-semibold p-4 border-b">All Classes</h2>
+      <Card title="All Classes">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -480,155 +489,133 @@ export default function SchedulePage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button 
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={FiEdit2}
                       onClick={() => handleEditClass(classItem)}
-                      className="text-blue-600 hover:text-blue-900 mr-3"
+                      className="mr-2"
                     >
-                      <FiEdit2 className="inline mr-1" /> Edit
-                    </button>
-                    <button 
+                      Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={FiTrash2}
                       onClick={() => handleDeleteClass(classItem.id)}
                       className="text-red-600 hover:text-red-900"
                     >
-                      <FiTrash2 className="inline mr-1" /> Delete
-                    </button>
+                      Delete
+                    </Button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
-      {/* Class Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">
-                {currentClass && !currentClass.id.startsWith('new-') ? 'Edit Class' : 'Add New Class'}
-              </h2>
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                &times;
-              </button>
-            </div>
-            
-            <form className="space-y-4" onSubmit={handleSubmitClass}>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Class Title</label>
-                <input
-                  type="text"
-                  name="title"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  defaultValue={currentClass?.title || ''}
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Instructor</label>
-                <input
-                  type="text"
-                  name="instructor"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  defaultValue={currentClass?.instructor || ''}
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Day</label>
-                <select
-                  name="day"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  defaultValue={currentClass?.day || 'Monday'}
-                  required
-                >
-                  {daysOfWeek.map(day => (
-                    <option key={day} value={day}>{day}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Start Time</label>
-                  <input
-                    type="time"
-                    name="startTime"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    defaultValue={currentClass?.startTime || '09:00'}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">End Time</label>
-                  <input
-                    type="time"
-                    name="endTime"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    defaultValue={currentClass?.endTime || '10:00'}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Location</label>
-                  <input
-                    type="text"
-                    name="location"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    defaultValue={currentClass?.location || ''}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Max Capacity</label>
-                  <input
-                    type="number"
-                    name="maxCapacity"
-                    min="1"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    defaultValue={currentClass?.maxCapacity || '15'}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Color</label>
-                <input
-                  type="color"
-                  name="color"
-                  className="mt-1 block w-full h-10 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  defaultValue={currentClass?.color || '#3B82F6'}
-                />
-              </div>
-              
-              <div className="flex justify-end space-x-3 pt-4">
-                <button 
-                  type="button"
-                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
-                  onClick={() => setIsModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  {currentClass && !currentClass.id.startsWith('new-') ? 'Update Class' : 'Create Class'}
-                </button>
-              </div>
-            </form>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={currentClass && !currentClass.id.startsWith('new-') ? 'Edit Class' : 'Add New Class'}
+        footer={modalFooter}
+      >
+        <form id="class-form" className="space-y-4" onSubmit={handleSubmitClass}>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Class Title</label>
+            <input
+              type="text"
+              name="title"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              defaultValue={currentClass?.title || ''}
+              required
+            />
           </div>
-        </div>
-      )}
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Instructor</label>
+            <input
+              type="text"
+              name="instructor"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              defaultValue={currentClass?.instructor || ''}
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Day</label>
+            <select
+              name="day"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              defaultValue={currentClass?.day || 'Monday'}
+              required
+            >
+              {daysOfWeek.map(day => (
+                <option key={day} value={day}>{day}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Start Time</label>
+              <input
+                type="time"
+                name="startTime"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                defaultValue={currentClass?.startTime || '09:00'}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">End Time</label>
+              <input
+                type="time"
+                name="endTime"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                defaultValue={currentClass?.endTime || '10:00'}
+                required
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Location</label>
+              <input
+                type="text"
+                name="location"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                defaultValue={currentClass?.location || ''}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Max Capacity</label>
+              <input
+                type="number"
+                name="maxCapacity"
+                min="1"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                defaultValue={currentClass?.maxCapacity || '15'}
+                required
+              />
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Color</label>
+            <input
+              type="color"
+              name="color"
+              className="mt-1 block w-full h-10 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              defaultValue={currentClass?.color || '#3B82F6'}
+            />
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 } 
