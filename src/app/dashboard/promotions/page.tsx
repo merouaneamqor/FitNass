@@ -4,8 +4,20 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { FiPlus, FiCalendar, FiTag, FiPercent, FiEdit, FiTrash2, FiAlertCircle, FiSearch } from 'react-icons/fi';
 
+// Define interface for promotion
+interface Promotion {
+  id: string;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  discount: string;
+  status: 'active' | 'scheduled' | 'expired' | 'cancelled';
+  redemptionCount: number;
+}
+
 // Mock promotions - will be replaced with real API data
-const mockPromotions = [
+const mockPromotions: Promotion[] = [
   {
     id: '1',
     title: 'Ramadan Special',
@@ -60,10 +72,10 @@ const mockPromotions = [
 
 export default function PromotionsPage() {
   const { data: session } = useSession();
-  const [promotions, setPromotions] = useState(mockPromotions);
+  const [promotions, setPromotions] = useState<Promotion[]>(mockPromotions);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentPromotion, setCurrentPromotion] = useState(null);
+  const [currentPromotion, setCurrentPromotion] = useState<Promotion | null>(null);
   const [selectedStatus, setSelectedStatus] = useState('all');
 
   // Filter promotions based on search term and status
@@ -93,12 +105,12 @@ export default function PromotionsPage() {
     setIsModalOpen(true);
   };
 
-  const handleEditPromotion = (promotion) => {
+  const handleEditPromotion = (promotion: Promotion) => {
     setCurrentPromotion(promotion);
     setIsModalOpen(true);
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
         return 'bg-green-100 text-green-800';
