@@ -26,12 +26,12 @@ export const fetchGyms = async (): Promise<Gym[]> => {
       orderBy: { createdAt: 'desc' }
     });
     
-    return gyms.map((gym: any): Gym => ({
+    return gyms.map((gym): Gym => ({
       ...gym,
       images: gym.images as string[],
       facilities: gym.facilities as string[],
     }));
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Database Error:', error);
     throw new Error(`Failed to fetch gyms: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
