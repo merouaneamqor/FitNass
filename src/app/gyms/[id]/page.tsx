@@ -160,6 +160,7 @@ export default function GymDetailsPage({ params }: { params: { id: string } }) {
                     >
                       <Image
                         src={image}
+                        fill
                         alt={`${gym.name} ${index + 1}`}
                         className="w-full h-full object-cover"
                       />
