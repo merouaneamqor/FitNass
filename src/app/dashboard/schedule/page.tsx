@@ -7,6 +7,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import { EventClickArg, DateSelectArg } from '@fullcalendar/core';
 import { PageHeader, Card, Button, Modal } from '@/components/dashboard';
 
 // Define interface for class type
@@ -150,7 +151,7 @@ export default function SchedulePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentClass, setCurrentClass] = useState<ClassType | null>(null);
   const [viewMode, setViewMode] = useState('timeGridWeek');
-  const calendarRef = useRef<any>(null);
+  const calendarRef = useRef<FullCalendar>(null);
 
   // Convert classes to calendar events
   useEffect(() => {
@@ -219,7 +220,7 @@ export default function SchedulePage() {
     setIsModalOpen(true);
   };
 
-  const handleEventClick = (info: any) => {
+  const handleEventClick = (info: EventClickArg) => {
     const eventId = info.event.id;
     const classItem = classes.find(c => c.id === eventId);
     if (classItem) {
@@ -227,7 +228,7 @@ export default function SchedulePage() {
     }
   };
 
-  const handleDateSelect = (selectInfo: any) => {
+  const handleDateSelect = (selectInfo: DateSelectArg) => {
     // Create a new class when a time slot is selected
     const startTime = new Date(selectInfo.start);
     const endTime = new Date(selectInfo.end);
@@ -325,7 +326,17 @@ export default function SchedulePage() {
     return 'text-green-600';
   };
 
-  const renderEventContent = (eventInfo: any) => {
+  interface EventContentProps {
+    event: {
+      title: string;
+      extendedProps: {
+        instructor: string;
+        location: string;
+      };
+    };
+  }
+
+  const renderEventContent = (eventInfo: EventContentProps) => {
     const { event } = eventInfo;
     const { instructor, location } = event.extendedProps;
     

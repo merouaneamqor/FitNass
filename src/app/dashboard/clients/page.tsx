@@ -5,8 +5,28 @@ import { useSession } from 'next-auth/react';
 import { FiUsers, FiPlus, FiFilter, FiMail, FiPhone, FiTrash2, FiEdit2 } from 'react-icons/fi';
 import { PageHeader, Card, Button, Search, DataTable, Modal } from '@/components/dashboard';
 
+// Define the Client interface at the top
+interface Client {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  joinDate: string;
+  status: string;
+  fitnessGoals: string;
+  trainer: string;
+}
+
+// Define the column type that matches the DataTable component
+type Column = {
+  header: string;
+  accessor: keyof Client | ((item: Client) => React.ReactNode);
+  cell?: (row: Client) => JSX.Element;
+  className?: string;
+};
+
 // Mock data for client list
-const mockClients = [
+const mockClients: Client[] = [
   {
     id: '1',
     name: 'Mohammed El Alami',
@@ -61,11 +81,11 @@ const mockClients = [
 
 export default function ClientsPage() {
   const { data: session } = useSession();
-  const [clients, setClients] = useState(mockClients);
+  const [clients, setClients] = useState<Client[]>(mockClients);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<any>(null);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
   if (!session || session.user.role !== 'GYM_OWNER') {
     return (
@@ -79,11 +99,11 @@ export default function ClientsPage() {
   }
 
   // Define columns for DataTable
-  const columns = [
+  const columns: Column[] = [
     {
       header: 'Name',
       accessor: 'name',
-      cell: (row: any) => (
+      cell: (row: Client) => (
         <div className="flex items-center">
           <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
             <FiUsers className="h-5 w-5 text-blue-600" />
@@ -98,7 +118,7 @@ export default function ClientsPage() {
     {
       header: 'Contact',
       accessor: 'email',
-      cell: (row: any) => (
+      cell: (row: Client) => (
         <div className="flex flex-col">
           <div className="text-sm text-gray-900 flex items-center">
             <FiMail className="mr-2 text-gray-400" />
@@ -122,7 +142,7 @@ export default function ClientsPage() {
     {
       header: 'Status',
       accessor: 'status',
-      cell: (row: any) => (
+      cell: (row: Client) => (
         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
           row.status === 'Active' 
             ? 'bg-green-100 text-green-800' 
@@ -134,8 +154,8 @@ export default function ClientsPage() {
     },
     {
       header: 'Actions',
-      accessor: 'id',
-      cell: (row: any) => (
+      accessor: (row) => row.id,
+      cell: (row: Client) => (
         <div className="flex justify-end">
           <Button
             variant="ghost"
@@ -171,7 +191,7 @@ export default function ClientsPage() {
     setIsAddModalOpen(true);
   };
 
-  const handleEditClient = (client: any) => {
+  const handleEditClient = (client: Client) => {
     setSelectedClient(client);
     setIsEditModalOpen(true);
   };
@@ -184,7 +204,7 @@ export default function ClientsPage() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    const newClient = {
+    const newClient: Client = {
       id: `client-${Date.now()}`,
       name: formData.get('name') as string,
       email: formData.get('email') as string,
@@ -201,9 +221,11 @@ export default function ClientsPage() {
 
   const handleUpdateClient = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!selectedClient) return;
+    
     const formData = new FormData(e.currentTarget);
     
-    const updatedClient = {
+    const updatedClient: Client = {
       ...selectedClient,
       name: formData.get('name') as string,
       email: formData.get('email') as string,
