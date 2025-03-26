@@ -128,6 +128,7 @@ async function main() {
       name: 'Admin Système',
       password: adminPassword,
       role: 'ADMIN',
+      isVerified: true,
     },
   });
   console.log('Admin user created:', admin.email);
@@ -147,6 +148,7 @@ async function main() {
         name: `${firstName} ${lastName}`,
         password: gymOwnerPassword,
         role: 'GYM_OWNER',
+        isVerified: true,
       },
     });
     gymOwners.push(gymOwner);
@@ -168,6 +170,7 @@ async function main() {
         name: `${firstName} ${lastName}`,
         password: userPassword,
         role: 'USER',
+        isVerified: true,
       },
     });
     users.push(user);

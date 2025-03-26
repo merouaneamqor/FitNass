@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { FiSave, FiUpload, FiTrash2, FiUser, FiMapPin, FiPhone, FiMail, FiGlobe, FiClock, FiDollarSign, FiShield, FiLock, FiCreditCard } from 'react-icons/fi';
+import { FiSave, FiUpload, FiTrash2, FiUser, FiMapPin, FiPhone, FiMail, FiGlobe, FiLock, FiCreditCard } from 'react-icons/fi';
 
 export default function SettingsPage() {
   const { data: session } = useSession();

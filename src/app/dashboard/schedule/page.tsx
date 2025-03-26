@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { FiPlus, FiEdit2, FiTrash2, FiCalendar, FiClock, FiUser, FiUsers } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiCalendar, FiUser, FiUsers } from 'react-icons/fi';
 
 // Mock data for classes/sessions
 const mockClasses = [
@@ -202,7 +202,7 @@ export default function SchedulePage() {
       <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Schedule</h1>
-          <p className="text-gray-600 mt-2">Manage your gym's classes and sessions.</p>
+          <p className="text-gray-600 mt-2">Manage your gym&apos;s classes and sessions.</p>
         </div>
         
         <div className="mt-4 sm:mt-0 flex space-x-2">

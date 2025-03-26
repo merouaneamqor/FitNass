@@ -37,6 +37,7 @@ export async function POST(request: Request) {
         name: validatedData.name,
         email: validatedData.email,
         password: hashedPassword,
+        isVerified: false,
       },
     });
 
@@ -48,6 +49,7 @@ export async function POST(request: Request) {
       role: newUser.role,
       createdAt: newUser.createdAt,
       updatedAt: newUser.updatedAt,
+      isVerified: newUser.isVerified,
       image: newUser.image
     };
 
