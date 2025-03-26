@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { FiActivity, FiUsers, FiTag, FiStar, FiBarChart2 } from 'react-icons/fi';
+import { FiUsers, FiTag, FiStar, FiBarChart2 } from 'react-icons/fi';
 
 // Mock data for demonstration
 const mockDashboardData = {

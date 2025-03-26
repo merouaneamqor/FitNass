@@ -43,13 +43,6 @@ export default function NewGymPage() {
   const [newFacility, setNewFacility] = useState('');
   const [newImage, setNewImage] = useState('');
 
-  // Interface definition kept for potential future use
-  interface FormErrorsType {
-    [key: string]: string;
-  }
-
-  // Removed unused state variables: formErrors and setFormErrors
-
   // Fetch gym owners (users with GYM_OWNER role)
   useEffect(() => {
     if (status === 'authenticated' && session?.user?.role === 'ADMIN') {

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { FiClock, FiMapPin } from 'react-icons/fi';
+import Image from 'next/image';
 
 // Mock data for demonstration
 const mockPromotions = [
@@ -81,10 +82,12 @@ export default function PromotionsPage() {
           {filteredPromotions.map((promotion) => (
             <div key={promotion.id} className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="relative h-48">
-                <img
+                <Image
                   src={promotion.image}
                   alt={promotion.title}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
                 <div className="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
                   {promotion.discount}

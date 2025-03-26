@@ -55,10 +55,7 @@ export async function PUT(request: Request) {
   }
 }
 
-export async function GET(
-  _request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET() {
   try {
     const session = await getServerSession();
     

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FiUsers, FiHome, FiStar, FiActivity, FiShield, FiAlertTriangle, FiGrid, FiTag, FiSettings } from 'react-icons/fi';
+import { FiUsers, FiHome, FiStar, FiActivity, FiShield, FiAlertTriangle, FiTag, FiSettings } from 'react-icons/fi';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 

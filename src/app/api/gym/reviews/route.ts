@@ -10,10 +10,7 @@ const reviewSchema = z.object({
   comment: z.string().min(10, 'Comment must be at least 10 characters'),
 });
 
-export async function GET(
-  _request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET() {
   try {
     const session = await getServerSession();
     

@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 const prisma = new PrismaClient();
 
+// Define validation schema
 const signupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
@@ -14,16 +15,13 @@ const signupSchema = z.object({
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, password: rawPassword } = body;
     
-    // Validate inputs
-    if (!name || !email || !rawPassword) {
-      return NextResponse.json({ error: 'Name, email, and password are required' }, { status: 400 });
-    }
+    // Validate using the schema
+    const validatedData = signupSchema.parse(body);
     
     // Check if user with this email already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email },
+      where: { email: validatedData.email },
     });
     
     if (existingUser) {
@@ -31,19 +29,27 @@ export async function POST(request: Request) {
     }
     
     // Hash password
-    const hashedPassword = await bcrypt.hash(rawPassword, 10);
+    const hashedPassword = await bcrypt.hash(validatedData.password, 10);
     
     // Create user
     const newUser = await prisma.user.create({
       data: {
-        name,
-        email,
+        name: validatedData.name,
+        email: validatedData.email,
         password: hashedPassword,
       },
     });
 
-    // Remove password from response
-    const { password, ...userWithoutPassword } = newUser;
+    // Remove password from response - use proper destructuring to avoid warnings
+    const userWithoutPassword = {
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
+      createdAt: newUser.createdAt,
+      updatedAt: newUser.updatedAt,
+      image: newUser.image
+    };
 
     return NextResponse.json(
       { message: 'User created successfully', user: userWithoutPassword },

@@ -9,12 +9,13 @@ export default function SignIn() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
-  // const error = searchParams.get('error') || '';
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
     const formData = new FormData(e.currentTarget);
     const email = formData.get('email') as string;
@@ -28,13 +29,13 @@ export default function SignIn() {
       });
 
       if (result?.error) {
-        // setError(result.error);
+        setError(result.error);
       } else {
         router.push(callbackUrl);
         router.refresh();
       }
-    } catch (error) {
-      // setError('An error occurred during sign in');
+    } catch {
+      setError('An error occurred during sign in');
     } finally {
       setIsLoading(false);
     }
@@ -55,11 +56,11 @@ export default function SignIn() {
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {/* {error && (
+          {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative" role="alert">
               <span className="block sm:inline">{error}</span>
             </div>
-          )} */}
+          )}
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="email" className="sr-only">
