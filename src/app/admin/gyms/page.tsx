@@ -6,37 +6,7 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
 import EditGymModal from './components/EditGymModal';
-
-// Define Gym interface
-interface Gym {
-  id: string;
-  name: string;
-  description: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  latitude: number;
-  longitude: number;
-  phone?: string;
-  website?: string;
-  email?: string;
-  rating: number;
-  priceRange: string;
-  facilities: string[];
-  images: string[];
-  status: 'ACTIVE' | 'INACTIVE' | 'PENDING_APPROVAL' | 'CLOSED';
-  isVerified: boolean;
-  viewCount: number;
-  ownerId: string;
-  owner?: {
-    id: string;
-    name?: string;
-    email: string;
-  };
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Gym, UpdateData } from './types';
 
 export default function GymsPage() {
   const { data: session, status } = useSession();
@@ -89,7 +59,7 @@ export default function GymsPage() {
     }
   };
   
-  const handleSaveGym = async (gym: Partial<Gym>) => {
+  const handleSaveGym = async (gym: UpdateData) => {
     try {
       const url = `/api/admin/gyms/${gym.id}`;
       

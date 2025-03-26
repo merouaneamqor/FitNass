@@ -1,69 +1,12 @@
 import { useState, useEffect } from 'react';
 import { FiX, FiSave, FiPlus, FiTrash2 } from 'react-icons/fi';
-
-// Define User interface for gym owners
-interface User {
-  id: string;
-  name: string | null;
-  email: string;
-  role: string;
-}
-
-// Define Gym interface
-interface Gym {
-  id: string;
-  name: string;
-  description: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  latitude: number;
-  longitude: number;
-  phone?: string;
-  website?: string;
-  email?: string;
-  rating: number;
-  priceRange: string;
-  facilities: string[];
-  images: string[];
-  status: 'ACTIVE' | 'INACTIVE' | 'PENDING_APPROVAL' | 'CLOSED';
-  isVerified: boolean;
-  viewCount: number;
-  ownerId: string;
-  owner?: {
-    id: string;
-    name?: string;
-    email: string;
-  };
-  createdAt: string;
-  updatedAt: string;
-}
+import type { User, Gym, UpdateData } from '../types';
 
 interface EditGymModalProps {
   gym: Partial<Gym>;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (gym: Partial<Gym>) => Promise<void>;
-}
-
-interface UpdateData {
-  name?: string;
-  description?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  zipCode?: string;
-  latitude?: number;
-  longitude?: number;
-  phone?: string;
-  website?: string;
-  email?: string;
-  priceRange?: string;
-  facilities?: string[];
-  images?: string[];
-  isVerified?: boolean;
-  owner?: { connect: { id: string } };
+  onSave: (gym: UpdateData) => Promise<void>;
 }
 
 export default function EditGymModal({ gym, isOpen, onClose, onSave }: EditGymModalProps) {
@@ -173,14 +116,19 @@ export default function EditGymModal({ gym, isOpen, onClose, onSave }: EditGymMo
         facilities: formData.facilities,
         images: formData.images,
         isVerified: formData.isVerified,
-        owner: { connect: { id: formData.ownerId } }
       };
+      
+      // Only include owner if ownerId is provided
+      if (formData.ownerId) {
+        updateData.owner = { connect: { id: formData.ownerId } };
+      }
 
       await onSave(updateData);
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error saving gym:', err);
-      setError(err.message || 'Failed to save gym. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save gym. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -504,4 +452,6 @@ export default function EditGymModal({ gym, isOpen, onClose, onSave }: EditGymMo
       </div>
     </div>
   );
-} 
+}
+
+export type { UpdateData }; 

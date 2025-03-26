@@ -14,8 +14,20 @@ type UserWithRelations = Prisma.UserGetPayload<{
   }
 }>;
 
+// Map Prisma Role enum to string
+function mapRoleToString(role: string): "user" | "admin" | "gym-owner" {
+  switch (role) {
+    case 'ADMIN':
+      return 'admin';
+    case 'GYM_OWNER':
+      return 'gym-owner';
+    default:
+      return 'user';
+  }
+}
+
 // Map Prisma User model to UserProfile type
-const mapUserToProfile = async (user: any): Promise<UserProfile> => {
+const mapUserToProfile = async (user: Prisma.UserGetPayload<{ include: { favorites: true } }>): Promise<UserProfile> => {
   try {
     // Get user reviews with gym data
     const reviews = await prismaExec(
@@ -40,15 +52,12 @@ const mapUserToProfile = async (user: any): Promise<UserProfile> => {
       'Error fetching user favorite gyms'
     );
 
-    // Fix the role mapping to ensure it returns the correct type
-    const mappedRole = mapRole(user.role) as 'user' | 'admin' | 'gym-owner';
-
     // Map to UserProfile format
     return {
       id: user.id,
       name: user.name || '',
       email: user.email,
-      role: mappedRole,
+      role: mapRoleToString(user.role),
       city: user.city || '',
       createdAt: user.createdAt.toISOString(),
       image: user.image || '',
@@ -71,12 +80,11 @@ const mapUserToProfile = async (user: any): Promise<UserProfile> => {
   } catch (error) {
     console.error("Error mapping user to profile:", error);
     // Return a minimal profile with the data we have
-    const mappedRole = mapRole(user.role) as 'user' | 'admin' | 'gym-owner';
     return {
       id: user.id,
       name: user.name || '',
       email: user.email,
-      role: mappedRole,
+      role: mapRoleToString(user.role),
       city: user.city || '',
       createdAt: user.createdAt.toISOString(),
       image: user.image || '',
@@ -90,24 +98,13 @@ const mapUserToProfile = async (user: any): Promise<UserProfile> => {
   }
 };
 
-// Map Prisma Role enum to string
-const mapRole = (role: string): string => {
-  switch (role) {
-    case 'ADMIN': 
-      return 'admin';
-    case 'GYM_OWNER': 
-      return 'gym-owner';
-    default:
-      return 'user';
-  }
-};
-
 // Get user profile by ID
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
   try {
     const user = await prismaExec(() => 
       prisma.user.findUnique({
         where: { id: userId },
+        include: { favorites: true }
       }),
       'Error fetching user profile'
     );
@@ -128,6 +125,7 @@ export const getUserProfileByEmail = async (email: string): Promise<UserProfile 
     const user = await prismaExec(
       () => prisma.user.findUnique({
         where: { email },
+        include: { favorites: true }
       }),
       'Error fetching user profile by email'
     );
@@ -147,7 +145,15 @@ export const getUserProfileByEmail = async (email: string): Promise<UserProfile 
 export const updateUserProfile = async (id: string, data: Partial<UserProfile>): Promise<UserProfile | null> => {
   try {
     // Extract fields that belong to the User model
-    const userUpdate: any = {};
+    interface UserUpdateData {
+      name?: string;
+      email?: string;
+      city?: string;
+      image?: string;
+      bio?: string;
+    }
+    
+    const userUpdate: UserUpdateData = {};
     if (data.name !== undefined) userUpdate.name = data.name;
     if (data.email !== undefined) userUpdate.email = data.email;
     if (data.city !== undefined) userUpdate.city = data.city;
@@ -159,6 +165,7 @@ export const updateUserProfile = async (id: string, data: Partial<UserProfile>):
       () => prisma.user.update({
         where: { id },
         data: userUpdate,
+        include: { favorites: true }
       }),
       'Error updating user profile'
     );
@@ -201,7 +208,8 @@ export const addFavoriteGym = async (userId: string, gymId: string): Promise<Use
     // Get the updated user profile
     const user = await prismaExec(
       () => prisma.user.findUnique({
-        where: { id: userId }
+        where: { id: userId },
+        include: { favorites: true }
       }),
       'Error fetching updated user profile'
     );
@@ -236,7 +244,8 @@ export const removeFavoriteGym = async (userId: string, gymId: string): Promise<
     // Get the updated user profile
     const user = await prismaExec(
       () => prisma.user.findUnique({
-        where: { id: userId }
+        where: { id: userId },
+        include: { favorites: true }
       }),
       'Error fetching updated user profile'
     );
@@ -250,15 +259,4 @@ export const removeFavoriteGym = async (userId: string, gymId: string): Promise<
     console.error('Error removing favorite gym:', error);
     throw error;
   }
-};
-
-function mapRoleToString(role: any): "user" | "admin" | "gym-owner" {
-  switch (role) {
-    case 'ADMIN':
-      return 'admin';
-    case 'GYM_OWNER':
-      return 'gym-owner';
-    default:
-      return 'user';
-  }
-} 
+}; 

@@ -136,7 +136,7 @@ export default function AdminDashboard() {
       <div className="bg-white p-8 rounded-xl shadow-md max-w-md w-full text-center">
         <FiAlertTriangle className="mx-auto h-12 w-12 text-amber-500 mb-4" />
         <h2 className="text-2xl font-bold text-neutral-800 mb-2">Access Denied</h2>
-        <p className="text-neutral-600 mb-6">You don't have permission to access the admin dashboard.</p>
+        <p className="text-neutral-600 mb-6">You don&apos;t have permission to access the admin dashboard.</p>
         <a href="/" className="inline-flex items-center justify-center px-5 py-2 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
           Return to Homepage
         </a>
@@ -319,12 +319,13 @@ function StatCard({ icon: Icon, title, value, color }: {
   icon: React.ElementType;
   title: string;
   value: string | number;
-  color: 'coral' | 'pink' | 'neon'; 
+  color: 'coral' | 'pink' | 'neon' | 'indigo'; 
 }) {
   const colorClasses = {
     coral: 'bg-fitnass-coral text-white',
     pink: 'bg-fitnass-pink text-white',
     neon: 'bg-fitnass-blue text-white',
+    indigo: 'bg-indigo-600 text-white'
   };
   
   return (
@@ -349,12 +350,13 @@ function AdminNavCard({
   title: string; 
   description: string;
   href: string;
-  color: 'coral' | 'pink' | 'neon'; 
+  color: 'coral' | 'pink' | 'neon' | 'indigo'; 
 }) {
   const colorClasses = {
     coral: 'bg-indigo-600 text-white hover:bg-indigo-700',
     pink: 'bg-indigo-500 text-white hover:bg-indigo-600',
     neon: 'bg-indigo-400 text-indigo-900 hover:bg-indigo-500 hover:text-white',
+    indigo: 'bg-indigo-600 text-white hover:bg-indigo-700'
   };
   
   return (
