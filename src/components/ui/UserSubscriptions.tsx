@@ -34,7 +34,7 @@ export const UserSubscriptions: React.FC<UserSubscriptionsProps> = ({
     );
   }
 
-  const getStatusStyles = (status) => {
+  const getStatusStyles = (status: string): string => {
     switch (status) {
       case 'active':
         return 'bg-green-100 text-green-800';
@@ -47,7 +47,7 @@ export const UserSubscriptions: React.FC<UserSubscriptionsProps> = ({
     }
   };
 
-  const getStatusIcon = (status) => {
+  const getStatusIcon = (status: string): React.ReactNode => {
     switch (status) {
       case 'active':
         return <FiCheck className="w-4 h-4 mr-1" />;
@@ -65,7 +65,7 @@ export const UserSubscriptions: React.FC<UserSubscriptionsProps> = ({
         const startDate = new Date(subscription.startDate);
         const endDate = subscription.endDate ? new Date(subscription.endDate) : null;
         
-        const formatDate = (date) => {
+        const formatDate = (date: Date): string => {
           return date.toLocaleDateString('en-US', {
             year: 'numeric', 
             month: 'long', 

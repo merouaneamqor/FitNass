@@ -26,9 +26,24 @@ export async function PUT(request: Request) {
     const body = await request.json();
     const validatedData = updateGymSchema.parse(body);
 
-    const updatedGym = await prisma.gym.update({
+    // First find the gym
+    const gym = await prisma.gym.findFirst({
       where: {
         ownerId: session.user.id,
+      },
+    });
+
+    if (!gym) {
+      return NextResponse.json(
+        { error: 'Gym not found' },
+        { status: 404 }
+      );
+    }
+
+    // Then update it
+    const updatedGym = await prisma.gym.update({
+      where: {
+        id: gym.id,
       },
       data: {
         name: validatedData.name,
@@ -66,7 +81,7 @@ export async function GET() {
       );
     }
 
-    const gym = await prisma.gym.findUnique({
+    const gym = await prisma.gym.findFirst({
       where: {
         ownerId: session.user.id,
       },

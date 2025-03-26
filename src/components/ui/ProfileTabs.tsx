@@ -67,7 +67,12 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
             const isActive = currentTab === tab.key;
             
             // Construct the URL with the tab parameter
-            const params = new URLSearchParams(searchParams);
+            const params = new URLSearchParams();
+            // Copy all existing parameters
+            searchParams.forEach((value, key) => {
+              params.set(key, value);
+            });
+            // Set the tab parameter
             params.set('tab', tab.key);
             
             return (

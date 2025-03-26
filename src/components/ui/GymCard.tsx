@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { FiMapPin, FiStar, FiActivity } from 'react-icons/fi';
 import { Gym } from '@/types/gym';
+import Image from 'next/image';
 
 interface GymCardProps {
   gym: Gym;
@@ -52,10 +53,12 @@ export const GymCard: React.FC<GymCardProps> = ({ gym, onCardClick, featured = f
       onClick={handleClick}
     >
       <div className="relative h-60">
-        <img
+        <Image
           src={gym.images?.[0] || 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48'}
           alt={gym.name}
-          className="w-full h-full object-cover"
+          width={400}
+          height={300}
+          className="h-48 w-full object-cover rounded-t-xl"
         />
         <div className={`absolute top-4 right-4 ${featured ? 'bg-indigo-600' : getPriceRangeColor(gym.priceRange)} text-white px-3 py-1 rounded-full text-sm font-medium shadow-sm backdrop-blur-sm bg-opacity-90`}>
           {featured ? 'Featured' : gym.priceRange}

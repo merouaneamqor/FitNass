@@ -1,6 +1,7 @@
 import React from 'react';
 import { UserProfile } from '@/types/user';
 import { FiUser, FiMail, FiMapPin, FiCalendar } from 'react-icons/fi';
+import Image from 'next/image';
 
 interface ProfileHeaderProps {
   profile: UserProfile;
@@ -27,17 +28,13 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
           <div className="relative">
-            {profile.image ? (
-              <img
-                src={profile.image}
-                alt={profile.name}
-                className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md"
-              />
-            ) : (
-              <div className="w-24 h-24 rounded-full bg-indigo-100 flex items-center justify-center shadow-md">
-                <FiUser className="h-12 w-12 text-indigo-500" />
-              </div>
-            )}
+            <Image
+              src={profile.image || '/default-avatar.png'}
+              alt="Profile photo"
+              width={96}
+              height={96}
+              className="h-24 w-24 rounded-full object-cover border-4 border-white"
+            />
             {profile.role === 'gym-owner' && (
               <span className="absolute bottom-0 right-0 bg-indigo-600 text-white text-xs px-2 py-1 rounded-full">
                 Gym Owner

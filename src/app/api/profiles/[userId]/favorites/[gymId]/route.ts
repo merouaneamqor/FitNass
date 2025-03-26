@@ -33,7 +33,7 @@ export async function DELETE(
     // Handle special case for 'me'
     if (userId === 'me') {
       profileUserId = session.user.id;
-    } else if (session.user.id !== userId && session.user.role !== 'admin') {
+    } else if (session.user.id !== userId && session.user.role !== 'ADMIN') {
       // Only allow users to modify their own favorites unless they're an admin
       return NextResponse.json(
         { error: 'Forbidden - you can only modify your own favorites' },
@@ -52,10 +52,10 @@ export async function DELETE(
       }
       
       return NextResponse.json(updatedProfile);
-    } catch (dbError: Error) {
+    } catch (dbError: unknown) {
       console.error('Database error removing favorite gym:', dbError);
       
-      if ('message' in dbError && dbError.message?.includes('User not found')) {
+      if (dbError && typeof dbError === 'object' && 'message' in dbError && typeof dbError.message === 'string' && dbError.message.includes('User not found')) {
         return NextResponse.json(
           { error: 'User profile not found' },
           { status: 404 }

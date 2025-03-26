@@ -146,7 +146,7 @@ export const ProfileClient: React.FC<ProfileClientProps> = ({
       // Always update the UI optimistically
       setClientSideProfile(prev => ({
         ...prev,
-        favoriteGyms: prev.favoriteGyms.filter(id => id !== gymId)
+        favoriteGyms: prev.favoriteGyms?.filter(id => id !== gymId) || []
       }));
     } catch (err) {
       console.error('Error removing favorite:', err);
@@ -310,7 +310,6 @@ export const ProfileClient: React.FC<ProfileClientProps> = ({
         if (!isOwnProfile) return null;
         return (
           <ProfileSettings
-            profile={clientSideProfile}
             onSaveSettings={handleSaveSettings}
             onDeleteAccount={handleDeleteAccount}
           />
@@ -355,7 +354,6 @@ export const ProfileClient: React.FC<ProfileClientProps> = ({
           />
           
           <ProfileTabs 
-            userId={clientSideProfile.id} 
             isOwnProfile={isOwnProfile} 
             className="mb-8"
           />

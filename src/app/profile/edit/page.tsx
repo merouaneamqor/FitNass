@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ProfileEditForm, HeaderSection, LoadingSpinner, ErrorAlert } from '@/components/ui';
 import { useProfile } from '@/hooks';
+import { UserProfile } from '@/types/user';
 import { FiArrowLeft } from 'react-icons/fi';
 
 export default function EditProfilePage() {
@@ -18,7 +19,7 @@ export default function EditProfilePage() {
     }
   }, [loading, profile, error, router]);
 
-  const handleSaveProfile = async (updatedProfile) => {
+  const handleSaveProfile = async (updatedProfile: Partial<UserProfile>) => {
     setSubmitError(null);
     
     try {
@@ -54,7 +55,6 @@ export default function EditProfilePage() {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <ErrorAlert 
-          title="Error Loading Profile" 
           message="There was a problem loading your profile. Please try again later."
         />
       </div>
@@ -65,19 +65,17 @@ export default function EditProfilePage() {
     <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
       <HeaderSection
         title="Edit Your Profile"
-        subtitle="Update your personal information and profile settings"
-        actions={
-          <button
-            onClick={handleCancel}
-            className="inline-flex items-center text-indigo-600 hover:text-indigo-700"
-          >
-            <FiArrowLeft className="mr-2" />
-            Back to Profile
-          </button>
-        }
       />
 
       <div className="mt-8 max-w-4xl mx-auto">
+        <button
+          onClick={handleCancel}
+          className="inline-flex items-center text-indigo-600 hover:text-indigo-700 mb-6"
+        >
+          <FiArrowLeft className="mr-2" />
+          Back to Profile
+        </button>
+        
         {submitError && (
           <div className="mb-6 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-lg">
             {submitError}

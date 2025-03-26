@@ -21,7 +21,7 @@ export async function GET() {
       );
     }
 
-    const gym = await prisma.gym.findUnique({
+    const gym = await prisma.gym.findFirst({
       where: {
         ownerId: session.user.id,
       },
@@ -142,7 +142,6 @@ export async function POST(request: Request) {
       },
       data: {
         rating: Number(newAverageRating.toFixed(1)),
-        reviewCount: allReviews.length,
       },
     });
 
@@ -228,7 +227,6 @@ export async function PUT(request: Request) {
       },
       data: {
         rating: Number(newAverageRating.toFixed(1)),
-        reviewCount: allReviews.length,
       },
     });
 
@@ -313,8 +311,7 @@ export async function DELETE(request: Request) {
         id: gymId,
       },
       data: {
-        rating: newAverageRating,
-        reviewCount: allReviews.length,
+        rating: Number(newAverageRating.toFixed(1)),
       },
     });
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 // Import icons individually instead of using the FI namespace
 import { FiMapPin, FiStar, FiPhone, FiGlobe, FiMail, FiLoader } from 'react-icons/fi';
+import Image from 'next/image';
 
 // Gym data interface
 interface Gym {
@@ -114,11 +115,12 @@ export default function GymDetailsPage({ params }: { params: { id: string } }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Gym Header */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="relative h-96">
-            <img
-              src={mainImage}
+          <div className="relative h-96 w-full">
+            <Image
+              src={gym.images[0]}
               alt={gym.name}
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover rounded-xl"
             />
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-6">
               <h1 className="text-3xl font-bold text-white">{gym.name}</h1>
@@ -156,7 +158,7 @@ export default function GymDetailsPage({ params }: { params: { id: string } }) {
                         selectedImage === index ? 'ring-2 ring-blue-500' : ''
                       }`}
                     >
-                      <img
+                      <Image
                         src={image}
                         alt={`${gym.name} ${index + 1}`}
                         className="w-full h-full object-cover"

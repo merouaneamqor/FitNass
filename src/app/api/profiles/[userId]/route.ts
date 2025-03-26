@@ -97,7 +97,7 @@ export async function PATCH(
     // Handle special case for 'me'
     if (userId === 'me') {
       profileUserId = session.user.id;
-    } else if (session.user.id !== userId && session.user.role !== 'admin') {
+    } else if (session.user.id !== userId && session.user.role !== 'ADMIN') {
       // Only allow users to update their own profile unless they're an admin
       return NextResponse.json(
         { error: 'Forbidden - you can only update your own profile' },

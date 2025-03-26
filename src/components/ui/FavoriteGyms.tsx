@@ -38,9 +38,8 @@ export const FavoriteGyms: React.FC<FavoriteGymsProps> = ({
             address: '123 Mohammed V Blvd',
             city: 'Casablanca',
             description: 'Modern fitness center with top equipment and personal trainers.',
-            mainImage: 'https://images.unsplash.com/photo-1570829460005-c840387bb1ca?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
             rating: 4.7,
-            priceRange: 3,
+            priceRange: '3',
             facilities: ['pool', 'sauna', 'parking', 'wifi', 'classes'],
             latitude: 33.5731,
             longitude: -7.5898,
@@ -52,9 +51,8 @@ export const FavoriteGyms: React.FC<FavoriteGymsProps> = ({
             address: '45 Hassan II Street',
             city: 'Rabat',
             description: 'Specialized in weightlifting and strength training.',
-            mainImage: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
             rating: 4.5,
-            priceRange: 2,
+            priceRange: '2',
             facilities: ['parking', 'wifi', 'classes', 'personal-training'],
             latitude: 34.0209,
             longitude: -6.8416,
@@ -64,7 +62,7 @@ export const FavoriteGyms: React.FC<FavoriteGymsProps> = ({
 
         // Filter mock gyms to match the profile's favorite gym IDs
         const filteredGyms = mockGyms.filter(gym => 
-          profile.favoriteGyms.includes(gym.id)
+          profile.favoriteGyms?.includes(gym.id) || false
         );
 
         setFavoriteGyms(filteredGyms);

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { FiUsers, FiHome, FiStar, FiActivity, FiShield, FiAlertTriangle, FiTag, FiSettings } from 'react-icons/fi';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { ActivityItem } from '@/types';
 
 // Define interfaces for the stats and activity data types
 interface Stats {
@@ -12,13 +13,6 @@ interface Stats {
   pendingApprovals: number;
   reviewsThisWeek: number;
   activePromotions: number;
-}
-
-interface ActivityItem {
-  id: string;
-  action: string;
-  time: string;
-  user: string;
 }
 
 interface SystemHealth {

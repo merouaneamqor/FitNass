@@ -11,7 +11,7 @@ const promotionSchema = z.object({
   discount: z.string().min(1, 'Discount is required'),
   startDate: z.string().datetime(),
   endDate: z.string().datetime(),
-  status: z.enum(['active', 'inactive', 'expired']),
+  status: z.enum(['ACTIVE', 'SCHEDULED', 'EXPIRED', 'CANCELLED']),
 });
 
 export async function POST(request: Request) {
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const validatedData = promotionSchema.parse(body);
 
-    const gym = await prisma.gym.findUnique({
+    const gym = await prisma.gym.findFirst({
       where: {
         ownerId: session.user.id,
       },
@@ -76,7 +76,7 @@ export async function GET() {
       );
     }
 
-    const gym = await prisma.gym.findUnique({
+    const gym = await prisma.gym.findFirst({
       where: {
         ownerId: session.user.id,
       },

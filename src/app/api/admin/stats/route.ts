@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/db';
+import { ActivityItem } from '@/types';
 
 export async function GET() {
   try {
@@ -20,7 +21,7 @@ export async function GET() {
     let pendingApprovals = 0;
     let reviewsThisWeek: number = 0;
     let activePromotions: number = 0;
-    let recentActivity: any[] = [];
+    let recentActivity: ActivityItem[] = [];
     
     try {
       // Get total users count
@@ -215,25 +216,29 @@ async function getRecentActivity() {
       id: `user-${user.id}`,
       action: 'User registered',
       time: user.createdAt,
-      user: user.name
+      user: user.name,
+      role: 'USER' as 'USER' | 'GYM_OWNER' | 'ADMIN'
     })),
     ...recentGyms.map(gym => ({
       id: `gym-${gym.id}`,
       action: 'New gym registered',
       time: gym.createdAt,
-      user: gym.name
+      user: gym.name,
+      role: 'GYM_OWNER' as 'USER' | 'GYM_OWNER' | 'ADMIN'
     })),
     ...recentReviews.map(review => ({
       id: `review-${review.id}`,
       action: `New ${review.rating}-star review`,
       time: review.createdAt,
-      user: `${review.user?.name || 'Unknown'} for ${review.gym?.name || 'Unknown'}`
+      user: `${review.user?.name || 'Unknown'} for ${review.gym?.name || 'Unknown'}`,
+      role: 'USER' as 'USER' | 'GYM_OWNER' | 'ADMIN'
     })),
     ...recentPromotions.map(promo => ({
       id: `promo-${promo.id}`,
       action: 'New promotion created',
       time: promo.createdAt,
-      user: `${promo.gym?.name || 'Unknown'}: ${promo.title}`
+      user: `${promo.gym?.name || 'Unknown'}: ${promo.title}`,
+      role: 'GYM_OWNER' as 'USER' | 'GYM_OWNER' | 'ADMIN'
     }))
   ];
   

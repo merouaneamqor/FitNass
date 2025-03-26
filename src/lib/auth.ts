@@ -7,7 +7,7 @@ import { compare } from "bcrypt";
 const FALLBACK_SECRET = "a_development_secret_for_testing_purposes_only";
 
 export const authOptions: NextAuthOptions = {
-  adapter: null, // Disable adapter if not properly configured
+  adapter: undefined, // Disable adapter if not properly configured
   secret: process.env.NEXTAUTH_SECRET || FALLBACK_SECRET,
   session: {
     strategy: "jwt",
