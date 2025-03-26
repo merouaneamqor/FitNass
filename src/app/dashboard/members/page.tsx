@@ -5,6 +5,17 @@ import { useSession } from 'next-auth/react';
 import { FiMail, FiPhone, FiUser, FiCalendar, FiSearch } from 'react-icons/fi';
 
 // For initial development - will be replaced with real data fetching
+interface Member {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  joinDate: string;
+  status: string;
+  membershipType: string;
+  lastVisit: string;
+}
+
 const mockMembers = [
   {
     id: '1',
@@ -60,9 +71,9 @@ const mockMembers = [
 
 export default function MembersPage() {
   const { data: session } = useSession();
-  const [members, setMembers] = useState(mockMembers);
+  const [members, setMembers] = useState<Member[]>(mockMembers);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedMember, setSelectedMember] = useState(null);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Filter members based on search term
@@ -83,7 +94,7 @@ export default function MembersPage() {
     );
   }
 
-  const handleMemberClick = (member) => {
+  const handleMemberClick = (member: Member) => {
     setSelectedMember(member);
     setIsModalOpen(true);
   };
