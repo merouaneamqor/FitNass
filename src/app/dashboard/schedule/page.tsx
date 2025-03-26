@@ -115,11 +115,25 @@ const timeSlots = [
   '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'
 ];
 
+// Add this interface at the top of the file
+interface ClassType {
+  id: string;
+  title: string;
+  instructor: string;
+  day: string;
+  startTime: string;
+  endTime: string;
+  maxCapacity: number;
+  currentEnrollment: number;
+  location: string;
+  color: string;
+}
+
 export default function SchedulePage() {
   const { data: session } = useSession();
   const [classes, setClasses] = useState(mockClasses);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentClass, setCurrentClass] = useState(null);
+  const [currentClass, setCurrentClass] = useState<ClassType | null>(null);
   const [viewMode, setViewMode] = useState('week'); // 'week' or 'list'
 
   if (!session || session.user.role !== 'GYM_OWNER') {
@@ -138,16 +152,16 @@ export default function SchedulePage() {
     setIsModalOpen(true);
   };
 
-  const handleEditClass = (classItem) => {
+  const handleEditClass = (classItem: ClassType) => {
     setCurrentClass(classItem);
     setIsModalOpen(true);
   };
 
-  const formatTimeRange = (start, end) => {
+  const formatTimeRange = (start: string, end: string) => {
     return `${start} - ${end}`;
   };
 
-  const getEnrollmentStatus = (current, max) => {
+  const getEnrollmentStatus = (current: number, max: number) => {
     const percentage = (current / max) * 100;
     if (percentage >= 90) return 'text-red-600';
     if (percentage >= 70) return 'text-yellow-600';
@@ -155,7 +169,7 @@ export default function SchedulePage() {
   };
 
   // Render class block for weekly view
-  const renderClassBlock = (classItem) => {
+  const renderClassBlock = (classItem: ClassType) => {
     const startHour = parseInt(classItem.startTime.split(':')[0]);
     const startPosition = (startHour - 7) * 60; // 7:00 AM is the first time slot
     const startMinute = parseInt(classItem.startTime.split(':')[1] || '0');

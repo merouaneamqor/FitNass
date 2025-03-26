@@ -60,16 +60,20 @@ export default function AnalyticsPage() {
     );
   }
 
-  const formatNumber = (num) => {
+  const formatNumber = (num: number) => {
     return new Intl.NumberFormat('fr-MA').format(num);
   };
 
-  const formatCurrency = (num) => {
+  const formatCurrency = (num: number) => {
     return new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD' }).format(num);
   };
 
   // Simplified chart component
-  const SimpleBarChart = ({ data, height = 100, barColor = '#3B82F6' }) => {
+  const SimpleBarChart = ({ data, height = 100, barColor = '#3B82F6' }: { 
+    data: number[];
+    height?: number;
+    barColor?: string;
+  }) => {
     const max = Math.max(...data);
     
     return (
@@ -90,7 +94,9 @@ export default function AnalyticsPage() {
   };
 
   // Simplified pie chart component
-  const SimplePieChart = ({ data }) => {
+  const SimplePieChart = ({ data }: { 
+    data: Array<{ percentage: number }> 
+  }) => {
     let cumulativePercentage = 0;
     
     return (
