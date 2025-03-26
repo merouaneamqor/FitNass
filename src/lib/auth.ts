@@ -32,6 +32,14 @@ export const authOptions: NextAuthOptions = {
         const user = await prismaExec(
           () => prisma.user.findUnique({
             where: { email: credentials.email },
+            select: {
+              id: true,
+              email: true,
+              password: true,
+              isVerified: true,
+              name: true,
+              role: true
+            }
           }),
           'Error fetching user during authentication'
         );
@@ -52,6 +60,10 @@ export const authOptions: NextAuthOptions = {
 
         if (!isPasswordValid) {
           return null;
+        }
+
+        if (user && !user.isVerified) {
+          throw new Error("Email not verified");
         }
 
         return {
