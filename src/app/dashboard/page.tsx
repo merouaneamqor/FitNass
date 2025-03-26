@@ -77,7 +77,7 @@ export default function DashboardPage() {
           value={mockDashboardData.totalMembers.toString()}
           icon={FiUsers}
           color="blue"
-          trend={+5}
+          trend={{ value: 5, isPositive: true }}
           subtitle="Since last month"
         />
 
@@ -93,7 +93,7 @@ export default function DashboardPage() {
           value={mockDashboardData.averageRating.toString()}
           icon={FiStar}
           color="yellow"
-          trend={+0.2}
+          trend={{ value: 0.2, isPositive: true }}
           subtitle="Since last month"
         />
 
@@ -102,7 +102,7 @@ export default function DashboardPage() {
           value={mockDashboardData.totalReviews.toString()}
           icon={FiBarChart2}
           color="purple"
-          trend={+12}
+          trend={{ value: 12, isPositive: true }}
           subtitle="Since last month"
         />
       </div>
