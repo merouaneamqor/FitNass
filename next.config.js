@@ -7,6 +7,12 @@ const nextConfig = {
         hostname: 'images.unsplash.com',
       },
     ],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'clubs.ma',
+      },
+    ],
   },
 };
 

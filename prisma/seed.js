@@ -1,11 +1,9 @@
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
-const { faker } = require('@faker-js/faker');
+const fs = require('fs');
+const path = require('path');
 
 const prisma = new PrismaClient();
-
-// Set random seed for consistency
-faker.seed(123);
 
 // Helper to generate random items from an array
 const randomItem = (array) => array[Math.floor(Math.random() * array.length)];
@@ -14,10 +12,22 @@ const randomItems = (array, count) => {
   return shuffled.slice(0, count);
 };
 
-async function main() {
-  console.log('Starting database seeding with Moroccan data...');
+// Load scraped data from JSON file
+const loadScrapedData = () => {
+  try {
+    const rawData = fs.readFileSync(path.join(__dirname, '../clubs.json'), 'utf8');
+    const clubsData = JSON.parse(rawData);
+    return clubsData.filter(club => club.name !== "N/A" && club.description !== "N/A");
+  } catch (error) {
+    console.error('Error loading clubs data:', error);
+    return [];
+  }
+};
 
-  // Pre-defined arrays for realistic Moroccan data
+async function main() {
+  console.log('Starting database seeding with scraped Moroccan gym data...');
+
+  // Pre-defined arrays for filling in gaps or adding additional data
   const gymFacilities = [
     'Cardio', 'Musculation', 'Piscine', 'Sauna', 'Cours collectifs', 
     'Coach personnel', 'Boxe', 'Yoga', 'Pilates', 'CrossFit', 
@@ -25,14 +35,6 @@ async function main() {
     'Hammam traditionnel', 'Espace femmes', 'MMA', 'Rooftop', 'HIIT'
   ];
   
-  const gymBrands = [
-    'Atlas Gym', 'Casablanca Fitness', 'Marrakech Health Club', 
-    'Tangier Strength', 'Royal Fitness', 'Moroccan Power', 'MedFit', 
-    'FES Athletic', 'Rabat Elite', 'Agadir Beach Club',
-    'Maghreb Fitness', 'City Club', 'California Gym', 'Golds Gym', 
-    'Fitness Factory', 'Wellness Club', 'Fit Zone', 'Sportfit', 'Power Gym'
-  ];
-
   const moroccanCities = [
     { city: 'Casablanca', lat: 33.5731, lng: -7.5898 },
     { city: 'Rabat', lat: 34.0209, lng: -6.8416 },
@@ -51,18 +53,11 @@ async function main() {
     { city: 'Essaouira', lat: 31.5085, lng: -9.7595 }
   ];
   
-  const gymDescriptions = [
-    "Salle de sport moderne avec des équipements de pointe et des entraîneurs certifiés.",
-    "Centre de fitness offrant une variété de cours et un suivi personnalisé.",
-    "Club premium avec installations haut de gamme et hammam traditionnel.",
-    "Salle familiale avec des options pour tous les âges et niveaux.",
-    "Centre spécialisé dans le CrossFit et l'entraînement fonctionnel.",
-    "Studio de yoga et bien-être avec vue panoramique sur la ville.",
-    "Complexe sportif avec piscine olympique et terrains multisports.",
-    "Club ouvert 24/7 avec accès par badge et coaching virtuel.",
-    "Espace réservé aux femmes offrant intimité et programmes adaptés.",
-    "Centre combinant traditions marocaines et techniques modernes de fitness."
-  ];
+  // Get city coordinates map for faster lookups
+  const cityCoordinatesMap = {};
+  moroccanCities.forEach(city => {
+    cityCoordinatesMap[city.city] = { lat: city.lat, lng: city.lng };
+  });
   
   const reviewComments = [
     "Excellentes installations et personnel accueillant. Recommandé!",
@@ -108,24 +103,6 @@ async function main() {
     "Démarrez votre parcours fitness avec l'accompagnement de nos experts."
   ];
 
-  const gymImageURLs = [
-    'https://images.unsplash.com/photo-1534438327276-14e5300c3a48',
-    'https://images.unsplash.com/photo-1540497077202-7c8a3999166f',
-    'https://images.unsplash.com/photo-1571902943202-507ec2618e8f',
-    'https://images.unsplash.com/photo-1517836357463-d25dfeac3438',
-    'https://images.unsplash.com/photo-1558611848-73f7eb4001a1',
-    'https://images.unsplash.com/photo-1546483875-ad9014c88eba',
-    'https://images.unsplash.com/photo-1545205597-3d9d02c29597',
-    'https://images.unsplash.com/photo-1508672019048-805c876b67e2',
-    'https://images.unsplash.com/photo-1591228127791-8e2eaef098d3',
-    'https://images.unsplash.com/photo-1576678927484-cc907957088c',
-    'https://images.unsplash.com/photo-1623874228601-f4193c7b1818',
-    'https://images.unsplash.com/photo-1581122584612-713f89daa8eb',
-    'https://images.unsplash.com/photo-1554284126-aa88f22d8b74',
-    'https://images.unsplash.com/photo-1534367610401-9f5ed68180aa',
-    'https://images.unsplash.com/photo-1607962837359-5e7e89f86776'
-  ];
-
   // Moroccan names
   const firstNames = [
     'Mohammed', 'Youssef', 'Omar', 'Ali', 'Hamza', 'Amine', 'Ibrahim', 'Adam', 'Karim', 'Samir',
@@ -136,6 +113,10 @@ async function main() {
     'Alami', 'Benjelloun', 'Chakri', 'Daoudi', 'El Fassi', 'Fathi', 'Ghali', 'Hakimi', 'Idrissi', 'Jabri',
     'Kadiri', 'Lemrini', 'Mansouri', 'Naciri', 'Ouazzani', 'Qadir', 'Rouissi', 'Saadi', 'Tazi', 'Ziani'
   ];
+
+  // Load the scraped clubs data
+  const scrapedClubs = loadScrapedData();
+  console.log(`Loaded ${scrapedClubs.length} clubs from scraped data`);
 
   // Create admin user
   const adminPassword = await bcrypt.hash('admin123', 10);
@@ -193,163 +174,179 @@ async function main() {
     console.log(`Regular user ${i} created:`, user.email);
   }
 
-  // Create gyms (25)
+  // Create gyms from scraped data
   const gyms = [];
   
-  for (let i = 1; i <= 25; i++) {
-    const location = randomItem(moroccanCities);
-    const priceRanges = ['€', '€€', '€€€'];
-    const brand = randomItem(gymBrands);
+  for (let i = 0; i < scrapedClubs.length; i++) {
+    const club = scrapedClubs[i];
     
-    const gym = await prisma.gym.upsert({
-      where: { id: `gym${i}` },
-      update: {},
-      create: {
-        id: `gym${i}`,
-        name: `${brand} ${location.city}`,
-        description: randomItem(gymDescriptions),
-        address: `${Math.floor(Math.random() * 200) + 1} Avenue Mohammed V`,
-        city: location.city,
-        state: '',
-        zipCode: `${Math.floor(Math.random() * 90000) + 10000}`,
-        latitude: location.lat + (Math.random() * 0.02 - 0.01),
-        longitude: location.lng + (Math.random() * 0.02 - 0.01),
-        phone: `+212 ${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10000000) + 1000000}`,
-        website: `https://www.${brand.toLowerCase().replace(/\s+/g, '')}.ma`,
-        email: `contact@${brand.toLowerCase().replace(/\s+/g, '')}.ma`,
-        rating: parseFloat((3 + Math.random() * 2).toFixed(1)),
-        priceRange: randomItem(priceRanges),
-        facilities: randomItems(gymFacilities, 5 + Math.floor(Math.random() * 8)),
-        images: randomItems(gymImageURLs, 3 + Math.floor(Math.random() * 3)),
-        ownerId: randomItem(gymOwners).id
-      },
-    });
-    gyms.push(gym);
-    console.log('Gym created:', gym.name);
-  }
+    // Extract city name without "à" prefix if it exists
+    let cityName = club.city.trim();
+    if (cityName.startsWith('à')) {
+      cityName = cityName.substring(1).trim();
+    }
+    
+    // Get coordinates for the city
+    const coordinates = cityCoordinatesMap[cityName] || { 
+      lat: 33.5731 + (Math.random() * 0.02 - 0.01), // Default to Casablanca with slight randomization
+      lng: -7.5898 + (Math.random() * 0.02 - 0.01)
+    };
+    
+    // Convert activities from string to array if needed
+    let activities = [];
+    if (typeof club.activities === 'string') {
+      activities = club.activities.split(',').map(a => a.trim()).filter(a => a);
+    } else if (Array.isArray(club.activities)) {
+      activities = club.activities;
+    }
+    
+    // Ensure we have at least some facilities
+    let facilities = [...activities];
+    if (facilities.length < 3) {
+      facilities = [...facilities, ...randomItems(gymFacilities, 5)];
+    }
 
-  // Create reviews (100)
-  const reviews = [];
-  
-  for (let i = 1; i <= 150; i++) {
-    const rating = Math.floor(Math.random() * 3) + 3; // Ratings from 3-5
-    const gym = randomItem(gyms);
-    const user = randomItem(users);
+    // Generate some images
+    const images = [];
+    if (club.image_url && club.image_url !== 'N/A') {
+      images.push(club.image_url);
+    }
+    
+    // Add random images if needed
+    while (images.length < 3) {
+      images.push(`https://picsum.photos/seed/${club.name.replace(/\s+/g, '')}-${images.length}/800/600`);
+    }
+    
+    // Determine price range
+    const priceRanges = ['€', '€€', '€€€'];
+    const priceRange = randomItem(priceRanges);
+    
+    // Fix URL if needed
+    let website = club.url;
+    if (website && website.startsWith('https://www.clubs.mahttps://')) {
+      website = website.replace('https://www.clubs.mahttps://', 'https://');
+    }
+    
+    // Generate email from name if not present
+    const email = `contact@${club.name.toLowerCase().replace(/\s+/g, '')}.ma`;
     
     try {
-      const review = await prisma.review.create({
-        data: {
-          rating: rating,
-          comment: randomItem(reviewComments),
-          userId: user.id,
-          gymId: gym.id,
+      const gym = await prisma.gym.upsert({
+        where: { id: `scraped-gym-${i + 1}` },
+        update: {},
+        create: {
+          id: `scraped-gym-${i + 1}`,
+          name: club.name,
+          description: club.description || 'Centre sportif à Casablanca offrant des services de qualité',
+          address: club.address || `${Math.floor(Math.random() * 200) + 1} Avenue Mohammed V`,
+          city: cityName || 'Casablanca',
+          state: '',
+          zipCode: `${Math.floor(Math.random() * 90000) + 10000}`,
+          latitude: coordinates.lat,
+          longitude: coordinates.lng,
+          phone: club.phone !== 'N/A' ? club.phone : `+212 ${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10000000) + 1000000}`,
+          website: website !== 'N/A' ? website : null,
+          email: email,
+          rating: club.rating || parseFloat((3 + Math.random() * 2).toFixed(1)),
+          priceRange: priceRange,
+          facilities: facilities,
+          images: images,
+          isVerified: club.verified || false,
+          ownerId: randomItem(gymOwners).id
         },
       });
-      reviews.push(review);
-      console.log(`Review ${i} created for ${gym.name} by ${user.name}`);
+      gyms.push(gym);
+      console.log(`Gym ${i + 1}/${scrapedClubs.length} created:`, gym.name);
     } catch (error) {
-      // Skip if user already reviewed this gym
-      console.log(`Skipping duplicate review for gym ${gym.name} by ${user.name}`);
+      console.error(`Failed to create gym ${club.name}:`, error);
+    }
+  }
+
+  // Create reviews (3-5 per gym)
+  console.log('Creating reviews for gyms...');
+  
+  for (const gym of gyms) {
+    const reviewCount = Math.floor(Math.random() * 3) + 3; // 3-5 reviews per gym
+    
+    for (let i = 0; i < reviewCount; i++) {
+      const rating = Math.floor(Math.random() * 3) + 3; // Ratings from 3-5
+      const user = randomItem(users);
+      
+      try {
+        const review = await prisma.review.create({
+          data: {
+            rating: rating,
+            comment: randomItem(reviewComments),
+            userId: user.id,
+            gymId: gym.id,
+          },
+        });
+        console.log(`Review created for ${gym.name} by ${user.email}`);
+      } catch (error) {
+        console.error(`Failed to create review for gym ${gym.name}:`, error);
+      }
+    }
+  }
+
+  // Create promotions (1-2 per gym)
+  console.log('Creating promotions for gyms...');
+  
+  for (const gym of gyms) {
+    const hasPromotion = Math.random() > 0.3; // 70% chance of having a promotion
+    
+    if (hasPromotion) {
+      const promoCount = Math.floor(Math.random() * 2) + 1; // 1-2 promotions
+      
+      for (let i = 0; i < promoCount; i++) {
+        const titleIndex = Math.floor(Math.random() * promotionTitles.length);
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + 30 + Math.floor(Math.random() * 60)); // 30-90 days
+        
+        try {
+          const promotion = await prisma.promotion.create({
+            data: {
+              title: promotionTitles[titleIndex],
+              description: promotionDescriptions[titleIndex],
+              startDate: startDate,
+              endDate: endDate,
+              discount: `${Math.floor(Math.random() * 40) + 10}%`, // 10-50% discount
+              gymId: gym.id,
+            },
+          });
+          console.log(`Promotion created for ${gym.name}: ${promotion.title}`);
+        } catch (error) {
+          console.error(`Failed to create promotion for gym ${gym.name}:`, error);
+        }
+      }
     }
   }
 
   // Update gym ratings based on reviews
+  console.log('Updating gym ratings based on reviews...');
+  
   for (const gym of gyms) {
-    const gymReviews = await prisma.review.findMany({
+    const reviews = await prisma.review.findMany({
       where: { gymId: gym.id },
     });
     
-    if (gymReviews.length > 0) {
-      const averageRating = gymReviews.reduce((sum, review) => sum + review.rating, 0) / gymReviews.length;
+    if (reviews.length > 0) {
+      const avgRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
       
       await prisma.gym.update({
         where: { id: gym.id },
-        data: { rating: parseFloat(averageRating.toFixed(1)) },
+        data: { rating: parseFloat(avgRating.toFixed(1)) },
       });
-      
-      console.log(`Updated rating for ${gym.name} to ${averageRating.toFixed(1)}`);
+      console.log(`Updated rating for ${gym.name} to ${avgRating.toFixed(1)}`);
     }
   }
 
-  // Create promotions (40)
-  const promotions = [];
-  const statuses = ['ACTIVE', 'SCHEDULED', 'EXPIRED'];
-  
-  for (let i = 1; i <= 40; i++) {
-    const gym = randomItem(gyms);
-    const titleIndex = i % promotionTitles.length;
-    const descriptionIndex = i % promotionDescriptions.length;
-    
-    // Generate random dates
-    const now = new Date();
-    const pastDate = new Date(now);
-    pastDate.setMonth(pastDate.getMonth() - 6);
-    
-    const futureDate = new Date(now);
-    futureDate.setMonth(futureDate.getMonth() + 6);
-    
-    // Randomize promotion status
-    const status = randomItem(statuses);
-    
-    let startDate, endDate;
-    
-    if (status === 'ACTIVE') {
-      startDate = new Date(now);
-      startDate.setDate(startDate.getDate() - Math.floor(Math.random() * 30));
-      
-      endDate = new Date(now);
-      endDate.setDate(endDate.getDate() + Math.floor(Math.random() * 60) + 5);
-    } else if (status === 'SCHEDULED') {
-      startDate = new Date(now);
-      startDate.setDate(startDate.getDate() + Math.floor(Math.random() * 30) + 1);
-      
-      endDate = new Date(startDate);
-      endDate.setDate(endDate.getDate() + Math.floor(Math.random() * 60) + 30);
-    } else if (status === 'EXPIRED') {
-      endDate = new Date(now);
-      endDate.setDate(endDate.getDate() - Math.floor(Math.random() * 10) - 1);
-      
-      startDate = new Date(endDate);
-      startDate.setDate(startDate.getDate() - Math.floor(Math.random() * 60) - 10);
-    }
-    
-    // Create discounts
-    const discountTypes = ['% de réduction', 'DH de réduction', 'Mois gratuit', 'Sans frais d\'inscription', '2 pour 1'];
-    const discountValues = ['10', '15', '20', '25', '30', '40', '50', '100', '200', '300'];
-    const discountValue = randomItem(discountValues);
-    const discountType = randomItem(discountTypes);
-    let discount;
-    
-    if (discountType === '% de réduction') {
-      discount = `${discountValue}% de réduction`;
-    } else if (discountType === 'DH de réduction') {
-      discount = `${discountValue} DH de réduction`;
-    } else {
-      discount = discountType;
-    }
-    
-    const promotion = await prisma.promotion.create({
-      data: {
-        title: promotionTitles[titleIndex],
-        description: promotionDescriptions[descriptionIndex],
-        startDate: startDate,
-        endDate: endDate,
-        discount: discount,
-        gymId: gym.id,
-      },
-    });
-    
-    promotions.push(promotion);
-    console.log(`Promotion ${i} created for ${gym.name}: ${promotion.title} (${status})`);
-  }
-
-  console.log('Database seeding completed successfully!');
-  console.log(`Created: ${gymOwners.length} gym owners, ${users.length} users, ${gyms.length} gyms, ${reviews.length} reviews, ${promotions.length} promotions`);
+  console.log('Database seeding completed!');
 }
 
 main()
   .catch((e) => {
-    console.error('Error during seeding:', e);
+    console.error(e);
     process.exit(1);
   })
   .finally(async () => {
