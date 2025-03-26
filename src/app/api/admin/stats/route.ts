@@ -18,9 +18,9 @@ export async function GET() {
     let totalUsers = 0;
     let totalGyms = 0;
     let pendingApprovals = 0;
-    let reviewsThisWeek = 0;
-    let activePromotions = 0;
-    let recentActivity = [];
+    let reviewsThisWeek: number = 0;
+    let activePromotions: number = 0;
+    let recentActivity: any[] = [];
     
     try {
       // Get total users count
@@ -40,7 +40,7 @@ export async function GET() {
       // Get pending approvals (gyms awaiting approval)
       pendingApprovals = await prisma.gym.count({
         where: {
-          status: 'pending'
+          status: 'PENDING_APPROVAL'
         }
       });
     } catch (error) {
@@ -70,7 +70,7 @@ export async function GET() {
           endDate: {
             gte: new Date()
           },
-          status: 'active'
+          status: 'ACTIVE'
         }
       });
     } catch (error) {
@@ -105,10 +105,10 @@ export async function GET() {
 }
 
 async function getRecentActivity() {
-  let recentUsers = [];
-  let recentGyms = [];
-  let recentReviews = [];
-  let recentPromotions = [];
+  let recentUsers: Array<{id: string, name: string | null, createdAt: Date}> = [];
+  let recentGyms: Array<{id: string, name: string, createdAt: Date}> = [];
+  let recentReviews: any[] = [];
+  let recentPromotions: any[] = [];
   
   try {
     // Recent user registrations
