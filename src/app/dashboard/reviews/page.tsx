@@ -5,6 +5,21 @@ import { useSession } from 'next-auth/react';
 import { FiStar, FiFilter, FiThumbsUp, FiMessageSquare, FiTrash2, FiFlag, FiSearch } from 'react-icons/fi';
 
 // Mock data for reviews
+interface Review {
+  id: string;
+  user: {
+    name: string;
+    image: string | null;
+  };
+  rating: number;
+  comment: string;
+  date: string;
+  status: string;
+  helpfulCount: number;
+  hasOwnerResponse: boolean;
+  ownerResponse: string | null;
+}
+
 const mockReviews = [
   {
     id: '1',
@@ -80,10 +95,10 @@ const mockReviews = [
 
 export default function ReviewsPage() {
   const { data: session } = useSession();
-  const [reviews, setReviews] = useState(mockReviews);
+  const [reviews, setReviews] = useState<Review[]>(mockReviews);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRating, setFilterRating] = useState(0);
-  const [respondToReviewId, setRespondToReviewId] = useState(null);
+  const [respondToReviewId, setRespondToReviewId] = useState<string | null>(null);
   const [responseText, setResponseText] = useState('');
   const [sortBy, setSortBy] = useState('date');
 
@@ -117,13 +132,13 @@ export default function ReviewsPage() {
     );
   }
 
-  const handleRespondClick = (reviewId) => {
+  const handleRespondClick = (reviewId: string) => {
     const review = reviews.find(r => r.id === reviewId);
     setRespondToReviewId(reviewId);
     setResponseText(review?.ownerResponse || '');
   };
 
-  const submitResponse = (reviewId) => {
+  const submitResponse = (reviewId: string) => {
     // In a real app, this would send data to the API
     setReviews(reviews.map(review => 
       review.id === reviewId 
@@ -138,7 +153,7 @@ export default function ReviewsPage() {
     setResponseText('');
   };
 
-  const renderStars = (rating) => {
+  const renderStars = (rating: number) => {
     return Array(5).fill(0).map((_, i) => (
       <FiStar 
         key={i} 
@@ -147,7 +162,7 @@ export default function ReviewsPage() {
     ));
   };
 
-  const getRatingColor = (rating) => {
+  const getRatingColor = (rating: number) => {
     if (rating >= 4) return 'text-green-600';
     if (rating >= 3) return 'text-yellow-600';
     return 'text-red-600';
