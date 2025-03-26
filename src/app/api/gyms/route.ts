@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { prisma, prismaExec } from '@/lib/db'; // Update to use our singleton client
 import { Prisma } from '@prisma/client';

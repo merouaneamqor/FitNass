@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { addFavoriteGym } from '@/lib/profile';
 import { getServerSession } from 'next-auth/next';
