@@ -252,7 +252,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial) => (
               <div key={testimonial.id} className="bg-neutral-50 p-6 rounded-2xl shadow-sm">
-                <p className="text-neutral-700 mb-4 italic">"{testimonial.comment}"</p>
+                <p className="text-neutral-700 mb-4 italic">&quot;{testimonial.comment}&quot;</p>
                 <div className="flex items-center">
                   <img 
                     src={testimonial.image} 

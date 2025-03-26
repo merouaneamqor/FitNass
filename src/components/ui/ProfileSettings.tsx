@@ -2,9 +2,15 @@ import React, { useState } from 'react';
 import { UserProfile } from '@/types/user';
 import { FiLock, FiBell, FiGlobe, FiToggleLeft, FiToggleRight, FiTrash2 } from 'react-icons/fi';
 
+interface UserSettings {
+  emailNotifications: boolean;
+  pushNotifications: boolean;
+  language: string;
+}
+
 interface ProfileSettingsProps {
   profile: UserProfile;
-  onSaveSettings: (settings: any) => Promise<boolean>;
+  onSaveSettings: (settings: UserSettings) => Promise<boolean>;
   onDeleteAccount?: () => void;
   className?: string;
 }

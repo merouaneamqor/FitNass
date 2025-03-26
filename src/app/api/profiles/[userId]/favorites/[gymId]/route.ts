@@ -52,10 +52,10 @@ export async function DELETE(
       }
       
       return NextResponse.json(updatedProfile);
-    } catch (dbError: any) {
+    } catch (dbError: Error) {
       console.error('Database error removing favorite gym:', dbError);
       
-      if (dbError.message?.includes('User not found')) {
+      if ('message' in dbError && dbError.message?.includes('User not found')) {
         return NextResponse.json(
           { error: 'User profile not found' },
           { status: 404 }

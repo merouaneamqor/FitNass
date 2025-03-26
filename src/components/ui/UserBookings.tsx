@@ -1,7 +1,18 @@
 import React from 'react';
 import { UserProfile } from '@/types/user';
-import { FiCalendar, FiClock, FiMapPin, FiXCircle } from 'react-icons/fi';
+import { FiCalendar, FiClock, FiXCircle } from 'react-icons/fi';
 import Link from 'next/link';
+
+// Define booking interface based on how it's used
+interface Booking {
+  id: string;
+  gymId: string;
+  gymName: string;
+  date: string;
+  time: string;
+  className?: string;
+  status: 'upcoming' | 'completed' | 'cancelled';
+}
 
 interface UserBookingsProps {
   profile: UserProfile;
@@ -38,7 +49,7 @@ export const UserBookings: React.FC<UserBookingsProps> = ({
         <FiCalendar className="mx-auto text-neutral-300 h-12 w-12 mb-4" />
         <h3 className="text-lg font-medium text-neutral-700">No Bookings Found</h3>
         <p className="text-neutral-500 mt-2">
-          You haven't booked any gym sessions yet.
+          You haven&apos;t booked any gym sessions yet.
         </p>
         <Link 
           href="/gyms" 
@@ -50,7 +61,7 @@ export const UserBookings: React.FC<UserBookingsProps> = ({
     );
   }
 
-  const renderBookingsList = (bookings, isPast = false) => {
+  const renderBookingsList = (bookings: Booking[], isPast = false) => {
     if (bookings.length === 0) return null;
     
     return (
@@ -59,7 +70,7 @@ export const UserBookings: React.FC<UserBookingsProps> = ({
           {isPast ? 'Past Bookings' : 'Upcoming Bookings'}
         </h3>
         
-        {bookings.map((booking) => {
+        {bookings.map((booking: Booking) => {
           const bookingDate = new Date(booking.date);
           const formattedDate = bookingDate.toLocaleDateString('en-US', {
             weekday: 'long',

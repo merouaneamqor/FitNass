@@ -152,7 +152,7 @@ export default function Navbar() {
                   href="/auth/signup"
                   className="text-gray-700 dark:text-gray-200 px-5 py-2 rounded-full font-medium text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
-                  S'inscrire
+                  S&apos;inscrire
                 </Link>
                 <Link
                   href="/auth/signin"
@@ -306,7 +306,7 @@ export default function Navbar() {
                   href="/auth/signup"
                   className="w-full text-center py-3 rounded-xl text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 font-medium hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  S'inscrire
+                  S&apos;inscrire
                 </Link>
                 <Link
                   href="/auth/signin"

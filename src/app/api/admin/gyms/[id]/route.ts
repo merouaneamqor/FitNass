@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma, prismaExec } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { Prisma } from '@prisma/client';
 
 // Get specific gym
 export async function GET(
@@ -124,7 +125,7 @@ export async function PUT(
     }
     
     // Prepare update data
-    const updateData: any = {};
+    const updateData: Prisma.GymUpdateInput = {};
     
     // Only include fields that are provided in the request
     if (data.name !== undefined) updateData.name = data.name;
@@ -191,8 +192,8 @@ export async function PUT(
       
       // Remove undefined values
       Object.keys(simpleUpdateData).forEach(key => {
-        if (simpleUpdateData[key] === undefined) {
-          delete simpleUpdateData[key];
+        if (simpleUpdateData[key as keyof typeof simpleUpdateData] === undefined) {
+          delete simpleUpdateData[key as keyof typeof simpleUpdateData];
         }
       });
       

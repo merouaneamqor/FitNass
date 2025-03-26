@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma, prismaExec } from '@/lib/db'; // Update to use our singleton client
+import { Prisma } from '@prisma/client';
 
 export async function GET(request: Request) {
   try {
@@ -10,7 +11,7 @@ export async function GET(request: Request) {
     const minRating = searchParams.get('minRating') ? parseFloat(searchParams.get('minRating')!) : undefined;
 
     // Build filter conditions
-    const where: any = {};
+    const where: Prisma.GymWhereInput = {};
     
     if (city) {
       where.city = {

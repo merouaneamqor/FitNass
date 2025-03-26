@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { FiArrowLeft, FiSave, FiX, FiPlus, FiTrash2, FiAlertTriangle } from 'react-icons/fi';
 import Link from 'next/link';
+import Image from 'next/image';
 
 // Define User interface for gym owners
 interface User {
@@ -42,11 +43,12 @@ export default function NewGymPage() {
   const [newFacility, setNewFacility] = useState('');
   const [newImage, setNewImage] = useState('');
 
+  // Interface definition kept for potential future use
   interface FormErrorsType {
     [key: string]: string;
   }
 
-  const [formErrors, setFormErrors] = useState<FormErrorsType>({});
+  // Removed unused state variables: formErrors and setFormErrors
 
   // Fetch gym owners (users with GYM_OWNER role)
   useEffect(() => {
@@ -495,7 +497,13 @@ export default function NewGymPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {formData.images.map((image, index) => (
                   <div key={index} className="relative group">
-                    <img src={image} alt={`Gym ${index + 1}`} className="h-40 w-full object-cover rounded-md" />
+                    <Image 
+                      src={image} 
+                      alt={`Gym ${index + 1}`} 
+                      className="h-40 w-full object-cover rounded-md"
+                      width={320}
+                      height={160}
+                    />
                     <button
                       type="button"
                       onClick={() => removeImage(index)}

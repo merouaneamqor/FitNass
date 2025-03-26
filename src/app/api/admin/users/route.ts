@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { authOptions } from '@/lib/auth';
+import { Prisma } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -199,7 +200,7 @@ export async function PUT(request: Request) {
     }
     
     // Prepare update data
-    const updateData: any = {};
+    const updateData: Prisma.UserUpdateInput = {};
     
     if (validatedData.name) updateData.name = validatedData.name;
     if (validatedData.email) updateData.email = validatedData.email;

@@ -36,9 +36,11 @@ export const ProfileClient: React.FC<ProfileClientProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Only use the API hook if it's the user's own profile
-  const { profile, loading, error, updateProfile, addFavoriteGym, removeFavoriteGym } = 
-    isOwnProfile ? useProfile(initialProfile.id) : { profile: null, loading: false, error: null, updateProfile: null, addFavoriteGym: null, removeFavoriteGym: null };
+  // Use the hook unconditionally
+  const { profile: apiProfile, loading, error, updateProfile, addFavoriteGym, removeFavoriteGym } = useProfile(initialProfile.id);
+  
+  // Then conditionally use the result
+  const profile = isOwnProfile ? apiProfile : null;
   
   // When the API data is loaded, update our state
   useEffect(() => {
@@ -228,7 +230,11 @@ export const ProfileClient: React.FC<ProfileClientProps> = ({
     }
   };
 
-  const handleSaveSettings = async (settings: any) => {
+  const handleSaveSettings = async (settings: {
+    emailNotifications: boolean;
+    pushNotifications: boolean;
+    language: string;
+  }) => {
     if (!isOwnProfile) return false;
     
     setIsLoading(true);

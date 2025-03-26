@@ -53,11 +53,11 @@ export async function POST(
       }
       
       return NextResponse.json(updatedProfile);
-    } catch (dbError: any) {
+    } catch (dbError: Error) {
       console.error('Database error adding favorite gym:', dbError);
       
       // Check for specific error messages
-      if (dbError.message?.includes('Gym not found')) {
+      if ('message' in dbError && dbError.message?.includes('Gym not found')) {
         return NextResponse.json(
           { error: 'Gym not found' },
           { status: 404 }

@@ -166,11 +166,10 @@ export default function GymsPage() {
               <Map
                 {...viewState}
                 ref={mapRef}
-                onMoveEnd={(evt: any) => setViewState(evt.viewState)}
+                onMoveEnd={(evt: { viewState: typeof viewState }) => setViewState(evt.viewState)}
                 mapStyle="mapbox://styles/mapbox/light-v11"
                 mapboxAccessToken={MAPBOX_TOKEN}
                 style={{ width: '100%', height: '100%', minHeight: 'calc(100vh - 200px)' }}
-                {...{} as any}
               >
                 <NavigationControl position="bottom-right" showCompass={false} />
                 
@@ -188,7 +187,7 @@ export default function GymsPage() {
                       } hover:bg-indigo-600 text-white shadow-lg transform transition-transform ${
                         selectedGym?.id === gym.id ? 'scale-125 z-10' : 'scale-100'
                       } pulse-marker`}
-                      onClick={(e: any) => {
+                      onClick={(e: React.MouseEvent) => {
                         e.stopPropagation();
                         setSelectedGym(gym);
                       }}

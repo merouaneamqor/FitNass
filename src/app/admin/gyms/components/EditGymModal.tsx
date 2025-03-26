@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FiX, FiSave, FiPlus, FiTrash2 } from 'react-icons/fi';
+import Image from 'next/image';
 import type { User, Gym, UpdateData } from '../types';
 
 interface EditGymModalProps {
@@ -395,7 +396,13 @@ export default function EditGymModal({ gym, isOpen, onClose, onSave }: EditGymMo
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {formData.images?.map((image, index) => (
                   <div key={index} className="relative group">
-                    <img src={image} alt={`Gym ${index + 1}`} className="h-24 w-full object-cover rounded-md" />
+                    <Image 
+                      src={image} 
+                      alt={`Gym ${index + 1}`} 
+                      width={200}
+                      height={96}
+                      className="h-24 w-full object-cover rounded-md" 
+                    />
                     <button
                       type="button"
                       onClick={() => removeImage(index)}
