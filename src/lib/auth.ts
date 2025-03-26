@@ -36,7 +36,6 @@ export const authOptions: NextAuthOptions = {
               id: true,
               email: true,
               password: true,
-              isVerified: true,
               name: true,
               role: true
             }
@@ -60,10 +59,6 @@ export const authOptions: NextAuthOptions = {
 
         if (!isPasswordValid) {
           return null;
-        }
-
-        if (user && !user.isVerified) {
-          throw new Error("Email not verified");
         }
 
         return {
