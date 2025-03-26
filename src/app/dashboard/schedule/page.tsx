@@ -1,8 +1,43 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { FiPlus, FiEdit2, FiTrash2, FiCalendar, FiUser, FiUsers } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiCalendar, FiUser, FiUsers, FiMapPin } from 'react-icons/fi';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
+
+// Define interface for class type
+interface ClassType {
+  id: string;
+  title: string;
+  instructor: string;
+  day: string;
+  startTime: string;
+  endTime: string;
+  maxCapacity: number;
+  currentEnrollment: number;
+  location: string;
+  color: string;
+}
+
+// Interface for calendar events
+interface CalendarEvent {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  backgroundColor: string;
+  borderColor: string;
+  textColor: string;
+  extendedProps: {
+    instructor: string;
+    location: string;
+    maxCapacity: number;
+    currentEnrollment: number;
+  };
+}
 
 // Mock data for classes/sessions
 const mockClasses = [
@@ -104,37 +139,63 @@ const mockClasses = [
   }
 ];
 
-// Days of the week
-const daysOfWeek = [
-  'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
-];
-
-// Time slots for the schedule
-const timeSlots = [
-  '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', 
-  '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'
-];
-
-// Add this interface at the top of the file
-interface ClassType {
-  id: string;
-  title: string;
-  instructor: string;
-  day: string;
-  startTime: string;
-  endTime: string;
-  maxCapacity: number;
-  currentEnrollment: number;
-  location: string;
-  color: string;
-}
+// Days of the week mapping (for converting day name to date)
+const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export default function SchedulePage() {
   const { data: session } = useSession();
-  const [classes, setClasses] = useState(mockClasses);
+  const [classes, setClasses] = useState<ClassType[]>(mockClasses);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentClass, setCurrentClass] = useState<ClassType | null>(null);
-  const [viewMode, setViewMode] = useState('week'); // 'week' or 'list'
+  const [viewMode, setViewMode] = useState('timeGridWeek');
+  const calendarRef = useRef<any>(null);
+
+  // Convert classes to calendar events
+  useEffect(() => {
+    const events = classes.map(classItem => {
+      // Get the current week's date for the day
+      const date = getDateForDayOfWeek(classItem.day);
+      
+      // Create the start and end datetime strings
+      const startDateTime = `${date}T${classItem.startTime}:00`;
+      const endDateTime = `${date}T${classItem.endTime}:00`;
+      
+      return {
+        id: classItem.id,
+        title: classItem.title,
+        start: startDateTime,
+        end: endDateTime,
+        backgroundColor: classItem.color,
+        borderColor: classItem.color,
+        textColor: '#FFFFFF',
+        extendedProps: {
+          instructor: classItem.instructor,
+          location: classItem.location,
+          maxCapacity: classItem.maxCapacity,
+          currentEnrollment: classItem.currentEnrollment
+        }
+      };
+    });
+    
+    setCalendarEvents(events);
+  }, [classes]);
+
+  // Helper function to get current week's date for a day name
+  const getDateForDayOfWeek = (dayName: string) => {
+    const today = new Date();
+    const currentDayIndex = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const targetDayIndex = daysOfWeek.indexOf(dayName);
+    
+    const diff = targetDayIndex - currentDayIndex;
+    
+    // Calculate the date of the target day in this week
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + diff);
+    
+    // Format as YYYY-MM-DD
+    return targetDate.toISOString().split('T')[0];
+  };
 
   if (!session || session.user.role !== 'GYM_OWNER') {
     return (
@@ -157,8 +218,103 @@ export default function SchedulePage() {
     setIsModalOpen(true);
   };
 
-  const formatTimeRange = (start: string, end: string) => {
-    return `${start} - ${end}`;
+  const handleEventClick = (info: any) => {
+    const eventId = info.event.id;
+    const classItem = classes.find(c => c.id === eventId);
+    if (classItem) {
+      handleEditClass(classItem);
+    }
+  };
+
+  const handleDateSelect = (selectInfo: any) => {
+    // Create a new class when a time slot is selected
+    const startTime = new Date(selectInfo.start);
+    const endTime = new Date(selectInfo.end);
+    
+    // Format times as HH:MM
+    const formattedStartTime = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}`;
+    const formattedEndTime = `${endTime.getHours().toString().padStart(2, '0')}:${endTime.getMinutes().toString().padStart(2, '0')}`;
+    
+    // Get the day name
+    const dayName = daysOfWeek[startTime.getDay()];
+    
+    // Create a new class template
+    const newClass: ClassType = {
+      id: `new-${Date.now()}`,
+      title: 'New Class',
+      instructor: '',
+      day: dayName,
+      startTime: formattedStartTime,
+      endTime: formattedEndTime,
+      maxCapacity: 15,
+      currentEnrollment: 0,
+      location: '',
+      color: '#3B82F6' // Default blue color
+    };
+    
+    setCurrentClass(newClass);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteClass = (classId: string) => {
+    // In a real app, you'd make an API call to delete the class
+    setClasses(classes.filter(c => c.id !== classId));
+  };
+
+  const handleSubmitClass = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    // Get form data
+    const formData = new FormData(e.currentTarget);
+    const title = formData.get('title') as string;
+    const instructor = formData.get('instructor') as string;
+    const day = formData.get('day') as string;
+    const startTime = formData.get('startTime') as string;
+    const endTime = formData.get('endTime') as string;
+    const location = formData.get('location') as string;
+    const maxCapacity = parseInt(formData.get('maxCapacity') as string);
+    const color = formData.get('color') as string;
+    
+    if (currentClass) {
+      // Editing existing class
+      if (currentClass.id.startsWith('new-')) {
+        // It's a new class that hasn't been saved yet
+        const newClass: ClassType = {
+          id: `class-${Date.now()}`,
+          title,
+          instructor,
+          day,
+          startTime,
+          endTime,
+          maxCapacity,
+          currentEnrollment: 0,
+          location,
+          color
+        };
+        
+        setClasses([...classes, newClass]);
+      } else {
+        // Update existing class
+        setClasses(classes.map(c => 
+          c.id === currentClass.id 
+            ? { 
+                ...c, 
+                title,
+                instructor,
+                day,
+                startTime,
+                endTime,
+                maxCapacity,
+                location,
+                color
+              } 
+            : c
+        ));
+      }
+    }
+    
+    setIsModalOpen(false);
+    setCurrentClass(null);
   };
 
   const getEnrollmentStatus = (current: number, max: number) => {
@@ -168,31 +324,21 @@ export default function SchedulePage() {
     return 'text-green-600';
   };
 
-  // Render class block for weekly view
-  const renderClassBlock = (classItem: ClassType) => {
-    const startHour = parseInt(classItem.startTime.split(':')[0]);
-    const startPosition = (startHour - 7) * 60; // 7:00 AM is the first time slot
-    const startMinute = parseInt(classItem.startTime.split(':')[1] || '0');
-    
-    const endHour = parseInt(classItem.endTime.split(':')[0]);
-    const endMinute = parseInt(classItem.endTime.split(':')[1] || '0');
-    
-    const durationMinutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute);
+  const renderEventContent = (eventInfo: any) => {
+    const { event } = eventInfo;
+    const { instructor, location } = event.extendedProps;
     
     return (
-      <div 
-        key={classItem.id}
-        style={{
-          top: `${startPosition + startMinute}px`,
-          height: `${durationMinutes}px`,
-          backgroundColor: classItem.color,
-        }}
-        className="absolute inset-x-2 rounded p-1 text-white text-xs overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
-        onClick={() => handleEditClass(classItem)}
-      >
-        <div className="font-semibold">{classItem.title}</div>
-        <div className="text-xs">{formatTimeRange(classItem.startTime, classItem.endTime)}</div>
-        <div className="text-xs truncate">{classItem.instructor}</div>
+      <div className="p-1 overflow-hidden h-full">
+        <div className="font-semibold text-sm">{event.title}</div>
+        <div className="text-xs flex items-center">
+          <FiUser className="mr-1" size={10} />
+          {instructor}
+        </div>
+        <div className="text-xs flex items-center">
+          <FiMapPin className="mr-1" size={10} />
+          {location}
+        </div>
       </div>
     );
   };
@@ -207,16 +353,16 @@ export default function SchedulePage() {
         
         <div className="mt-4 sm:mt-0 flex space-x-2">
           <button
-            className={`px-4 py-2 rounded-lg ${viewMode === 'week' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-            onClick={() => setViewMode('week')}
+            className={`px-4 py-2 rounded-lg ${viewMode === 'timeGridWeek' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+            onClick={() => setViewMode('timeGridWeek')}
           >
             Week View
           </button>
           <button
-            className={`px-4 py-2 rounded-lg ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-            onClick={() => setViewMode('list')}
+            className={`px-4 py-2 rounded-lg ${viewMode === 'dayGridMonth' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+            onClick={() => setViewMode('dayGridMonth')}
           >
-            List View
+            Month View
           </button>
           <button
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
@@ -228,116 +374,131 @@ export default function SchedulePage() {
         </div>
       </div>
 
-      {viewMode === 'week' ? (
-        // Weekly calendar view
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="grid grid-cols-8 border-b">
-            <div className="p-4 text-sm font-medium text-gray-500 border-r">Time</div>
-            {daysOfWeek.map((day) => (
-              <div key={day} className="p-4 text-sm font-medium text-gray-700 text-center">
-                {day}
-              </div>
-            ))}
-          </div>
-          
-          <div className="grid grid-cols-8 h-[700px] relative">
-            <div className="border-r">
-              {timeSlots.map((time) => (
-                <div key={time} className="h-[60px] border-b flex items-center justify-center">
-                  <span className="text-xs text-gray-500">{time}</span>
-                </div>
-              ))}
-            </div>
-            
-            {daysOfWeek.map((day) => (
-              <div key={day} className="border-r relative">
-                {classes
-                  .filter(c => c.day === day)
-                  .map(classItem => renderClassBlock(classItem))
-                }
-              </div>
-            ))}
-          </div>
+      {/* FullCalendar Component */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-4">
+          <FullCalendar
+            ref={calendarRef}
+            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+            initialView={viewMode}
+            headerToolbar={{
+              left: 'prev,next today',
+              center: 'title',
+              right: 'timeGridDay,timeGridWeek,dayGridMonth'
+            }}
+            events={calendarEvents}
+            eventContent={renderEventContent}
+            selectable={true}
+            selectMirror={true}
+            dayMaxEvents={true}
+            weekends={true}
+            height="auto"
+            aspectRatio={1.8}
+            expandRows={true}
+            allDaySlot={false}
+            slotMinTime="06:00:00"
+            slotMaxTime="22:00:00"
+            eventClick={handleEventClick}
+            select={handleDateSelect}
+            slotDuration="00:30:00"
+            slotLabelFormat={{
+              hour: 'numeric',
+              minute: '2-digit',
+              meridiem: 'short'
+            }}
+            eventTimeFormat={{
+              hour: 'numeric',
+              minute: '2-digit',
+              meridiem: 'short'
+            }}
+          />
         </div>
-      ) : (
-        // List view
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schedule</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Instructor</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Enrollment</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+      </div>
+
+      {/* List View of Classes */}
+      <div className="bg-white rounded-lg shadow overflow-hidden mt-6">
+        <h2 className="text-xl font-semibold p-4 border-b">All Classes</h2>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schedule</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Instructor</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Enrollment</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {classes.sort((a, b) => 
+                daysOfWeek.indexOf(a.day) - daysOfWeek.indexOf(b.day) || 
+                a.startTime.localeCompare(b.startTime)
+              ).map((classItem) => (
+                <tr key={classItem.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="h-8 w-8 rounded-full" style={{ backgroundColor: classItem.color }}></div>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">{classItem.title}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center text-sm text-gray-900">
+                      <FiCalendar className="mr-2 text-gray-400" />
+                      {classItem.day}, {classItem.startTime} - {classItem.endTime}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center text-sm text-gray-900">
+                      <FiUser className="mr-2 text-gray-400" />
+                      {classItem.instructor}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {classItem.location}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <FiUsers className="mr-2 text-gray-400" />
+                      <span className={`text-sm font-medium ${getEnrollmentStatus(classItem.currentEnrollment, classItem.maxCapacity)}`}>
+                        {classItem.currentEnrollment}/{classItem.maxCapacity}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                      <div 
+                        className={`h-1.5 rounded-full ${
+                          classItem.currentEnrollment / classItem.maxCapacity >= 0.9 
+                            ? 'bg-red-500' 
+                            : classItem.currentEnrollment / classItem.maxCapacity >= 0.7 
+                            ? 'bg-yellow-500' 
+                            : 'bg-green-500'
+                        }`}
+                        style={{ width: `${(classItem.currentEnrollment / classItem.maxCapacity) * 100}%` }}
+                      ></div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button 
+                      onClick={() => handleEditClass(classItem)}
+                      className="text-blue-600 hover:text-blue-900 mr-3"
+                    >
+                      <FiEdit2 className="inline mr-1" /> Edit
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteClass(classItem.id)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      <FiTrash2 className="inline mr-1" /> Delete
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {classes.sort((a, b) => daysOfWeek.indexOf(a.day) - daysOfWeek.indexOf(b.day) || a.startTime.localeCompare(b.startTime)).map((classItem) => (
-                  <tr key={classItem.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="h-8 w-8 rounded-full" style={{ backgroundColor: classItem.color }}></div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{classItem.title}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-900">
-                        <FiCalendar className="mr-2 text-gray-400" />
-                        {classItem.day}, {formatTimeRange(classItem.startTime, classItem.endTime)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-900">
-                        <FiUser className="mr-2 text-gray-400" />
-                        {classItem.instructor}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {classItem.location}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <FiUsers className="mr-2 text-gray-400" />
-                        <span className={`text-sm font-medium ${getEnrollmentStatus(classItem.currentEnrollment, classItem.maxCapacity)}`}>
-                          {classItem.currentEnrollment}/{classItem.maxCapacity}
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                        <div 
-                          className={`h-1.5 rounded-full ${
-                            classItem.currentEnrollment / classItem.maxCapacity >= 0.9 
-                              ? 'bg-red-500' 
-                              : classItem.currentEnrollment / classItem.maxCapacity >= 0.7 
-                              ? 'bg-yellow-500' 
-                              : 'bg-green-500'
-                          }`}
-                          style={{ width: `${(classItem.currentEnrollment / classItem.maxCapacity) * 100}%` }}
-                        ></div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button 
-                        onClick={() => handleEditClass(classItem)}
-                        className="text-blue-600 hover:text-blue-900 mr-3"
-                      >
-                        <FiEdit2 className="inline mr-1" /> Edit
-                      </button>
-                      <button className="text-red-600 hover:text-red-900">
-                        <FiTrash2 className="inline mr-1" /> Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
 
       {/* Class Modal */}
       {isModalOpen && (
@@ -345,7 +506,7 @@ export default function SchedulePage() {
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">
-                {currentClass ? 'Edit Class' : 'Add New Class'}
+                {currentClass && !currentClass.id.startsWith('new-') ? 'Edit Class' : 'Add New Class'}
               </h2>
               <button 
                 onClick={() => setIsModalOpen(false)}
@@ -355,13 +516,15 @@ export default function SchedulePage() {
               </button>
             </div>
             
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmitClass}>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Class Title</label>
                 <input
                   type="text"
+                  name="title"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   defaultValue={currentClass?.title || ''}
+                  required
                 />
               </div>
               
@@ -369,16 +532,20 @@ export default function SchedulePage() {
                 <label className="block text-sm font-medium text-gray-700">Instructor</label>
                 <input
                   type="text"
+                  name="instructor"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   defaultValue={currentClass?.instructor || ''}
+                  required
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700">Day</label>
                 <select
+                  name="day"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   defaultValue={currentClass?.day || 'Monday'}
+                  required
                 >
                   {daysOfWeek.map(day => (
                     <option key={day} value={day}>{day}</option>
@@ -391,16 +558,20 @@ export default function SchedulePage() {
                   <label className="block text-sm font-medium text-gray-700">Start Time</label>
                   <input
                     type="time"
+                    name="startTime"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     defaultValue={currentClass?.startTime || '09:00'}
+                    required
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">End Time</label>
                   <input
                     type="time"
+                    name="endTime"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     defaultValue={currentClass?.endTime || '10:00'}
+                    required
                   />
                 </div>
               </div>
@@ -410,17 +581,21 @@ export default function SchedulePage() {
                   <label className="block text-sm font-medium text-gray-700">Location</label>
                   <input
                     type="text"
+                    name="location"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     defaultValue={currentClass?.location || ''}
+                    required
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Max Capacity</label>
                   <input
                     type="number"
+                    name="maxCapacity"
                     min="1"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     defaultValue={currentClass?.maxCapacity || '15'}
+                    required
                   />
                 </div>
               </div>
@@ -429,6 +604,7 @@ export default function SchedulePage() {
                 <label className="block text-sm font-medium text-gray-700">Color</label>
                 <input
                   type="color"
+                  name="color"
                   className="mt-1 block w-full h-10 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   defaultValue={currentClass?.color || '#3B82F6'}
                 />
@@ -446,7 +622,7 @@ export default function SchedulePage() {
                   type="submit"
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
-                  {currentClass ? 'Update Class' : 'Create Class'}
+                  {currentClass && !currentClass.id.startsWith('new-') ? 'Update Class' : 'Create Class'}
                 </button>
               </div>
             </form>
