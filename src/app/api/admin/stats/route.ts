@@ -3,7 +3,9 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/db';
 
-export async function GET(request: Request) {
+export async function GET(
+  _request: Request
+) {
   try {
     // Check authentication and authorization
     const session = await getServerSession(authOptions);

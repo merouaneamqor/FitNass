@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { FiTag, FiClock, FiMapPin } from 'react-icons/fi';
+import { FiClock, FiMapPin } from 'react-icons/fi';
 
 // Mock data for demonstration
 const mockPromotions = [

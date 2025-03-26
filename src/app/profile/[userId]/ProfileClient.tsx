@@ -37,7 +37,7 @@ export const ProfileClient: React.FC<ProfileClientProps> = ({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Use the hook unconditionally
-  const { profile: apiProfile, loading, error, updateProfile, addFavoriteGym, removeFavoriteGym } = useProfile(initialProfile.id);
+  const { profile: apiProfile, loading, error, updateProfile, /* addFavoriteGym, */ removeFavoriteGym } = useProfile(initialProfile.id);
   
   // Then conditionally use the result
   const profile = isOwnProfile ? apiProfile : null;
@@ -63,14 +63,14 @@ export const ProfileClient: React.FC<ProfileClientProps> = ({
     }
   }, [error, hasLoadedDbProfile]);
 
-  const handleTabChange = (newTab: string) => {
-    const params = new URLSearchParams(searchParams);
-    params.set('tab', newTab);
-    if (params.has('editing')) {
-      params.delete('editing');
-    }
-    router.push(`${pathname}?${params.toString()}`);
-  };
+  // const handleTabChange = (newTab: string) => {
+  //   const params = new URLSearchParams(searchParams);
+  //   params.set('tab', newTab);
+  //   if (params.has('editing')) {
+  //     params.delete('editing');
+  //   }
+  //   router.push(`${pathname}?${params.toString()}`);
+  // };
 
   const handleEditClick = () => {
     router.push(`${pathname}?editing=true`);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FiSearch, FiEdit, FiTrash2, FiPlus, FiX, FiCheck, FiFilter, FiAlertTriangle, FiEye, FiHome } from 'react-icons/fi';
+import { FiSearch, FiEdit, FiTrash2, FiPlus, FiFilter, FiAlertTriangle, FiEye, FiHome } from 'react-icons/fi';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -208,26 +208,24 @@ export default function GymsPage() {
     return matchesSearch && matchesStatus && matchesCity;
   });
   
-  const getFacilityChip = (facility: string) => (
-    <span key={facility} className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">
-      {facility}
-    </span>
-  );
+  // Function to get facility chip styling (optional, currently unused)
+  // const getFacilityChip = (facility: string) => {
+  //   return 'px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs whitespace-nowrap';
+  // };
   
-  const getStatusBadge = (status: Gym['status']) => {
-    const statusColors = {
-      'ACTIVE': 'bg-green-100 text-green-800',
-      'INACTIVE': 'bg-yellow-100 text-yellow-800',
-      'PENDING_APPROVAL': 'bg-blue-100 text-blue-800',
-      'CLOSED': 'bg-red-100 text-red-800',
-    };
-    
-    return (
-      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${statusColors[status]}`}>
-        {status.replace('_', ' ')}
-      </span>
-    );
-  };
+  // Function to get status badge (optional, currently unused)
+  // const getStatusBadge = (status: string) => {
+  //   switch (status) {
+  //     case 'ACTIVE':
+  //       return 'bg-green-100 text-green-800';
+  //     case 'PENDING':
+  //       return 'bg-yellow-100 text-yellow-800';
+  //     case 'INACTIVE':
+  //       return 'bg-red-100 text-red-800';
+  //     default:
+  //       return 'bg-gray-100 text-gray-800';
+  //   }
+  // };
   
   return (
     <div>

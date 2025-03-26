@@ -3,16 +3,18 @@ import { UserProfile } from '@/types/user';
 import { Prisma } from '@prisma/client';
 
 // Define types
-type UserWithRelations = Prisma.UserGetPayload<{
-  include: {
-    favorites: true;
-    reviews: {
-      include: {
-        gym: true;
-      }
-    }
-  }
-}>;
+// This type would be useful for when we need the full user relations
+// Currently unused but kept for future implementation
+// type UserWithRelations = Prisma.UserGetPayload<{
+//   include: {
+//     favorites: true;
+//     reviews: {
+//       include: {
+//         gym: true;
+//       }
+//     }
+//   }
+// }>;
 
 // Map Prisma Role enum to string
 function mapRoleToString(role: string): "user" | "admin" | "gym-owner" {

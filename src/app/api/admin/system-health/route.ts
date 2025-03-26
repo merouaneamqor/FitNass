@@ -5,7 +5,9 @@ import prisma from '@/lib/db';
 import { randomInt } from 'crypto';
 import os from 'os';
 
-export async function GET(request: Request) {
+export async function GET(
+  _request: Request
+) {
   try {
     // Check authentication and authorization
     const session = await getServerSession(authOptions);

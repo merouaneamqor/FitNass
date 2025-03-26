@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { UserProfile } from '@/types/user';
 import { FiLock, FiBell, FiGlobe, FiToggleLeft, FiToggleRight, FiTrash2 } from 'react-icons/fi';
 
 interface UserSettings {
@@ -9,14 +8,14 @@ interface UserSettings {
 }
 
 interface ProfileSettingsProps {
-  profile: UserProfile;
+  // profile: UserProfile;
   onSaveSettings: (settings: UserSettings) => Promise<boolean>;
   onDeleteAccount?: () => void;
   className?: string;
 }
 
 export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
-  profile,
+  // profile,
   onSaveSettings,
   onDeleteAccount,
   className = "",

@@ -11,14 +11,14 @@ interface Tab {
 }
 
 interface ProfileTabsProps {
-  userId: string;
-  isOwnProfile?: boolean;
+  // userId: string;
+  isOwnProfile: boolean;
   className?: string;
 }
 
 export const ProfileTabs: React.FC<ProfileTabsProps> = ({
-  userId,
-  isOwnProfile = false,
+  // userId,
+  isOwnProfile,
   className = "",
 }) => {
   const pathname = usePathname();

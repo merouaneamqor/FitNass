@@ -47,7 +47,7 @@ export default function GymsPage() {
 
   // Use our custom hook to fetch gyms data
   const { 
-    gyms, 
+    // gyms, 
     loading, 
     error, 
     uniqueCities, 

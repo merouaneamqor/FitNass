@@ -1,13 +1,13 @@
 import React from 'react';
 import Link from 'next/link';
 import './globals.css';
-import { FiHome, FiUser, FiMenu, FiX, FiActivity, FiSearch, FiChevronDown, FiLogIn, FiArrowRight } from 'react-icons/fi';
+import { FiActivity, FiArrowRight } from 'react-icons/fi';
 import Providers from './providers';
 import ClientSideHeader from '@/components/ui/ClientSideHeader';
 
 export const metadata = {
-  title: 'FitNass | Find the Best Gyms in Morocco',
-  description: 'Discover and book the best gyms across Morocco with FitNass. Compare facilities, read reviews, and find your perfect fitness spot.',
+  title: 'FitNass - Find the Perfect Gym',
+  description: 'Discover and review gyms in your area with FitNass',
 };
 
 export default function RootLayout({

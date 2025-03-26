@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { FiSearch, FiMapPin, FiStar, FiActivity, FiArrowRight, FiUsers, FiCheck } from 'react-icons/fi';
-import { SearchBar } from '@/components/ui';
 
 // Example featured gyms data
 const featuredGyms = [

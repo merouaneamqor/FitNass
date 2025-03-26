@@ -14,36 +14,36 @@ const signupSchema = z.object({
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const validatedData = signupSchema.parse(body);
-
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: {
-        email: validatedData.email,
-      },
-    });
-
-    if (existingUser) {
-      return NextResponse.json(
-        { message: 'User with this email already exists' },
-        { status: 400 }
-      );
+    const { name, email, password: rawPassword } = body;
+    
+    // Validate inputs
+    if (!name || !email || !rawPassword) {
+      return NextResponse.json({ error: 'Name, email, and password are required' }, { status: 400 });
     }
-
+    
+    // Check if user with this email already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+    
+    if (existingUser) {
+      return NextResponse.json({ error: 'User with this email already exists' }, { status: 400 });
+    }
+    
     // Hash password
-    const hashedPassword = await bcrypt.hash(validatedData.password, 10);
-
+    const hashedPassword = await bcrypt.hash(rawPassword, 10);
+    
     // Create user
-    const user = await prisma.user.create({
+    const newUser = await prisma.user.create({
       data: {
-        name: validatedData.name,
-        email: validatedData.email,
+        name,
+        email,
         password: hashedPassword,
       },
     });
 
     // Remove password from response
-    const { password, ...userWithoutPassword } = user;
+    const { password, ...userWithoutPassword } = newUser;
 
     return NextResponse.json(
       { message: 'User created successfully', user: userWithoutPassword },

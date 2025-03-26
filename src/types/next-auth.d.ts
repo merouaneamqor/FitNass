@@ -1,6 +1,7 @@
-import type NextAuth from "next-auth";
+// Add your custom augmentations here
+// import NextAuth from 'next-auth';
 
-declare module "next-auth" {
+declare module 'next-auth' {
   /**
    * Returned by `useSession`, `getSession` and received as a prop on the `SessionProvider` React Context
    */
@@ -13,9 +14,9 @@ declare module "next-auth" {
       /** The user's email address */
       email: string;
       /** The user's profile image */
-      image: string;
+      image?: string;
       /** The user's role */
-      role: string;
+      role: 'USER' | 'GYM_OWNER' | 'ADMIN';
     };
   }
 
