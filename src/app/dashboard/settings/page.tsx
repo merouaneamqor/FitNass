@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { FiSave, FiUpload, FiTrash2, FiUser, FiMapPin, FiPhone, FiMail, FiGlobe, FiClock, FiDollarSign, FiShield, FiLock } from 'react-icons/fi';
+import { FiSave, FiUpload, FiTrash2, FiUser, FiMapPin, FiPhone, FiMail, FiGlobe, FiClock, FiDollarSign, FiShield, FiLock, FiCreditCard } from 'react-icons/fi';
 
 export default function SettingsPage() {
   const { data: session } = useSession();
@@ -474,13 +474,13 @@ export default function SettingsPage() {
                         id={`channel-${channel.id}`}
                         type="checkbox"
                         className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                        checked={accountSettings.notifications[channel.id]}
+                        checked={accountSettings.notifications[channel.id as keyof typeof accountSettings.notifications]}
                         onChange={(e) => {
                           setAccountSettings({
                             ...accountSettings,
                             notifications: {
                               ...accountSettings.notifications,
-                              [channel.id]: e.target.checked
+                              [channel.id as keyof typeof accountSettings.notifications]: e.target.checked
                             }
                           });
                         }}
@@ -504,13 +504,13 @@ export default function SettingsPage() {
                         id={`type-${type.id}`}
                         type="checkbox"
                         className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                        checked={accountSettings.notifications[type.id]}
+                        checked={accountSettings.notifications[type.id as keyof typeof accountSettings.notifications]}
                         onChange={(e) => {
                           setAccountSettings({
                             ...accountSettings,
                             notifications: {
                               ...accountSettings.notifications,
-                              [type.id]: e.target.checked
+                              [type.id as keyof typeof accountSettings.notifications]: e.target.checked
                             }
                           });
                         }}
