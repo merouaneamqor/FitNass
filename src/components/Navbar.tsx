@@ -3,13 +3,26 @@
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { FiMenu, FiX, FiSearch, FiUser, FiActivity, FiTag, FiAward, FiGrid, FiBriefcase, FiMapPin, FiChevronDown } from 'react-icons/fi';
+import { GiTennisRacket, GiWeightLiftingUp } from 'react-icons/gi';
 
 export default function Navbar() {
   const { data: session } = useSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
+  
+  // Handle search submission
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,15 +49,15 @@ export default function Navbar() {
                 href="/gyms"
                 className="text-gray-600 dark:text-gray-200 hover:text-fitnass-pink dark:hover:text-fitnass-neon inline-flex items-center font-medium text-sm"
               >
-                <FiMapPin className="mr-1.5" />
-                Trouver une salle
+                <GiWeightLiftingUp className="mr-1.5" />
+                Salles de Gym
               </Link>
               <Link
-                href="/free-trials"
+                href="/clubs"
                 className="text-gray-600 dark:text-gray-200 hover:text-fitnass-pink dark:hover:text-fitnass-neon inline-flex items-center font-medium text-sm"
               >
-                <FiTag className="mr-1.5" />
-                Essais Gratuits
+                <GiTennisRacket className="mr-1.5" />
+                Clubs Sportifs
               </Link>
               <Link
                 href="/promotions"
@@ -52,6 +65,13 @@ export default function Navbar() {
               >
                 <FiAward className="mr-1.5" />
                 Offres Exclusives
+              </Link>
+              <Link
+                href="/subscriptions"
+                className="text-gray-600 dark:text-gray-200 hover:text-fitnass-pink dark:hover:text-fitnass-neon inline-flex items-center font-medium text-sm"
+              >
+                <FiTag className="mr-1.5" />
+                Abonnements
               </Link>
               <div className="relative group">
                 <button className="text-gray-600 dark:text-gray-200 hover:text-fitnass-pink dark:hover:text-fitnass-neon inline-flex items-center font-medium text-sm">
@@ -94,16 +114,19 @@ export default function Navbar() {
           </div>
 
           <div className="hidden md:flex md:items-center md:space-x-6">
-            <div className="relative">
+            <form onSubmit={handleSearch} className="relative">
               <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-2 focus-within:ring-2 focus-within:ring-fitnass-pink">
                 <FiSearch className="h-5 w-5 text-gray-400 dark:text-gray-300" />
                 <input
                   type="text"
-                  placeholder="Rechercher une salle..."
+                  placeholder="Rechercher gyms ou clubs..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="ml-2 bg-transparent border-0 focus:outline-none focus:ring-0 w-56 text-sm"
                 />
               </div>
-            </div>
+              <button type="submit" className="hidden">Search</button>
+            </form>
             {session ? (
               <div className="ml-3 relative">
                 <div className="flex items-center space-x-4">
@@ -129,8 +152,8 @@ export default function Navbar() {
                           <Link href="/favorites" className="block px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
                             Mes Favoris
                           </Link>
-                          <Link href="/memberships" className="block px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
-                            Mes Abonnements
+                          <Link href="/dashboard" className="block px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                            Mon Dashboard
                           </Link>
                           <div className="px-1 py-1 border-t border-gray-100 dark:border-gray-700">
                             <button
@@ -184,16 +207,19 @@ export default function Navbar() {
         <div className="md:hidden">
           <div className="pt-2 pb-3 space-y-1 px-4">
             <div className="mb-6 mt-4">
-              <div className="relative">
+              <form onSubmit={handleSearch} className="relative">
                 <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-2">
                   <FiSearch className="h-5 w-5 text-gray-400 dark:text-gray-300" />
                   <input
                     type="text"
-                    placeholder="Rechercher une salle..."
+                    placeholder="Rechercher gyms ou clubs..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="ml-2 bg-transparent border-0 focus:outline-none focus:ring-0 w-full text-sm"
                   />
                 </div>
-              </div>
+                <button type="submit" className="hidden">Search</button>
+              </form>
             </div>
             
             <Link
@@ -209,6 +235,13 @@ export default function Navbar() {
             >
               <FiTag className="mr-3 h-5 w-5 text-fitnass-coral" />
               Essais Gratuits
+            </Link>
+            <Link
+              href="/subscriptions"
+              className="flex items-center px-4 py-3 rounded-xl text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              <FiTag className="mr-3 h-5 w-5 text-fitnass-coral" />
+              Abonnements
             </Link>
             <Link
               href="/promotions"
@@ -286,10 +319,10 @@ export default function Navbar() {
                   Mes Favoris
                 </Link>
                 <Link
-                  href="/memberships"
+                  href="/dashboard"
                   className="block py-2 px-4 rounded-lg text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  Mes Abonnements
+                  Mon Dashboard
                 </Link>
                 <button
                   onClick={() => signOut()}

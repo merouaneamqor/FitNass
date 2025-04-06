@@ -27,11 +27,15 @@ model User {
   status             UserStatus     @default(ACTIVE)
   tokenExpiry        DateTime?
   verificationToken  String?
+  createdClubs       Club[]         @relation("ClubOwner")
   createdGyms        Gym[]          @relation("GymOwner")
   loginHistory       LoginHistory[]
   notifications      Notification[]
+  reservations       Reservation[]
   reviews            Review[]
+  favoriteClubs      Club[]         @relation("UserFavoriteClubs")
   favorites          Gym[]          @relation("UserFavorites")
+  subscriptions      Subscription[]
 }
 
 model Gym {
@@ -70,10 +74,12 @@ model Review {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
   userId    String
-  gymId     String
+  gymId     String?
   isHelpful Int          @default(0)
   status    ReviewStatus @default(PUBLISHED)
-  gym       Gym          @relation(fields: [gymId], references: [id])
+  clubId    String?
+  club      Club?        @relation("ClubReviews", fields: [clubId], references: [id])
+  gym       Gym?         @relation(fields: [gymId], references: [id])
   user      User         @relation(fields: [userId], references: [id])
 }
 
@@ -114,10 +120,80 @@ model Notification {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model Club {
+  id           String       @id @default(cuid())
+  name         String
+  description  String
+  address      String
+  city         String
+  state        String
+  zipCode      String
+  latitude     Float
+  longitude    Float
+  phone        String?
+  website      String?
+  email        String?
+  rating       Float        @default(0)
+  images       String[]
+  facilities   String[]
+  openingHours Json?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  ownerId      String
+  isVerified   Boolean      @default(false)
+  status       ClubStatus   @default(ACTIVE)
+  viewCount    Int          @default(0)
+  owner        User         @relation("ClubOwner", fields: [ownerId], references: [id])
+  reviews      Review[]     @relation("ClubReviews")
+  sportFields  SportField[]
+  favoritedBy  User[]       @relation("UserFavoriteClubs")
+}
+
+model SportField {
+  id           String         @id @default(cuid())
+  name         String
+  description  String
+  type         SportFieldType
+  surface      String?
+  indoor       Boolean        @default(false)
+  size         String?
+  maxCapacity  Int?
+  pricePerHour Decimal
+  currency     String         @default("MAD")
+  availability Json?
+  amenities    String[]
+  images       String[]
+  clubId       String
+  status       FieldStatus    @default(AVAILABLE)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  reservations Reservation[]
+  club         Club           @relation(fields: [clubId], references: [id], onDelete: Cascade)
+}
+
+model Reservation {
+  id               String            @id @default(cuid())
+  startTime        DateTime
+  endTime          DateTime
+  status           ReservationStatus @default(PENDING)
+  totalPrice       Decimal
+  userId           String
+  sportFieldId     String
+  paymentStatus    PaymentStatus     @default(UNPAID)
+  paymentId        String?
+  notes            String?
+  participantCount Int?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  sportField       SportField        @relation(fields: [sportFieldId], references: [id])
+  user             User              @relation(fields: [userId], references: [id])
+}
+
 enum Role {
   USER
   ADMIN
   GYM_OWNER
+  CLUB_OWNER
 }
 
 enum UserStatus {
@@ -147,4 +223,99 @@ enum PromotionStatus {
   SCHEDULED
   EXPIRED
   CANCELLED
+}
+
+enum SportFieldType {
+  FOOTBALL
+  TENNIS
+  BASKETBALL
+  VOLLEYBALL
+  SQUASH
+  PADEL
+  SWIMMING_POOL
+  GOLF
+  OTHER
+}
+
+enum FieldStatus {
+  AVAILABLE
+  UNDER_MAINTENANCE
+  CLOSED
+  UNAVAILABLE
+}
+
+enum ClubStatus {
+  ACTIVE
+  INACTIVE
+  PENDING_APPROVAL
+  CLOSED
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+  PARTIALLY_REFUNDED
+  FAILED
+}
+
+model SubscriptionPlan {
+  id           String        @id
+  name         String
+  description  String
+  price        Float
+  billingCycle BillingCycle
+  features     String        // JSON string
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id              String             @id @default(cuid())
+  userId          String
+  planId          String
+  status          SubscriptionStatus @default(ACTIVE)
+  startDate       DateTime
+  endDate         DateTime
+  autoRenew       Boolean            @default(true)
+  paymentMethodId String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  plan            SubscriptionPlan   @relation(fields: [planId], references: [id])
+  user            User               @relation(fields: [userId], references: [id])
+  payments        PaymentRecord[]
+}
+
+model PaymentRecord {
+  id             String        @id @default(cuid())
+  subscriptionId String
+  amount         Float
+  status         String
+  paymentMethod  String
+  transactionId  String?
+  createdAt      DateTime      @default(now())
+  subscription   Subscription  @relation(fields: [subscriptionId], references: [id])
+}
+
+enum BillingCycle {
+  MONTHLY
+  QUARTERLY
+  ANNUALLY
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELLED
+  EXPIRED
 }

@@ -1,264 +1,331 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { FiUsers, FiTag, FiStar, FiBarChart2, FiHome, FiSettings, FiPlus } from 'react-icons/fi';
+import { FiUsers, FiCalendar, FiStar, FiBarChart2, FiDollarSign, FiTrendingUp, FiClock, FiActivity } from 'react-icons/fi';
 import { PageHeader, Card, StatsCard, Button } from '@/components/dashboard';
+import { getServerSession } from 'next-auth';
+import { redirect } from 'next/navigation';
+import prisma from '@/lib/db';
+import SubscriptionInfo from './subscription-info';
+import Link from 'next/link';
 
-// Mock data for demonstration
-const mockDashboardData = {
-  totalMembers: 250,
-  activePromotions: 3,
-  averageRating: 4.8,
-  totalReviews: 120,
-  recentReviews: [
-    {
-      id: 1,
-      user: 'John Doe',
-      rating: 5,
-      comment: 'Great gym with excellent equipment!',
-      date: '2024-03-15',
-    },
-    {
-      id: 2,
-      user: 'Jane Smith',
-      rating: 4,
-      comment: 'Good facilities but can get crowded.',
-      date: '2024-03-14',
-    },
-  ],
-  promotions: [
-    {
-      id: 1,
-      title: 'New Year Special',
-      status: 'active',
-      startDate: '2024-03-01',
-      endDate: '2024-03-31',
-      discount: '33% OFF',
-    },
-    {
-      id: 2,
-      title: 'Student Discount',
-      status: 'active',
-      startDate: '2024-03-15',
-      endDate: '2024-12-31',
-      discount: '25% OFF',
-    },
-  ],
-};
+// Define interfaces for our data types
+interface Member {
+  id: string;
+  name: string;
+  email: string;
+  joinDate: string;
+  phone: string;
+  status: string;
+  membershipType: string;
+  lastVisit: string;
+}
+
+interface Reservation {
+  id: string;
+  memberName: string;
+  date: string;
+  time: string;
+  service: string;
+}
 
 export default function DashboardPage() {
-  const { data: session } = useSession();
-  const [activeTab, setActiveTab] = useState('overview');
+  const { data: session, status } = useSession();
+  const [memberCount, setMemberCount] = useState(0);
+  const [recentMembers, setRecentMembers] = useState<Member[]>([]);
+  const [upcomingReservations, setUpcomingReservations] = useState<Reservation[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    if (session?.user?.role === 'GYM_OWNER') {
+      fetchDashboardData();
+    }
+  }, [session]);
 
-  if (!session || session.user.role !== 'GYM_OWNER') {
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      // Fetch member count
+      const membersResponse = await fetch('/api/members');
+      if (membersResponse.ok) {
+        const membersData = await membersResponse.json() as Member[];
+        setMemberCount(membersData.length);
+        
+        // Get most recent 5 members
+        const sortedMembers = [...membersData]
+          .sort((a, b) => new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime())
+          .slice(0, 5);
+        
+        setRecentMembers(sortedMembers);
+      }
+      
+      // You would fetch real reservation data here when available
+      // For now, using mock data
+      setUpcomingReservations([
+        {
+          id: '1',
+          memberName: 'Samira Belhaj',
+          date: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+          time: '10:00 - 11:30',
+          service: 'Group Training'
+        },
+        {
+          id: '2',
+          memberName: 'Ahmed Khalid',
+          date: new Date(Date.now() + 172800000).toISOString(), // Day after tomorrow
+          time: '14:00 - 15:00',
+          service: 'Personal Training'
+        },
+        {
+          id: '3',
+          memberName: 'Nadia El Amrani',
+          date: new Date(Date.now() + 259200000).toISOString(), // 3 days from now
+          time: '18:30 - 19:30',
+          service: 'Swimming Session'
+        }
+      ]);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
-          <p className="text-gray-600">You need to be a gym owner to access this page.</p>
-        </div>
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
+  if (!session || !session.user) {
+    redirect('/login?callbackUrl=/dashboard');
+  }
+
+  if (session.user.role !== 'GYM_OWNER') {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+        <Card>
+          <div className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Welcome, {session.user.name || 'User'}!</h2>
+            <p>This dashboard is designed for gym owners. Please contact support if you need access.</p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+  
   return (
     <div className="space-y-6">
       <PageHeader
         title="Dashboard"
-        description={`Welcome back, ${session.user.name}`}
-        icon={FiHome}
+        description="Manage your gym and track performance metrics."
+        icon={FiBarChart2}
       />
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatsCard
           title="Total Members"
-          value={mockDashboardData.totalMembers.toString()}
+          value={loading ? '...' : memberCount.toString()}
           icon={FiUsers}
-          color="blue"
           trend={{ value: 5, isPositive: true }}
-          subtitle="Since last month"
         />
-
         <StatsCard
-          title="Active Promotions"
-          value={mockDashboardData.activePromotions.toString()}
-          icon={FiTag}
-          color="green"
+          title="Today's Visits"
+          value="24"
+          icon={FiCalendar}
+          trend={{ value: 3, isPositive: true }}
         />
-
         <StatsCard
-          title="Average Rating"
-          value={mockDashboardData.averageRating.toString()}
-          icon={FiStar}
-          color="yellow"
-          trend={{ value: 0.2, isPositive: true }}
-          subtitle="Since last month"
+          title="Upcoming Bookings"
+          value={loading ? '...' : upcomingReservations.length.toString()}
+          icon={FiClock}
+          trend={{ value: 7, isPositive: true }}
         />
-
         <StatsCard
-          title="Total Reviews"
-          value={mockDashboardData.totalReviews.toString()}
-          icon={FiBarChart2}
-          color="purple"
+          title="Revenue (Monthly)"
+          value="9,850 MAD"
+          icon={FiDollarSign}
           trend={{ value: 12, isPositive: true }}
-          subtitle="Since last month"
         />
       </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Subscription Info */}
+        <Card className="lg:col-span-1">
+          <div className="p-4 border-b">
+            <h2 className="text-lg font-medium">Subscription Status</h2>
+          </div>
+          <div className="p-4">
+            <SubscriptionInfo userId={session.user.id} />
+          </div>
+        </Card>
 
-      {/* Tabs */}
-      <Card noPadding>
-        <div className="border-b border-gray-200">
-          <nav className="flex -mb-px">
-            {['overview', 'promotions', 'reviews', 'settings'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`${
-                  activeTab === tab
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm capitalize`}
-              >
-                {tab}
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        {/* Tab Content */}
-        <div className="p-6">
-          {activeTab === 'overview' && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Recent Reviews</h2>
-              <div className="space-y-4">
-                {mockDashboardData.recentReviews.map((review) => (
-                  <div key={review.id} className="border-b border-gray-200 pb-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <FiStar
-                              key={i}
-                              className={`h-5 w-5 ${
-                                i < review.rating ? 'text-yellow-400' : 'text-gray-300'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className="ml-2 text-gray-600">{review.user}</span>
-                      </div>
-                      <span className="text-gray-500">{review.date}</span>
-                    </div>
-                    <p className="mt-2 text-gray-600">{review.comment}</p>
+        {/* Recent Members */}
+        <Card className="lg:col-span-1">
+          <div className="p-4 border-b flex justify-between items-center">
+            <h2 className="text-lg font-medium">Recent Members</h2>
+            <Link href="/dashboard/members">
+              <Button size="sm" variant="ghost">View All</Button>
+            </Link>
+          </div>
+          <div className="divide-y">
+            {loading ? (
+              <div className="p-4 text-center">Loading...</div>
+            ) : recentMembers.length === 0 ? (
+              <div className="p-4 text-center text-gray-500">No members found</div>
+            ) : (
+              recentMembers.map((member) => (
+                <div key={member.id} className="p-4 flex items-center">
+                  <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                    <FiUsers className="h-5 w-5 text-blue-600" />
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'promotions' && (
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Active Promotions</h2>
-                <Button icon={FiPlus}>Create Promotion</Button>
-              </div>
-              <div className="space-y-4">
-                {mockDashboardData.promotions.map((promotion) => (
-                  <div key={promotion.id} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-gray-900">{promotion.title}</h3>
-                        <p className="text-sm text-gray-500">
-                          {new Date(promotion.startDate).toLocaleDateString()} -{' '}
-                          {new Date(promotion.endDate).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm">
-                        {promotion.status}
-                      </span>
-                    </div>
-                    <div className="mt-2">
-                      <span className="text-blue-600 font-medium">{promotion.discount}</span>
-                    </div>
+                  <div>
+                    <p className="font-medium">{member.name}</p>
+                    <p className="text-sm text-gray-500">Joined {new Date(member.joinDate).toLocaleDateString()}</p>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
 
-          {activeTab === 'reviews' && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">All Reviews</h2>
-              <div className="space-y-4">
-                {mockDashboardData.recentReviews.map((review) => (
-                  <div key={review.id} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <FiStar
-                              key={i}
-                              className={`h-5 w-5 ${
-                                i < review.rating ? 'text-yellow-400' : 'text-gray-300'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className="ml-2 text-gray-600">{review.user}</span>
-                      </div>
-                      <span className="text-gray-500">{review.date}</span>
-                    </div>
-                    <p className="mt-2 text-gray-600">{review.comment}</p>
+        {/* Upcoming Reservations */}
+        <Card className="lg:col-span-1">
+          <div className="p-4 border-b flex justify-between items-center">
+            <h2 className="text-lg font-medium">Upcoming Reservations</h2>
+            <Link href="/dashboard/reservations">
+              <Button size="sm" variant="ghost">View All</Button>
+            </Link>
+          </div>
+          <div className="divide-y">
+            {loading ? (
+              <div className="p-4 text-center">Loading...</div>
+            ) : upcomingReservations.length === 0 ? (
+              <div className="p-4 text-center text-gray-500">No upcoming reservations</div>
+            ) : (
+              upcomingReservations.map((reservation) => (
+                <div key={reservation.id} className="p-4">
+                  <div className="flex justify-between items-center mb-1">
+                    <p className="font-medium">{reservation.memberName}</p>
+                    <span className="text-sm bg-blue-100 text-blue-800 py-1 px-2 rounded-full">
+                      {reservation.service}
+                    </span>
                   </div>
-                ))}
+                  <div className="flex items-center text-sm text-gray-500">
+                    <FiCalendar className="mr-1" />
+                    <span>{new Date(reservation.date).toLocaleDateString()}</span>
+                    <span className="mx-2">•</span>
+                    <FiClock className="mr-1" />
+                    <span>{reservation.time}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Quick Actions */}
+        <Card>
+          <div className="p-4 border-b">
+            <h2 className="text-lg font-medium">Quick Actions</h2>
+          </div>
+          <div className="p-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <Link href="/dashboard/members/new">
+                <div className="bg-blue-50 hover:bg-blue-100 p-4 rounded-lg text-center transition-colors cursor-pointer">
+                  <FiUsers className="h-6 w-6 text-blue-500 mx-auto mb-2" />
+                  <span className="block font-medium">Add Member</span>
+                </div>
+              </Link>
+              <Link href="/dashboard/reservations/new">
+                <div className="bg-green-50 hover:bg-green-100 p-4 rounded-lg text-center transition-colors cursor-pointer">
+                  <FiCalendar className="h-6 w-6 text-green-500 mx-auto mb-2" />
+                  <span className="block font-medium">New Booking</span>
+                </div>
+              </Link>
+              <Link href="/dashboard/classes">
+                <div className="bg-purple-50 hover:bg-purple-100 p-4 rounded-lg text-center transition-colors cursor-pointer">
+                  <FiActivity className="h-6 w-6 text-purple-500 mx-auto mb-2" />
+                  <span className="block font-medium">Manage Classes</span>
+                </div>
+              </Link>
+              <Link href="/dashboard/reports">
+                <div className="bg-yellow-50 hover:bg-yellow-100 p-4 rounded-lg text-center transition-colors cursor-pointer">
+                  <FiBarChart2 className="h-6 w-6 text-yellow-500 mx-auto mb-2" />
+                  <span className="block font-medium">Reports</span>
+                </div>
+              </Link>
+              <Link href="/dashboard/promotions">
+                <div className="bg-red-50 hover:bg-red-100 p-4 rounded-lg text-center transition-colors cursor-pointer">
+                  <FiTrendingUp className="h-6 w-6 text-red-500 mx-auto mb-2" />
+                  <span className="block font-medium">Promotions</span>
+                </div>
+              </Link>
+              <Link href="/dashboard/settings">
+                <div className="bg-gray-50 hover:bg-gray-100 p-4 rounded-lg text-center transition-colors cursor-pointer">
+                  <FiDollarSign className="h-6 w-6 text-gray-500 mx-auto mb-2" />
+                  <span className="block font-medium">Finances</span>
+                </div>
+              </Link>
+            </div>
+          </div>
+        </Card>
+        
+        {/* Activity Chart - Placeholder */}
+        <Card>
+          <div className="p-4 border-b">
+            <h2 className="text-lg font-medium">Gym Activity (Week)</h2>
+          </div>
+          <div className="p-4">
+            {/* This would be replaced with an actual chart component */}
+            <div className="h-48 bg-gray-50 rounded-lg flex items-center justify-center">
+              <div className="space-y-4 w-full px-6">
+                <div className="flex items-center">
+                  <div className="w-12 text-xs text-gray-500">Mon</div>
+                  <div className="relative h-6 bg-blue-100 rounded w-5/12">
+                    <div className="absolute inset-y-0 left-0 bg-blue-500 rounded w-10/12"></div>
+                  </div>
+                  <div className="ml-2 text-sm">38</div>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-12 text-xs text-gray-500">Tue</div>
+                  <div className="relative h-6 bg-blue-100 rounded w-4/12">
+                    <div className="absolute inset-y-0 left-0 bg-blue-500 rounded w-8/12"></div>
+                  </div>
+                  <div className="ml-2 text-sm">26</div>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-12 text-xs text-gray-500">Wed</div>
+                  <div className="relative h-6 bg-blue-100 rounded w-6/12">
+                    <div className="absolute inset-y-0 left-0 bg-blue-500 rounded w-11/12"></div>
+                  </div>
+                  <div className="ml-2 text-sm">45</div>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-12 text-xs text-gray-500">Thu</div>
+                  <div className="relative h-6 bg-blue-100 rounded w-5/12">
+                    <div className="absolute inset-y-0 left-0 bg-blue-500 rounded w-9/12"></div>
+                  </div>
+                  <div className="ml-2 text-sm">34</div>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-12 text-xs text-gray-500">Fri</div>
+                  <div className="relative h-6 bg-blue-100 rounded w-7/12">
+                    <div className="absolute inset-y-0 left-0 bg-blue-500 rounded w-10/12"></div>
+                  </div>
+                  <div className="ml-2 text-sm">52</div>
+                </div>
               </div>
             </div>
-          )}
-
-          {activeTab === 'settings' && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Gym Settings</h2>
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Gym Name</label>
-                  <input
-                    type="text"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    defaultValue="FitLife Gym"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Description</label>
-                  <textarea
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    rows={4}
-                    defaultValue="State-of-the-art equipment and personal trainers"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Contact Email</label>
-                  <input
-                    type="email"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    defaultValue="info@fitlifegym.com"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-                  <input
-                    type="tel"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    defaultValue="(555) 123-4567"
-                  />
-                </div>
-                <Button icon={FiSettings}>Save Changes</Button>
-              </div>
-            </div>
-          )}
-        </div>
-      </Card>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 } 

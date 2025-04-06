@@ -19,6 +19,10 @@ declare module "next-auth" {
       image?: string;
       /** The user's role */
       role: 'USER' | 'GYM_OWNER' | 'ADMIN';
+      /** Whether the user is being impersonated by an admin */
+      isImpersonating?: boolean;
+      /** The email of the admin who is impersonating */
+      originalAdmin?: string;
     };
   }
 
@@ -28,6 +32,8 @@ declare module "next-auth" {
     name?: string | null;
     email?: string | null;
     image?: string | null;
+    isImpersonating?: boolean;
+    originalAdmin?: string;
   }
 }
 
@@ -38,5 +44,9 @@ declare module "next-auth/jwt" {
     id: string;
     /** The user's role */
     role: "USER" | "GYM_OWNER" | "ADMIN";
+    /** Whether the user is being impersonated by an admin */
+    isImpersonating?: boolean;
+    /** The email of the admin who is impersonating */
+    originalAdmin?: string;
   }
 } 

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FiSearch, FiEdit, FiTrash2, FiUserPlus, FiX, FiCheck, FiFilter, FiAlertTriangle } from 'react-icons/fi';
-import { useSession } from 'next-auth/react';
+import { FiSearch, FiEdit, FiTrash2, FiUserPlus, FiX, FiCheck, FiFilter, FiAlertTriangle, FiUserCheck } from 'react-icons/fi';
+import { useSession, signIn } from 'next-auth/react';
 
 // Define User interface
 interface User {
@@ -103,6 +103,44 @@ export default function UsersPage() {
     } catch (err) {
       console.error('Error deleting user:', err);
       alert('Failed to delete user. Please try again.');
+    }
+  };
+  
+  const handleSignInAsUser = async (userId: string) => {
+    try {
+      setLoading(true); // Add loading state during impersonation
+      
+      const response = await fetch('/api/admin/impersonate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to impersonate user');
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update the session with the new user data
+        await signIn('credentials', {
+          email: data.user.email,
+          password: 'impersonated',
+          redirect: false,
+        });
+        
+        // Redirect to the dashboard
+        window.location.href = '/dashboard';
+      }
+    } catch (error) {
+      console.error('Error impersonating user:', error);
+      alert('Failed to sign in as user. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -340,6 +378,13 @@ export default function UsersPage() {
                             onClick={() => handleDeleteUser(user.id)}
                           >
                             <FiTrash2 className="h-5 w-5" />
+                          </button>
+                          <button 
+                            className="text-green-600 hover:text-green-900"
+                            onClick={() => handleSignInAsUser(user.id)}
+                            title="Sign in as this user"
+                          >
+                            <FiUserCheck className="h-5 w-5" />
                           </button>
                         </div>
                       </td>

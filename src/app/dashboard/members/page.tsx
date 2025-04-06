@@ -5,7 +5,6 @@ import { useSession } from 'next-auth/react';
 import { FiMail, FiPhone, FiUser, FiCalendar, FiSearch, FiUserPlus, FiEdit2, FiTrash2, FiUsers } from 'react-icons/fi';
 import { PageHeader, Card, Button, Modal, Search } from '@/components/dashboard';
 
-// For initial development - will be replaced with real data fetching
 interface Member {
   id: string;
   name: string;
@@ -17,66 +16,38 @@ interface Member {
   lastVisit: string;
 }
 
-const mockMembers = [
-  {
-    id: '1',
-    name: 'Sara Alaoui',
-    email: 'sara.alaoui@example.com',
-    phone: '+212 623-456-789',
-    joinDate: '2023-05-12',
-    status: 'active',
-    membershipType: 'Premium',
-    lastVisit: '2024-03-24',
-  },
-  {
-    id: '2',
-    name: 'Karim Hassan',
-    email: 'karim.hassan@example.com',
-    phone: '+212 678-123-456',
-    joinDate: '2023-08-05',
-    status: 'active',
-    membershipType: 'Standard',
-    lastVisit: '2024-03-22',
-  },
-  {
-    id: '3',
-    name: 'Fatima Zohra',
-    email: 'fatima.zohra@example.com',
-    phone: '+212 612-345-678',
-    joinDate: '2023-10-15',
-    status: 'inactive',
-    membershipType: 'Basic',
-    lastVisit: '2024-02-18',
-  },
-  {
-    id: '4',
-    name: 'Younes Benjelloun',
-    email: 'younes.ben@example.com',
-    phone: '+212 687-654-321',
-    joinDate: '2024-01-10',
-    status: 'active',
-    membershipType: 'Premium',
-    lastVisit: '2024-03-25',
-  },
-  {
-    id: '5',
-    name: 'Nadia Mansouri',
-    email: 'nadia.mansouri@example.com',
-    phone: '+212 661-234-567',
-    joinDate: '2023-11-20',
-    status: 'active',
-    membershipType: 'Standard',
-    lastVisit: '2024-03-20',
-  },
-];
-
 export default function MembersPage() {
   const { data: session } = useSession();
-  const [members, setMembers] = useState<Member[]>(mockMembers);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (session?.user?.role === 'GYM_OWNER') {
+      fetchMembers();
+    }
+  }, [session]);
+
+  const fetchMembers = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/members');
+      if (!response.ok) {
+        throw new Error('Failed to fetch members');
+      }
+      const data = await response.json();
+      setMembers(data);
+    } catch (err) {
+      console.error('Error fetching members:', err);
+      setError('Failed to load members. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filter members based on search term
   const filteredMembers = members.filter(member => 
@@ -105,28 +76,56 @@ export default function MembersPage() {
     setIsAddModalOpen(true);
   };
 
-  const handleSubmitNewMember = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmitNewMember = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    const newMember: Member = {
-      id: `member-${Date.now()}`,
+    const newMember = {
       name: formData.get('name') as string,
       email: formData.get('email') as string,
       phone: formData.get('phone') as string,
-      joinDate: new Date().toISOString().split('T')[0],
-      status: 'active',
       membershipType: formData.get('membershipType') as string,
-      lastVisit: new Date().toISOString().split('T')[0],
     };
     
-    setMembers([...members, newMember]);
-    setIsAddModalOpen(false);
+    try {
+      const response = await fetch('/api/members', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newMember),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to add member');
+      }
+      
+      // Refresh the members list
+      await fetchMembers();
+      setIsAddModalOpen(false);
+    } catch (err) {
+      console.error('Error adding member:', err);
+      alert('Failed to add member. Please try again.');
+    }
   };
 
-  const deleteMember = (id: string) => {
-    setMembers(members.filter(member => member.id !== id));
-    setIsModalOpen(false);
+  const deleteMember = async (id: string) => {
+    try {
+      const response = await fetch(`/api/members/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete member');
+      }
+      
+      // Refresh the members list
+      await fetchMembers();
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error('Error deleting member:', err);
+      alert('Failed to delete member. Please try again.');
+    }
   };
 
   const headerActions = (
@@ -175,107 +174,127 @@ export default function MembersPage() {
         />
       </div>
 
-      <Card noPadding>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Membership</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Visit</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredMembers.map((member) => (
-                <tr 
-                  key={member.id} 
-                  className="hover:bg-gray-50 cursor-pointer"
-                  onClick={() => handleMemberClick(member)}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <FiUser className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{member.name}</div>
-                        <div className="text-sm text-gray-500">Since {new Date(member.joinDate).toLocaleDateString()}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex flex-col">
-                      <div className="text-sm text-gray-900 flex items-center">
-                        <FiMail className="mr-2 text-gray-400" />
-                        {member.email}
-                      </div>
-                      <div className="text-sm text-gray-500 flex items-center mt-1">
-                        <FiPhone className="mr-2 text-gray-400" />
-                        {member.phone}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      member.membershipType === 'Premium' 
-                        ? 'bg-purple-100 text-purple-800' 
-                        : member.membershipType === 'Standard'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-green-100 text-green-800'
-                    }`}>
-                      {member.membershipType}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      member.status === 'active' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {member.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div className="flex items-center">
-                      <FiCalendar className="mr-2 text-gray-400" />
-                      {new Date(member.lastVisit).toLocaleDateString()}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      icon={FiEdit2}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleMemberClick(member);
-                      }}
-                      className="mr-2"
+      {loading ? (
+        <Card>
+          <div className="flex justify-center items-center h-40">
+            <p className="text-gray-500">Loading members...</p>
+          </div>
+        </Card>
+      ) : error ? (
+        <Card>
+          <div className="flex justify-center items-center h-40">
+            <p className="text-red-500">{error}</p>
+          </div>
+        </Card>
+      ) : (
+        <Card noPadding>
+          {members.length === 0 ? (
+            <div className="p-6 text-center">
+              <p className="text-gray-500">No members found. Add your first member to get started.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Membership</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Visit</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredMembers.map((member) => (
+                    <tr 
+                      key={member.id} 
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => handleMemberClick(member)}
                     >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      icon={FiTrash2}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteMember(member.id);
-                      }}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      Delete
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <FiUser className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">{member.name}</div>
+                            <div className="text-sm text-gray-500">Since {new Date(member.joinDate).toLocaleDateString()}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-col">
+                          <div className="text-sm text-gray-900 flex items-center">
+                            <FiMail className="mr-2 text-gray-400" />
+                            {member.email}
+                          </div>
+                          <div className="text-sm text-gray-500 flex items-center mt-1">
+                            <FiPhone className="mr-2 text-gray-400" />
+                            {member.phone}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          member.membershipType === 'Premium' 
+                            ? 'bg-purple-100 text-purple-800' 
+                            : member.membershipType === 'Standard'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-green-100 text-green-800'
+                        }`}>
+                          {member.membershipType}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          member.status === 'active' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {member.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div className="flex items-center">
+                          <FiCalendar className="mr-2 text-gray-400" />
+                          {new Date(member.lastVisit).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon={FiEdit2}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMemberClick(member);
+                          }}
+                          className="mr-2"
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon={FiTrash2}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteMember(member.id);
+                          }}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Delete
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      )}
 
       {/* Member Detail Modal */}
       <Modal

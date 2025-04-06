@@ -10,6 +10,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'clubs.ma',
       },
+      {
+        protocol: 'https',
+        hostname: 'randomuser.me',
+      },
     ],
   },
 };
