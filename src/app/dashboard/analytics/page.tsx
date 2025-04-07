@@ -72,7 +72,7 @@ export default function AnalyticsPage() {
           </div>
         </Card>
       </div>
-      
+
       <Card className="p-6">
         <Bar data={analyticsData.membershipStats} options={options} />
       </Card>
