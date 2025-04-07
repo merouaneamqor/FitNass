@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { db } from "@/lib/db";
+import prisma from "@/lib/db";
 import { z } from "zod";
 
 // Schema for club creation validation
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
   const skip = (page - 1) * limit;
 
   try {
-    const clubs = await db.club.findMany({
+    const clubs = await prisma.club.findMany({
       where: {
         OR: [
           { name: { contains: search, mode: "insensitive" } },
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
       take: limit,
     });
 
-    const totalCount = await db.club.count({
+    const totalCount = await prisma.club.count({
       where: {
         OR: [
           { name: { contains: search, mode: "insensitive" } },
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if user has the appropriate role
-    const user = await db.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { role: true },
     });
@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create the club
-    const club = await db.club.create({
+    const club = await prisma.club.create({
       data: {
         ...result.data,
         images: result.data.images || [],
@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
 
     // If user is not already a CLUB_OWNER, update their role
     if (user.role !== "CLUB_OWNER" && user.role !== "ADMIN") {
-      await db.user.update({
+      await prisma.user.update({
         where: { id: session.user.id },
         data: { role: "CLUB_OWNER" },
       });

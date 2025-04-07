@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { db } from "@/lib/db";
+import prisma from "@/lib/db";
 import { z } from "zod";
 import { sendReservationConfirmationEmail } from "@/lib/email";
 
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Get reservations with pagination
-    const reservations = await db.reservation.findMany({
+    const reservations = await prisma.reservation.findMany({
       where: filter,
       include: {
         sportField: {
@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Get total count for pagination
-    const totalCount = await db.reservation.count({
+    const totalCount = await prisma.reservation.count({
       where: filter,
     });
 
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
     const { startTime, endTime, sportFieldId, participantCount, notes } = result.data;
 
     // Get the sport field details
-    const sportField = await db.sportField.findUnique({
+    const sportField = await prisma.sportField.findUnique({
       where: { id: sportFieldId },
       select: { pricePerHour: true, status: true },
     });
@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if the requested time is already booked
-    const existingReservation = await db.reservation.findFirst({
+    const existingReservation = await prisma.reservation.findFirst({
       where: {
         sportFieldId,
         status: { in: ["PENDING", "CONFIRMED"] },
@@ -176,7 +176,7 @@ export async function POST(req: NextRequest) {
     const totalPrice = parseFloat(sportField.pricePerHour) * durationInHours;
 
     // Create the reservation
-    const reservation = await db.reservation.create({
+    const reservation = await prisma.reservation.create({
       data: {
         startTime,
         endTime,

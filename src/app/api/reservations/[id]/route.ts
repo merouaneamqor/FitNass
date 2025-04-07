@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { db } from "@/lib/db";
+import prisma from "@/lib/db";
 import { z } from "zod";
 
 // Schema for reservation update
@@ -29,7 +29,7 @@ export async function GET(
     }
 
     // Get the reservation
-    const reservation = await db.reservation.findUnique({
+    const reservation = await prisma.reservation.findUnique({
       where: { id: params.id },
       include: {
         sportField: {
@@ -67,7 +67,7 @@ export async function GET(
     }
 
     // Check if the user has permission to view this reservation
-    const user = await db.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { role: true },
     });
@@ -76,7 +76,7 @@ export async function GET(
     const isOwner = reservation.userId === session.user.id;
     const isClubOwner = user?.role === "CLUB_OWNER" && 
                         reservation.sportField.club.id === 
-                        (await db.club.findFirst({ 
+                        (await prisma.club.findFirst({ 
                           where: { ownerId: session.user.id },
                           select: { id: true }
                         }))?.id;
@@ -115,7 +115,7 @@ export async function PATCH(
     }
 
     // Get the reservation
-    const reservation = await db.reservation.findUnique({
+    const reservation = await prisma.reservation.findUnique({
       where: { id: params.id },
       include: {
         sportField: {
@@ -134,7 +134,7 @@ export async function PATCH(
     }
 
     // Check if the user has permission to update this reservation
-    const user = await db.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { role: true },
     });
@@ -164,7 +164,7 @@ export async function PATCH(
     }
 
     // Update the reservation
-    const updatedReservation = await db.reservation.update({
+    const updatedReservation = await prisma.reservation.update({
       where: { id: params.id },
       data: result.data,
     });
@@ -196,7 +196,7 @@ export async function DELETE(
     }
 
     // Get the reservation
-    const reservation = await db.reservation.findUnique({
+    const reservation = await prisma.reservation.findUnique({
       where: { id: params.id },
       include: {
         sportField: {
@@ -215,7 +215,7 @@ export async function DELETE(
     }
 
     // Check if the user has permission to cancel this reservation
-    const user = await db.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { role: true },
     });
@@ -241,7 +241,7 @@ export async function DELETE(
     }
 
     // Update the reservation status to CANCELLED
-    await db.reservation.update({
+    await prisma.reservation.update({
       where: { id: params.id },
       data: { status: "CANCELLED" },
     });

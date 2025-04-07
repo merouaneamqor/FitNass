@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { db } from "@/lib/db";
+import prisma from "@/lib/db";
 import { createCheckoutSession } from "@/lib/stripe";
 
 export async function POST(
@@ -20,7 +20,7 @@ export async function POST(
     }
 
     // Get the reservation
-    const reservation = await db.reservation.findUnique({
+    const reservation = await prisma.reservation.findUnique({
       where: { id: params.id },
       include: {
         user: {

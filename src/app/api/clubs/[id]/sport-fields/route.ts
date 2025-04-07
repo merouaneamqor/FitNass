@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { db } from "@/lib/db";
+import prisma from "@/lib/db";
 import { z } from "zod";
 
 // Schema for sport field creation
@@ -58,7 +58,7 @@ export async function GET(
     }
 
     // Get sport fields
-    const sportFields = await db.sportField.findMany({
+    const sportFields = await prisma.sportField.findMany({
       where: filter,
       orderBy: {
         name: "asc",
@@ -68,7 +68,7 @@ export async function GET(
     });
 
     // Get total count for pagination
-    const totalCount = await db.sportField.count({
+    const totalCount = await prisma.sportField.count({
       where: filter,
     });
 
@@ -107,7 +107,7 @@ export async function POST(
     }
 
     // Get the club to check ownership
-    const club = await db.club.findUnique({
+    const club = await prisma.club.findUnique({
       where: { id: params.id },
       select: { ownerId: true },
     });
@@ -120,7 +120,7 @@ export async function POST(
     }
 
     // Check if user has permission to add fields to this club
-    const user = await db.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { role: true },
     });
@@ -148,7 +148,7 @@ export async function POST(
     }
 
     // Create the sport field
-    const sportField = await db.sportField.create({
+    const sportField = await prisma.sportField.create({
       data: {
         ...result.data,
         pricePerHour: result.data.pricePerHour.toString(),

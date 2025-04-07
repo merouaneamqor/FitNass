@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { db } from "@/lib/db";
+import prisma from "@/lib/db";
 import { z } from "zod";
 
 // Schema for club update validation
@@ -30,13 +30,13 @@ export async function GET(
 ) {
   try {
     // Increment view count
-    await db.club.update({
+    await prisma.club.update({
       where: { id: params.id },
       data: { viewCount: { increment: 1 } },
     });
 
     // Get club details
-    const club = await db.club.findUnique({
+    const club = await prisma.club.findUnique({
       where: { id: params.id },
       include: {
         sportFields: {
@@ -111,7 +111,7 @@ export async function PATCH(
     }
 
     // Get the club to check ownership
-    const club = await db.club.findUnique({
+    const club = await prisma.club.findUnique({
       where: { id: params.id },
       select: { ownerId: true },
     });
@@ -124,7 +124,7 @@ export async function PATCH(
     }
 
     // Check if user has permission to update the club
-    const user = await db.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { role: true },
     });
@@ -152,7 +152,7 @@ export async function PATCH(
     }
 
     // Update the club
-    const updatedClub = await db.club.update({
+    const updatedClub = await prisma.club.update({
       where: { id: params.id },
       data: result.data,
     });
@@ -184,7 +184,7 @@ export async function DELETE(
     }
 
     // Get the club to check ownership
-    const club = await db.club.findUnique({
+    const club = await prisma.club.findUnique({
       where: { id: params.id },
       select: { ownerId: true },
     });
@@ -197,7 +197,7 @@ export async function DELETE(
     }
 
     // Check if user has permission to delete the club
-    const user = await db.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { role: true },
     });
@@ -213,7 +213,7 @@ export async function DELETE(
     }
 
     // Delete the club (this will cascade to sportFields per the schema)
-    await db.club.delete({
+    await prisma.club.delete({
       where: { id: params.id },
     });
 

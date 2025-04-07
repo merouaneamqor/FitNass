@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { db } from "@/lib/db";
+import prisma from "@/lib/db";
 
 export async function GET(
   req: NextRequest,
@@ -55,7 +55,7 @@ export async function GET(
     }
 
     // Get reservations
-    const reservations = await db.reservation.findMany({
+    const reservations = await prisma.reservation.findMany({
       where: filter,
       select: {
         id: true,

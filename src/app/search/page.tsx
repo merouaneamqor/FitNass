@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { FiSearch, FiMapPin, FiStar, FiFilter, FiActivity, FiUsers, FiCalendar, FiAlertCircle } from 'react-icons/fi';
+import { FiSearch, FiMapPin, FiStar, FiFilter, FiActivity, FiUsers, FiCalendar, FiAlertCircle, FiX } from 'react-icons/fi';
 import { GiTennisRacket, GiSoccerField, GiWeightLiftingUp, GiRunningShoe } from 'react-icons/gi';
 
 type SearchResult = {
@@ -21,12 +21,29 @@ type SearchResult = {
 export default function SearchPage() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
+  const initialCity = searchParams.get('city') || '';
   
   const [searchQuery, setSearchQuery] = useState(initialQuery);
+  const [cityFilter, setCityFilter] = useState(initialCity);
   const [isLoading, setIsLoading] = useState(true);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [activeFilter, setActiveFilter] = useState<'all' | 'gyms' | 'clubs'>('all');
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  // Popular cities in Morocco
+  const popularCities = ['Casablanca', 'Rabat', 'Marrakech', 'Tangier', 'Fez', 'Agadir'];
+
+  // Handle selecting a popular city
+  const handleSelectCity = (city: string) => {
+    setCityFilter(city);
+    
+    // Update URL with selected city
+    const params = new URLSearchParams();
+    if (searchQuery) params.append('q', searchQuery);
+    params.append('city', city);
+    router.push(`/search?${params.toString()}`);
+  };
 
   useEffect(() => {
     async function fetchSearchResults() {
@@ -34,10 +51,16 @@ export default function SearchPage() {
       setError(null);
       
       try {
-        console.log(`Fetching search results for: "${searchQuery}"`);
+        console.log(`Fetching search results for: "${searchQuery}" in city: "${cityFilter}"`);
+        
+        // Build query params
+        const params = new URLSearchParams();
+        if (searchQuery) params.append('q', searchQuery);
+        if (cityFilter) params.append('city', cityFilter);
+        const queryString = params.toString();
         
         // Fetch gyms data
-        const gymsResponse = await fetch(`/api/gyms/search?q=${encodeURIComponent(searchQuery)}`);
+        const gymsResponse = await fetch(`/api/gyms/search?${queryString}`);
         if (!gymsResponse.ok) {
           throw new Error(`Failed to fetch gyms: ${gymsResponse.status} ${gymsResponse.statusText}`);
         }
@@ -46,7 +69,7 @@ export default function SearchPage() {
         console.log(`Received ${gymsData.length} gyms:`, gymsData);
         
         // Fetch clubs data
-        const clubsResponse = await fetch(`/api/clubs/search?q=${encodeURIComponent(searchQuery)}`);
+        const clubsResponse = await fetch(`/api/clubs/search?${queryString}`);
         if (!clubsResponse.ok) {
           throw new Error(`Failed to fetch clubs: ${clubsResponse.status} ${clubsResponse.statusText}`);
         }
@@ -98,18 +121,34 @@ export default function SearchPage() {
       }
     }
     
-    if (searchQuery) {
+    // Only fetch if either search query or city filter is provided
+    if (searchQuery || cityFilter) {
       fetchSearchResults();
     } else {
       setResults([]);
       setIsLoading(false);
     }
-  }, [searchQuery]);
+  }, [searchQuery, cityFilter]);
 
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Search is already triggered by the state change
+    
+    // Update URL with current search parameters
+    const params = new URLSearchParams();
+    if (searchQuery) params.append('q', searchQuery);
+    if (cityFilter) params.append('city', cityFilter);
+    router.push(`/search?${params.toString()}`);
+  };
+
+  // Handle city filter removal
+  const handleClearCityFilter = () => {
+    setCityFilter('');
+    
+    // Update URL without city parameter
+    const params = new URLSearchParams();
+    if (searchQuery) params.append('q', searchQuery);
+    router.push(`/search?${params.toString()}`);
   };
 
   // Filter results based on active filter
@@ -141,6 +180,43 @@ export default function SearchPage() {
             <FiSearch className="absolute left-4 top-4 text-neutral-400" />
             <button type="submit" className="hidden">Search</button>
           </form>
+          
+          {/* Popular Cities */}
+          <div className="mt-4">
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-white/80 text-sm">Popular cities:</span>
+              {popularCities.map(city => (
+                <button
+                  key={city}
+                  onClick={() => handleSelectCity(city)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                    cityFilter === city
+                      ? 'bg-white text-indigo-700'
+                      : 'bg-white/20 text-white hover:bg-white/30'
+                  }`}
+                >
+                  {city}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {/* City filter badge - shown when filtering by city */}
+          {cityFilter && (
+            <div className="mt-4 flex items-center">
+              <span className="text-white/80 mr-2">Filtered by city:</span>
+              <span className="bg-white/20 text-white px-3 py-1 rounded-full flex items-center text-sm">
+                <FiMapPin className="mr-1 h-3 w-3" />
+                {cityFilter}
+                <button 
+                  onClick={handleClearCityFilter}
+                  className="ml-2 hover:text-white/80"
+                >
+                  <FiX className="h-4 w-4" />
+                </button>
+              </span>
+            </div>
+          )}
         </div>
       </div>
       
@@ -206,15 +282,17 @@ export default function SearchPage() {
             <FiSearch className="mx-auto h-12 w-12 text-neutral-300" />
             <h3 className="mt-4 text-xl font-medium text-neutral-900">No results found</h3>
             <p className="mt-2 text-neutral-600">
-              {searchQuery 
-                ? `No results found for "${searchQuery}". Try different keywords.` 
-                : 'Enter a search term to find gyms and sports clubs.'}
+              {searchQuery || cityFilter
+                ? `No results found${searchQuery ? ` for "${searchQuery}"` : ''}${cityFilter ? ` in ${cityFilter}` : ''}. Try different criteria.` 
+                : 'Enter a search term or select a city to find gyms and sports clubs.'}
             </p>
           </div>
         ) : (
           <div className="space-y-8">
             <div className="text-sm text-neutral-500">
-              Found {filteredResults.length} results for "{searchQuery}"
+              Found {filteredResults.length} results
+              {searchQuery ? ` for "${searchQuery}"` : ''}
+              {cityFilter ? ` in ${cityFilter}` : ''}
             </div>
             
             <div className="grid grid-cols-1 gap-6">
@@ -231,6 +309,18 @@ export default function SearchPage() {
 
 function SearchResultCard({ result }: { result: SearchResult }) {
   const isGym = result.type === 'gym';
+  const router = useRouter();
+  
+  // Handle clicking on city badge
+  const handleCityClick = (e: React.MouseEvent, city: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Navigate to search with this city filter
+    const params = new URLSearchParams();
+    params.append('city', city);
+    router.push(`/search?${params.toString()}`);
+  };
   
   // Different styling based on type
   const typeStyles = isGym 
@@ -268,11 +358,20 @@ function SearchResultCard({ result }: { result: SearchResult }) {
       <div className="p-6 flex flex-col flex-grow">
         <div className="flex justify-between items-start mb-2">
           <div>
-            <div className="flex items-center mb-2">
+            <div className="flex items-center gap-2 mb-2">
               <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${typeStyles.badge}`}>
                 {typeStyles.icon}
                 {isGym ? 'Gym' : 'Sports Club'}
               </span>
+              
+              {/* City Badge - Clickable to filter by this city */}
+              <button 
+                onClick={(e) => handleCityClick(e, result.city)}
+                className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+              >
+                <FiMapPin className="mr-1 h-3 w-3" />
+                {result.city}
+              </button>
             </div>
             <h3 className={`text-xl font-semibold ${typeStyles.title}`}>
               <Link href={`/${isGym ? 'gyms' : 'clubs'}/${result.id}`} className="hover:underline">
@@ -288,7 +387,7 @@ function SearchResultCard({ result }: { result: SearchResult }) {
         
         <div className="flex items-center text-neutral-600 mb-4">
           <FiMapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-          <span>{result.address}, {result.city}</span>
+          <span>{result.address}</span>
         </div>
         
         <p className="text-neutral-600 line-clamp-2 mb-4 flex-grow">{result.description}</p>
