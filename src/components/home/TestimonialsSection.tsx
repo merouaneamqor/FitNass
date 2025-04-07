@@ -42,7 +42,7 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
                   <FiStar key={i} className={`h-5 w-5 mr-1 ${i < testimonial.rating ? 'text-amber-400 fill-current' : 'text-gray-300'}`} />
                 ))}
               </div>
-              <p className="text-gray-700 mb-6 italic">"{testimonial.comment}"</p>
+              <p className="text-gray-700 mb-6 italic">&quot;{testimonial.comment}&quot;</p>
               <div className="flex items-center">
                 <div className="h-14 w-14 rounded-full overflow-hidden">
                   <Image 

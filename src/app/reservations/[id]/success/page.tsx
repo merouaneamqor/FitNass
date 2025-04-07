@@ -101,10 +101,10 @@ export default function PaymentSuccessPage() {
         <Card className="max-w-xl mx-auto">
           <CardHeader>
             <CardTitle className="text-destructive">Reservation Not Found</CardTitle>
-            <CardDescription>We couldn't find details for this reservation</CardDescription>
+            <CardDescription>We couldn&apos;t find details for this reservation</CardDescription>
           </CardHeader>
           <CardContent>
-            <p>The reservation you're looking for doesn't exist or you don't have permission to view it.</p>
+            <p>The reservation you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to view it.</p>
           </CardContent>
           <CardFooter>
             <Button asChild>
@@ -188,6 +188,8 @@ export default function PaymentSuccessPage() {
               </div>
             </div>
           </div>
+          <p className="text-gray-600">We&apos;ve sent a confirmation email with all the details.</p>
+          <p className="text-gray-600">You&apos;ll receive a reminder 24 hours before your reservation. Don&apos;t forget to check your email and arrive on time. We can&apos;t wait to see you!</p>
         </CardContent>
         
         <CardFooter className="flex flex-col sm:flex-row gap-4 justify-center">

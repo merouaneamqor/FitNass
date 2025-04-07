@@ -34,6 +34,11 @@ interface ReservationRequestParams extends RequestParams {
   body?: string;
 }
 
+// Define interface for club creation request
+interface CreateClubRequestParams extends RequestParams {
+  body: string;
+}
+
 // Mock NextRequest and NextResponse
 class MockNextRequest {
   private url: string;
@@ -193,7 +198,7 @@ describe('Club API', () => {
       (db.club.create as jest.Mock).mockResolvedValue(mockCreatedClub);
       
       // Mock the implementation of the createClub handler
-      (createClub as jest.Mock).mockImplementation(async (req: any) => {
+      (createClub as jest.Mock).mockImplementation(async (req: CreateClubRequestParams) => {
         return MockNextResponse.json(mockCreatedClub, { status: 201 });
       });
       

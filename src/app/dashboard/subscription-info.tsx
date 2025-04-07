@@ -163,7 +163,7 @@ export default function SubscriptionInfo({ userId }: SubscriptionInfoProps) {
       <Card>
         <CardHeader>
           <CardTitle>Subscription Status</CardTitle>
-          <CardDescription>You don't have an active subscription</CardDescription>
+          <CardDescription>You don&apos;t have an active subscription</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -271,6 +271,8 @@ export default function SubscriptionInfo({ userId }: SubscriptionInfoProps) {
               }
             </p>
           </div>
+          
+          <div className="text-sm text-gray-500">You&apos;ll be charged automatically at the end of your subscription period.</div>
         </div>
       </CardContent>
       

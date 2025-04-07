@@ -6,11 +6,7 @@ import Image from 'next/image';
 import { FiSearch, FiCheck, FiActivity } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 
-type HeroSectionProps = {
-  // You can add props if needed
-};
-
-export default function HeroSection({}: HeroSectionProps) {
+export default function HeroSection() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchType, setSearchType] = useState('all');
   const router = useRouter();
