@@ -53,13 +53,6 @@ type DateClickArg = {
   };
 };
 
-// Define error type
-type ApiError = {
-  message: string;
-  code?: string;
-  status?: number;
-};
-
 export default function BookClub() {
   const { id } = useParams();
   const router = useRouter();
@@ -68,12 +61,11 @@ export default function BookClub() {
   const [club, setClub] = useState<Club | null>(null);
   const [sportFields, setSportFields] = useState<SportField[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [selectedField, setSelectedField] = useState<string>('');
+  const [selectedFields, setSelectedFields] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [startTime, setStartTime] = useState<string>('');
-  const [endTime, setEndTime] = useState<string>('');
-  const [participants, setParticipants] = useState<number>(1);
-  const [notes, setNotes] = useState<string>('');
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [participantCount, setParticipantCount] = useState<number>(1);
+  const [totalPrice, setTotalPrice] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
@@ -107,7 +99,7 @@ export default function BookClub() {
         setSportFields(data.sportFields);
         
         if (data.sportFields.length > 0) {
-          setSelectedField(data.sportFields[0].id);
+          setSelectedFields([data.sportFields[0].id]);
         }
         
         setIsLoading(false);
@@ -129,7 +121,7 @@ export default function BookClub() {
   // Fetch reservations when a field is selected
   useEffect(() => {
     const fetchReservations = async () => {
-      if (!selectedField) return;
+      if (!selectedFields.length) return;
       
       try {
         // Fetch existing reservations for this field to show on calendar
@@ -139,7 +131,7 @@ export default function BookClub() {
         const endDate = new Date();
         endDate.setDate(endDate.getDate() + 30); // 30 days in the future
         
-        const response = await fetch(`/api/clubs/${id}/sport-fields/${selectedField}/reservations?start=${startDate.toISOString()}&end=${endDate.toISOString()}`);
+        const response = await fetch(`/api/clubs/${id}/sport-fields/${selectedFields[0]}/reservations?start=${startDate.toISOString()}&end=${endDate.toISOString()}`);
         if (!response.ok) throw new Error('Failed to fetch reservations');
         
         const data = await response.json();
@@ -154,7 +146,7 @@ export default function BookClub() {
     };
     
     fetchReservations();
-  }, [id, selectedField, toast]);
+  }, [id, selectedFields, toast]);
 
   const handleDateClick = (arg: DateClickArg) => {
     setSelectedDate(arg.date);
@@ -163,52 +155,55 @@ export default function BookClub() {
     const currentHour = new Date().getHours();
     const nextHour = currentHour + 1;
     
-    setStartTime(`${nextHour.toString().padStart(2, '0')}:00`);
-    setEndTime(`${(nextHour + 1).toString().padStart(2, '0')}:00`);
+    setSelectedTime(`${nextHour.toString().padStart(2, '0')}:00`);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedField || !selectedDate) {
-      toast({
-        title: 'Error',
-        description: 'Please select a field and date',
-        variant: 'destructive',
-      });
+    if (!selectedFields.length || !selectedDate || !selectedTime) {
       return;
     }
 
     try {
-      const response = await fetch('/api/reservations', {
+      setIsSubmitting(true);
+
+      const response = await fetch(`/api/clubs/${id}/sport-fields/reservations`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          sportFieldId: selectedField,
-          startTime: selectedDate.toISOString(),
-          endTime: new Date(selectedDate.getTime() + 60 * 60 * 1000).toISOString(),
+          fieldIds: selectedFields,
+          date: selectedDate.toISOString(),
+          time: selectedTime,
+          participantCount,
         }),
       });
 
       if (!response.ok) {
-        const error = await response.json() as ApiError;
-        throw new Error(error.message || 'Failed to create reservation');
+        throw new Error('Failed to create reservation');
       }
 
-      const reservation = await response.json();
-      
-      // Redirect to reservation page
-      router.push(`/reservations/${reservation.id}`);
-    } catch (error) {
-      const err = error as ApiError;
-      toast({
-        title: 'Error',
-        description: err.message || 'Failed to create reservation',
-        variant: 'destructive',
-      });
+      const data = await response.json();
+      router.push(`/reservations/${data.id}/success`);
+    } catch (err) {
+      console.error('An error occurred:', err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    const calculateTotalPrice = () => {
+      if (!selectedFields.length || !selectedTime) return;
+      
+      const selectedFieldsData = sportFields.filter(field => selectedFields.includes(field.id));
+      const totalPrice = selectedFieldsData.reduce((sum, field) => sum + field.price, 0);
+      setTotalPrice(totalPrice);
+    };
+
+    calculateTotalPrice();
+  }, [selectedFields, selectedTime, sportFields]);
 
   // Calendar events from reservations
   const calendarEvents = reservations.map(reservation => ({
@@ -275,8 +270,8 @@ export default function BookClub() {
               <div className="space-y-2">
                 <Label htmlFor="sport-field">Sport Field</Label>
                 <Select 
-                  value={selectedField} 
-                  onValueChange={setSelectedField}
+                  value={selectedFields.join(',')} 
+                  onValueChange={(value) => setSelectedFields(value.split(','))}
                   disabled={sportFields.length === 0}
                 >
                   <SelectTrigger>
@@ -302,28 +297,15 @@ export default function BookClub() {
                 />
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="start-time">Start Time</Label>
-                  <Input 
-                    id="start-time" 
-                    type="time" 
-                    value={startTime} 
-                    onChange={(e) => setStartTime(e.target.value)}
-                    disabled={!selectedDate}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="end-time">End Time</Label>
-                  <Input 
-                    id="end-time" 
-                    type="time" 
-                    value={endTime} 
-                    onChange={(e) => setEndTime(e.target.value)}
-                    disabled={!selectedDate}
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="time">Selected Time</Label>
+                <Input 
+                  id="time" 
+                  type="time" 
+                  value={selectedTime} 
+                  onChange={(e) => setSelectedTime(e.target.value)}
+                  disabled={!selectedDate}
+                />
               </div>
               
               <div className="space-y-2">
@@ -332,8 +314,17 @@ export default function BookClub() {
                   id="participants" 
                   type="number" 
                   min="1" 
-                  value={participants} 
-                  onChange={(e) => setParticipants(parseInt(e.target.value))}
+                  value={participantCount} 
+                  onChange={(e) => setParticipantCount(parseInt(e.target.value))}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="total-price">Total Price</Label>
+                <Input 
+                  id="total-price" 
+                  value={totalPrice.toString()} 
+                  readOnly
                 />
               </div>
               
@@ -342,12 +333,10 @@ export default function BookClub() {
                 <Textarea 
                   id="notes" 
                   placeholder="Any special requests or additional information" 
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
                 />
               </div>
               
-              <Button type="submit" className="w-full" disabled={isSubmitting || !selectedField || !selectedDate || !startTime || !endTime}>
+              <Button type="submit" className="w-full" disabled={isSubmitting || !selectedFields.length || !selectedDate || !selectedTime}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

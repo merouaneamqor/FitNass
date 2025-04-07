@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { FiSave, FiUpload, FiTrash2, FiUser, FiMapPin, FiPhone, FiMail, FiGlobe, FiLock, FiCreditCard } from 'react-icons/fi';
+import Image from 'next/image';
 
 export default function SettingsPage() {
   const { data: session } = useSession();
@@ -102,10 +103,12 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {gymProfile.images.map((image, index) => (
                   <div key={index} className="relative group">
-                    <img 
-                      src={image} 
-                      alt={`Gym image ${index + 1}`} 
-                      className="h-48 w-full object-cover rounded-lg" 
+                    <Image
+                      src={image}
+                      alt={`Gym image ${index + 1}`}
+                      width={300}
+                      height={300}
+                      className="h-48 w-full object-cover rounded-lg"
                     />
                     <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-lg">
                       <button type="button" className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700">

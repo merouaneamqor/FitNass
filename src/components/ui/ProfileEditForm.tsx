@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { UserProfile } from '@/types/user';
 import { FiUser, FiImage, FiMapPin, FiAlignLeft } from 'react-icons/fi';
+import Image from 'next/image';
 
 interface ProfileEditFormProps {
   profile: UserProfile;
@@ -87,15 +88,16 @@ export const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
               className="w-full p-3 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               placeholder="https://example.com/your-image.jpg"
             />
-            {image && (
-              <div className="mt-2">
-                <img
-                  src={image}
-                  alt="Profile preview"
-                  className="w-16 h-16 rounded-full object-cover"
-                />
-              </div>
-            )}
+            <div className="relative w-32 h-32 rounded-full overflow-hidden">
+              <Image
+                src={image || profile.image || '/default-avatar.png'}
+                alt={name || profile.name || 'User'}
+                width={128}
+                height={128}
+                className="object-cover"
+                priority
+              />
+            </div>
           </div>
           
           {/* City */}

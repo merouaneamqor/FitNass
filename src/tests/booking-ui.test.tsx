@@ -2,6 +2,11 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import BookClub from '@/app/(club)/clubs/[id]/book/page';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { toast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 // Mock hooks and components
 jest.mock('next/navigation', () => ({
@@ -14,10 +19,8 @@ jest.mock('next/navigation', () => ({
   })),
 }));
 
-jest.mock('@/hooks/use-toast', () => ({
-  useToast: jest.fn(() => ({
-    toast: jest.fn(),
-  })),
+jest.mock('@/components/ui/use-toast', () => ({
+  toast: jest.fn(),
 }));
 
 // Define interface for FullCalendar props
@@ -62,6 +65,47 @@ global.fetch = jest.fn(() =>
     json: () => Promise.resolve({}),
   })
 ) as jest.Mock;
+
+// Types
+interface ReservationData {
+  sportFieldId: string;
+  startTime: string;
+  endTime: string;
+  participantCount: number;
+}
+
+// Mock data
+const mockSportFields = [
+  {
+    id: '1',
+    name: 'Tennis Court 1',
+    type: 'TENNIS',
+    price: 100,
+    club: {
+      id: '1',
+      name: 'Sports Club',
+    },
+  },
+];
+
+// Mock handlers
+const mockCreateReservation = async (data: ReservationData) => {
+  return {
+    id: '1',
+    ...data,
+  };
+};
+
+const mockUpdateReservation = async (id: string, data: Partial<ReservationData>) => {
+  return {
+    id,
+    ...data,
+  };
+};
+
+const mockDeleteReservation = async (id: string) => {
+  return true;
+};
 
 describe('BookClub Component', () => {
   beforeEach(() => {
@@ -168,8 +212,8 @@ describe('BookClub Component', () => {
   });
 
   it('should validate form before submission', async () => {
-    const mockRouter = require('next/navigation').useRouter();
-    const mockToast = require('@/hooks/use-toast').useToast().toast;
+    const mockRouter = useRouter();
+    const mockToast = toast;
     
     render(<BookClub />);
     
@@ -236,7 +280,7 @@ describe('BookClub Component', () => {
   });
 
   it('should handle API errors gracefully', async () => {
-    const mockToast = require('@/hooks/use-toast').useToast().toast;
+    const mockToast = toast;
     
     // Mock API error
     (global.fetch as jest.Mock).mockImplementationOnce((url: string) => {

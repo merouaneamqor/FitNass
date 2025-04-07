@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { db } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
+import { NextRequest } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 // Define interfaces for mock request and response
 interface RequestOptions {
@@ -29,14 +32,19 @@ interface ClubRequestParams extends RequestParams {
   searchParams?: URLSearchParams;
 }
 
-interface ReservationRequestParams extends RequestParams {
-  searchParams?: URLSearchParams;
-  body?: string;
+interface ReservationRequestParams {
+  clubId: string;
+  fieldId: string;
+  startDate: string;
+  endDate: string;
 }
 
-// Define interface for club creation request
-interface CreateClubRequestParams extends RequestParams {
-  body: string;
+interface ReservationData {
+  sportFieldId: string;
+  startTime: string;
+  endTime: string;
+  participantCount: number;
+  userId: string;
 }
 
 // Mock NextRequest and NextResponse
@@ -63,14 +71,6 @@ class MockNextResponse {
   }
 }
 
-// Mock the NextRequest and NextResponse imports
-jest.mock('next/server', () => ({
-  NextRequest: MockNextRequest,
-  NextResponse: {
-    json: (data: unknown, options?: ResponseOptions) => MockNextResponse.json(data, options),
-  },
-}));
-
 // Mock next-auth
 jest.mock('next-auth', () => ({
   getServerSession: jest.fn(() => Promise.resolve({
@@ -83,9 +83,9 @@ jest.mock('next-auth', () => ({
 }));
 
 // Mock the database operations
-jest.mock('@/lib/db', () => {
+jest.mock('@/lib/prisma', () => {
   return {
-    db: {
+    prisma: {
       club: {
         create: jest.fn(),
         findMany: jest.fn(),
@@ -116,26 +116,10 @@ jest.mock('@/lib/db', () => {
   };
 });
 
-// Mock the API route handlers
-jest.mock('@/app/api/clubs/route', () => ({
-  GET: jest.fn(),
-  POST: jest.fn(),
-}));
-
-jest.mock('@/app/api/clubs/[id]/sport-fields/route', () => ({
-  GET: jest.fn(),
-  POST: jest.fn(),
-}));
-
-jest.mock('@/app/api/reservations/route', () => ({
-  GET: jest.fn(),
-  POST: jest.fn(),
-}));
-
-// Import after mocking
-const { GET: getClubs, POST: createClub } = require('@/app/api/clubs/route');
-const { GET: getSportFields, POST: createSportField } = require('@/app/api/clubs/[id]/sport-fields/route');
-const { GET: getReservations, POST: createReservation } = require('@/app/api/reservations/route');
+// Import API route handlers
+import { GET as getClubs, POST as createClub } from '@/app/api/clubs/route';
+import { GET as getSportFields, POST as createSportField } from '@/app/api/clubs/[id]/sport-fields/route';
+import { GET as getReservations, POST as createReservation } from '@/app/api/reservations/route';
 
 describe('Club API', () => {
   beforeEach(() => {
@@ -158,8 +142,8 @@ describe('Club API', () => {
         }
       ];
       
-      (db.club.findMany as jest.Mock).mockResolvedValue(mockClubs);
-      (db.club.count as jest.Mock).mockResolvedValue(2);
+      (prisma.club.findMany as jest.Mock).mockResolvedValue(mockClubs);
+      (prisma.club.count as jest.Mock).mockResolvedValue(2);
       
       // Mock the implementation of the getClubs handler
       (getClubs as jest.Mock).mockImplementation(async (req: ClubRequestParams) => {
@@ -194,11 +178,11 @@ describe('Club API', () => {
         description: 'A brand new club',
       };
       
-      (db.user.findUnique as jest.Mock).mockResolvedValue({ role: 'ADMIN' });
-      (db.club.create as jest.Mock).mockResolvedValue(mockCreatedClub);
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({ role: 'ADMIN' });
+      (prisma.club.create as jest.Mock).mockResolvedValue(mockCreatedClub);
       
       // Mock the implementation of the createClub handler
-      (createClub as jest.Mock).mockImplementation(async (req: CreateClubRequestParams) => {
+      (createClub as jest.Mock).mockImplementation(async (req: RequestParams) => {
         return MockNextResponse.json(mockCreatedClub, { status: 201 });
       });
       
@@ -233,15 +217,15 @@ describe('Reservation System', () => {
   });
 
   it('Club model should be defined in the database schema', () => {
-    expect(db.club).toBeDefined();
+    expect(prisma.club).toBeDefined();
   });
 
   it('SportField model should be defined in the database schema', () => {
-    expect(db.sportField).toBeDefined();
+    expect(prisma.sportField).toBeDefined();
   });
 
   it('Reservation model should be defined in the database schema', () => {
-    expect(db.reservation).toBeDefined();
+    expect(prisma.reservation).toBeDefined();
   });
 
   it('API endpoints should be properly defined', () => {
@@ -252,4 +236,39 @@ describe('Reservation System', () => {
     expect(getReservations).toBeDefined();
     expect(createReservation).toBeDefined();
   });
-}); 
+});
+
+// Mock data
+const mockReservation: ReservationData = {
+  sportFieldId: '1',
+  startTime: '2024-02-20T10:00:00Z',
+  endTime: '2024-02-20T11:00:00Z',
+  participantCount: 2,
+  userId: '1'
+};
+
+// Mock handlers
+const mockGetReservations = async (params: ReservationRequestParams) => {
+  return {
+    reservations: [],
+    total: 0
+  };
+};
+
+const mockCreateReservation = async (data: ReservationData) => {
+  return {
+    id: '1',
+    ...data
+  };
+};
+
+const mockUpdateReservation = async (id: string, data: Partial<ReservationData>) => {
+  return {
+    id,
+    ...data
+  };
+};
+
+const mockDeleteReservation = async (id: string) => {
+  return true;
+}; 

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { FiStar, FiFilter, FiThumbsUp, FiMessageSquare, FiTrash2, FiFlag, FiSearch } from 'react-icons/fi';
+import Image from 'next/image';
 
 // Mock data for reviews
 interface Review {
@@ -221,17 +222,14 @@ export default function ReviewsPage() {
                 <div className="flex justify-between items-start">
                   <div className="flex items-start">
                     <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                      {review.user.image ? (
-                        <img 
-                          src={review.user.image} 
-                          alt={review.user.name} 
-                          className="h-10 w-10 rounded-full" 
+                      <div className="relative w-12 h-12 rounded-full overflow-hidden">
+                        <Image
+                          src={review.user.image || '/default-avatar.png'}
+                          alt={review.user.name || 'User'}
+                          fill
+                          className="object-cover"
                         />
-                      ) : (
-                        <span className="font-medium text-blue-600">
-                          {review.user.name.charAt(0).toUpperCase()}
-                        </span>
-                      )}
+                      </div>
                     </div>
                     <div>
                       <h3 className="text-sm font-medium">{review.user.name}</h3>

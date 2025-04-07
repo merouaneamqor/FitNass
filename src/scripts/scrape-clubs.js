@@ -1,10 +1,13 @@
 // This script scrapes data about sports clubs from Google Maps API
 // Usage: node scrape-clubs.js
 
-require('dotenv').config();
-const fs = require('fs');
-const path = require('path');
-const { Client } = require('@googlemaps/google-maps-services-js');
+import puppeteer from 'puppeteer';
+import { PrismaClient } from '@prisma/client';
+import fs from 'fs';
+import path from 'path';
+import { Client } from '@googlemaps/google-maps-services-js';
+
+const prisma = new PrismaClient();
 
 // Initialize the Google Maps client
 const client = new Client({});

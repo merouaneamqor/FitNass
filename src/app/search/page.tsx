@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FiSearch, FiMapPin, FiStar, FiFilter, FiActivity, FiUsers, FiCalendar, FiAlertCircle, FiX } from 'react-icons/fi';
 import { GiTennisRacket, GiSoccerField, GiWeightLiftingUp, GiRunningShoe } from 'react-icons/gi';
+import Image from 'next/image';
 
 type SearchResult = {
   id: string;
@@ -341,17 +342,16 @@ function SearchResultCard({ result }: { result: SearchResult }) {
     <div className="flex flex-col md:flex-row bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-neutral-100">
       {/* Image */}
       <div className="md:w-64 h-48 md:h-auto flex-shrink-0">
-        <img
-          src={result.images && result.images.length > 0 
-            ? result.images[0]
-            : `https://via.placeholder.com/300x200?text=${encodeURIComponent(result.name)}`}
-          alt={result.name}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            // Replace broken image with placeholder
-            (e.target as HTMLImageElement).src = `https://via.placeholder.com/300x200?text=${encodeURIComponent(result.name)}`;
-          }}
-        />
+        <div className="relative w-full h-48 rounded-lg overflow-hidden">
+          <Image
+            src={result.images && result.images.length > 0 
+              ? result.images[0]
+              : `https://via.placeholder.com/300x200?text=${encodeURIComponent(result.name)}`}
+            alt={result.name}
+            fill
+            className="object-cover"
+          />
+        </div>
       </div>
       
       {/* Content */}

@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import Map, { Marker, Popup, NavigationControl } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import Image from 'next/image';
 
 // Import types
 import { Gym } from '@/types/gym';
@@ -235,11 +236,16 @@ export function GymClient({
                     className="gym-popup"
                   >
                     <div className="p-2 w-72">
-                      <img 
-                        src={selectedGym.images[0] || 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48'} 
-                        alt={selectedGym.name} 
-                        className="w-full h-40 object-cover rounded-lg mb-3"
-                      />
+                      <div className="relative w-full h-64 rounded-lg overflow-hidden">
+                        <Image
+                          src={selectedGym.images[0] || '/default-gym.jpg'}
+                          alt={selectedGym.name}
+                          width={288}
+                          height={256}
+                          className="object-cover w-full h-full"
+                          priority
+                        />
+                      </div>
                       <h3 className="font-semibold text-neutral-900 text-lg">{selectedGym.name}</h3>
                       <div className="flex items-center mt-2 text-sm text-neutral-600">
                         <span className="truncate">{selectedGym.address}, {selectedGym.city}</span>
