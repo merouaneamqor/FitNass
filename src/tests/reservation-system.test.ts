@@ -1,12 +1,45 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { db } from '@/lib/db';
 
+// Define interfaces for mock request and response
+interface RequestOptions {
+  method?: string;
+  headers?: Record<string, string>;
+  body?: string;
+}
+
+interface ResponseOptions {
+  status?: number;
+  headers?: Record<string, string>;
+}
+
+interface ResponseData {
+  status: number;
+  json: () => Promise<unknown>;
+}
+
+// Define interfaces for request parameters
+interface RequestParams {
+  searchParams?: URLSearchParams;
+  headers?: Record<string, string>;
+  body?: string;
+}
+
+interface ClubRequestParams extends RequestParams {
+  searchParams?: URLSearchParams;
+}
+
+interface ReservationRequestParams extends RequestParams {
+  searchParams?: URLSearchParams;
+  body?: string;
+}
+
 // Mock NextRequest and NextResponse
 class MockNextRequest {
   private url: string;
-  private options: any;
+  private options: RequestOptions;
 
-  constructor(url: string, options?: any) {
+  constructor(url: string, options?: RequestOptions) {
     this.url = url;
     this.options = options || {};
   }
@@ -17,7 +50,7 @@ class MockNextRequest {
 }
 
 class MockNextResponse {
-  static json(data: any, options?: any) {
+  static json(data: unknown, options?: ResponseOptions): ResponseData {
     return {
       status: options?.status || 200,
       json: () => Promise.resolve(data),
@@ -29,7 +62,7 @@ class MockNextResponse {
 jest.mock('next/server', () => ({
   NextRequest: MockNextRequest,
   NextResponse: {
-    json: (data: any, options?: any) => MockNextResponse.json(data, options),
+    json: (data: unknown, options?: ResponseOptions) => MockNextResponse.json(data, options),
   },
 }));
 
@@ -124,15 +157,14 @@ describe('Club API', () => {
       (db.club.count as jest.Mock).mockResolvedValue(2);
       
       // Mock the implementation of the getClubs handler
-      (getClubs as jest.Mock).mockImplementation(async (req: any) => {
+      (getClubs as jest.Mock).mockImplementation(async (req: ClubRequestParams) => {
         return MockNextResponse.json({
           clubs: mockClubs,
           meta: {
             total: 2,
             page: 1,
             limit: 10,
-            totalPages: 1,
-          }
+          },
         });
       });
       

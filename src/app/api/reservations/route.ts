@@ -14,6 +14,15 @@ const reservationSchema = z.object({
   notes: z.string().optional(),
 });
 
+// Define a type for the filter
+type ReservationFilter = {
+  userId?: string;
+  status?: string;
+  sportFieldId?: string;
+  startTime?: { gte: Date };
+  endTime?: { lte: Date };
+};
+
 // Get all reservations for the current user
 export async function GET(req: NextRequest) {
   try {
@@ -34,7 +43,7 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build filter based on query parameters
-    let filter: any = {
+    const filter: ReservationFilter = {
       userId: session.user.id,
     };
 

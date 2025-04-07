@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/loading-spinner';
 
 interface Feature {
@@ -14,24 +14,35 @@ interface Feature {
   included: boolean;
 }
 
-interface SubscriptionPlan {
+// Define types for subscription plans
+type SubscriptionPlan = {
   id: string;
   name: string;
   description: string;
   price: number;
-  billingCycle: string;
-  features: Feature[];
-}
+  interval: string;
+  features: string[];
+  isPopular?: boolean;
+};
+
+type UserSubscription = {
+  id: string;
+  status: string;
+  planId: string;
+  startDate: string;
+  endDate: string;
+  autoRenew: boolean;
+};
 
 export default function SubscriptionsPage() {
+  const { data: session } = useSession();
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userSubscription, setUserSubscription] = useState<any>(null);
-  const [subscribing, setSubscribing] = useState(false);
+  const [userSubscription, setUserSubscription] = useState<UserSubscription | null>(null);
+  const [processing, setProcessing] = useState(false);
   
   const router = useRouter();
-  const { data: session, status } = useSession();
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -45,7 +56,7 @@ export default function SubscriptionsPage() {
         setPlans(plansData);
         
         // Fetch user's current subscription if logged in
-        if (status === 'authenticated') {
+        if (session) {
           const subscriptionResponse = await fetch('/api/user/subscription');
           if (subscriptionResponse.ok) {
             const subscriptionData = await subscriptionResponse.json();
@@ -61,51 +72,36 @@ export default function SubscriptionsPage() {
     };
 
     fetchPlans();
-  }, [status]);
+  }, [session]);
 
   const handleSubscribe = async (planId: string) => {
-    if (status !== 'authenticated') {
+    if (!session) {
       // Redirect to login page if not authenticated
       router.push('/login?returnUrl=/subscriptions');
       return;
     }
 
-    setSubscribing(true);
+    setProcessing(true);
     try {
-      // In a real implementation, this would integrate with Stripe/payment processor
-      // For now, we'll create a subscription directly
-      const response = await fetch('/api/subscriptions/create', {
+      const response = await fetch('/api/subscriptions/create-checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          planId,
-          paymentMethodId: 'mock-payment-method' // Mock payment method ID
-        }),
+        body: JSON.stringify({ planId }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create subscription');
+        throw new Error(errorData.error || 'Failed to create checkout session');
       }
 
-      const result = await response.json();
-      
-      // Refresh the user's subscription data
-      const subscriptionResponse = await fetch('/api/user/subscription');
-      if (subscriptionResponse.ok) {
-        const subscriptionData = await subscriptionResponse.json();
-        setUserSubscription(subscriptionData);
-      }
-
-      // Show success message or redirect to dashboard
-      router.push('/dashboard?subscribed=true');
-    } catch (err: any) {
-      setError(err.message || 'Failed to create subscription');
-      console.error(err);
+      const { url } = await response.json();
+      window.location.href = url;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
     } finally {
-      setSubscribing(false);
+      setProcessing(false);
     }
   };
 
@@ -173,7 +169,7 @@ export default function SubscriptionsPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {plans.map((plan) => (
           <Card key={plan.id} className="flex flex-col">
             <CardHeader>
@@ -183,16 +179,14 @@ export default function SubscriptionsPage() {
             <CardContent className="flex-grow">
               <div className="mb-4">
                 <span className="text-3xl font-bold">
-                  {formatPrice(plan.price, plan.billingCycle)}
+                  {formatPrice(plan.price, plan.interval)}
                 </span>
               </div>
               <ul className="space-y-2">
                 {plan.features.map((feature, index) => (
                   <li key={index} className="flex items-start">
-                    <Check className={`mr-2 h-5 w-5 ${feature.included ? 'text-green-500' : 'text-gray-300'}`} />
-                    <span className={feature.included ? '' : 'text-muted-foreground line-through'}>
-                      {feature.name}
-                    </span>
+                    <Check className="mr-2 h-5 w-5 text-green-500" />
+                    <span>{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -200,16 +194,13 @@ export default function SubscriptionsPage() {
             <CardFooter>
               <Button
                 onClick={() => handleSubscribe(plan.id)}
-                disabled={subscribing || (userHasSubscription && userSubscription.subscription.plan.id === plan.id)}
+                disabled={processing}
                 className="w-full"
-                variant={userHasSubscription && userSubscription.subscription.plan.id === plan.id ? "outline" : "default"}
               >
-                {subscribing ? (
+                {processing ? (
                   <>
-                    <LoadingSpinner size="sm" className="mr-2" /> Processing...
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...
                   </>
-                ) : userHasSubscription && userSubscription.subscription.plan.id === plan.id ? (
-                  'Current Plan'
                 ) : (
                   'Subscribe'
                 )}
@@ -220,4 +211,4 @@ export default function SubscriptionsPage() {
       </div>
     </div>
   );
-} 
+}

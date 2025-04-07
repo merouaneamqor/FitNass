@@ -9,13 +9,46 @@ import { AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
+import { useSession } from 'next-auth/react';
 
 interface SubscriptionInfoProps {
   userId: string;
 }
 
+// Define types for subscription data
+type SubscriptionPlan = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  interval: string;
+  features: string[];
+  isPopular?: boolean;
+  startDate?: string;
+  endDate?: string;
+};
+
+type SubscriptionData = {
+  currentPlan: SubscriptionPlan | null;
+  nextBillingDate: string | null;
+  usage: {
+    used: number;
+    total: number;
+  };
+  status: 'active' | 'canceled' | 'past_due' | 'trialing' | 'incomplete' | 'incomplete_expired' | 'unpaid';
+  autoRenew?: boolean;
+};
+
+// Define error type
+type ApiError = {
+  message: string;
+  code?: string;
+  status?: number;
+};
+
 export default function SubscriptionInfo({ userId }: SubscriptionInfoProps) {
-  const [subscriptionData, setSubscriptionData] = useState<any>(null);
+  const { data: session } = useSession();
+  const [subscriptionData, setSubscriptionData] = useState<SubscriptionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cancellingSubscription, setCancellingSubscription] = useState(false);
@@ -26,62 +59,67 @@ export default function SubscriptionInfo({ userId }: SubscriptionInfoProps) {
   const subscribed = searchParams.get('subscribed');
 
   useEffect(() => {
-    const fetchSubscription = async () => {
+    const fetchSubscriptionData = async () => {
       try {
-        const response = await fetch('/api/user/subscription');
-        if (!response.ok) {
-          throw new Error('Failed to fetch subscription data');
-        }
-        const data = await response.json();
-        setSubscriptionData(data);
-        
-        if (subscribed === 'true') {
-          setShowSuccess(true);
-          setTimeout(() => setShowSuccess(false), 5000); // Hide after 5 seconds
+        const subscriptionResponse = await fetch('/api/user/subscription');
+        if (subscriptionResponse.ok) {
+          const data = await subscriptionResponse.json();
+          setSubscriptionData(data);
+          
+          if (subscribed === 'true') {
+            setShowSuccess(true);
+            setTimeout(() => setShowSuccess(false), 5000); // Hide after 5 seconds
+          }
         }
       } catch (err) {
-        console.error(err);
-        setError('Failed to load subscription information. Please try again later.');
+        const error = err as ApiError;
+        setError(error.message || 'Failed to fetch subscription data');
+        console.error(error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSubscription();
-  }, [subscribed]);
+    if (session) {
+      fetchSubscriptionData();
+    }
+  }, [session, subscribed]);
 
   const handleCancelSubscription = async () => {
-    if (!confirm('Are you sure you want to cancel your subscription? You will still have access until the end of your current billing period.')) {
-      return;
-    }
-
-    setCancellingSubscription(true);
     try {
-      const response = await fetch('/api/user/subscription', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ action: 'cancel' }),
+      setCancellingSubscription(true);
+      const response = await fetch('/api/user/subscription/cancel', {
+        method: 'POST',
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to cancel subscription');
+        const error = await response.json() as ApiError;
+        throw new Error(error.message || 'Failed to cancel subscription');
       }
 
-      // Refresh subscription data
       const subscriptionResponse = await fetch('/api/user/subscription');
       if (subscriptionResponse.ok) {
         const data = await subscriptionResponse.json();
         setSubscriptionData(data);
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to cancel subscription');
-      console.error(err);
+    } catch (err) {
+      const error = err as ApiError;
+      setError(error.message || 'Failed to cancel subscription');
+      console.error(error);
     } finally {
       setCancellingSubscription(false);
     }
+  };
+
+  // Format date to a readable string
+  const formatDate = (dateString: string | null): string => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
   };
 
   if (loading) {
@@ -120,7 +158,7 @@ export default function SubscriptionInfo({ userId }: SubscriptionInfoProps) {
     );
   }
 
-  if (!subscriptionData?.hasSubscription) {
+  if (!subscriptionData?.currentPlan) {
     return (
       <Card>
         <CardHeader>
@@ -142,8 +180,8 @@ export default function SubscriptionInfo({ userId }: SubscriptionInfoProps) {
   }
 
   // Calculate subscription period progress
-  const startDate = new Date(subscriptionData.subscription.startDate);
-  const endDate = new Date(subscriptionData.subscription.endDate);
+  const startDate = new Date(subscriptionData.currentPlan.startDate || new Date());
+  const endDate = new Date(subscriptionData.currentPlan.endDate || new Date());
   const currentDate = new Date();
   const totalDuration = endDate.getTime() - startDate.getTime();
   const elapsedDuration = currentDate.getTime() - startDate.getTime();
@@ -170,23 +208,34 @@ export default function SubscriptionInfo({ userId }: SubscriptionInfoProps) {
             <CardDescription>Manage your subscription and billing</CardDescription>
           </div>
           <Badge className={
-            subscriptionData.subscription.status === 'ACTIVE' 
+            subscriptionData.status === 'active' 
               ? 'bg-green-500' 
-              : subscriptionData.subscription.status === 'TRIALING' 
+              : subscriptionData.status === 'trialing' 
                 ? 'bg-blue-500' 
                 : 'bg-yellow-500'
           }>
-            {subscriptionData.subscription.status}
+            {subscriptionData.status}
           </Badge>
         </div>
       </CardHeader>
       
       <CardContent>
         <div className="space-y-4">
-          <div>
-            <h3 className="font-medium text-sm">Current Plan</h3>
-            <p className="text-xl font-semibold">{subscriptionData.subscription.plan.name}</p>
-            <p className="text-muted-foreground text-sm">{subscriptionData.subscription.plan.description}</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="font-medium text-sm">Current Plan</h3>
+              <p className="text-xl font-semibold">{subscriptionData.currentPlan.name}</p>
+              <p className="text-muted-foreground text-sm">{subscriptionData.currentPlan.description}</p>
+            </div>
+            <Badge className={
+              subscriptionData.status === 'active' 
+                ? 'bg-green-500' 
+                : subscriptionData.status === 'trialing' 
+                  ? 'bg-blue-500' 
+                  : 'bg-yellow-500'
+            }>
+              {subscriptionData.status}
+            </Badge>
           </div>
           
           <div>
@@ -204,10 +253,10 @@ export default function SubscriptionInfo({ userId }: SubscriptionInfoProps) {
           <div>
             <h3 className="font-medium text-sm mb-1">Plan Features</h3>
             <ul className="space-y-1">
-              {subscriptionData.subscription.plan.features.map((feature: any, index: number) => (
-                feature.included && <li key={index} className="text-sm flex items-center">
+              {subscriptionData.currentPlan.features.map((feature, index) => (
+                <li key={index} className="text-sm flex items-center">
                   <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
-                  {feature.name}
+                  {feature}
                 </li>
               ))}
             </ul>
@@ -215,8 +264,8 @@ export default function SubscriptionInfo({ userId }: SubscriptionInfoProps) {
           
           <div>
             <h3 className="font-medium text-sm">Auto-Renewal</h3>
-            <p className={subscriptionData.subscription.autoRenew ? 'text-green-600' : 'text-yellow-600'}>
-              {subscriptionData.subscription.autoRenew 
+            <p className={subscriptionData.autoRenew ? 'text-green-600' : 'text-yellow-600'}>
+              {subscriptionData.autoRenew 
                 ? 'Your subscription will automatically renew on ' + endDate.toLocaleDateString()
                 : 'Your subscription will end on ' + endDate.toLocaleDateString()
               }
@@ -233,7 +282,7 @@ export default function SubscriptionInfo({ userId }: SubscriptionInfoProps) {
           Change Plan
         </Button>
         
-        {subscriptionData.subscription.autoRenew && (
+        {subscriptionData.autoRenew && (
           <Button
             onClick={handleCancelSubscription}
             variant="destructive"

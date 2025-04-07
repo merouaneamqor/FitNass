@@ -11,15 +11,49 @@ const transporter = nodemailer.createTransport({
   secure: Boolean(process.env.EMAIL_SERVER_SECURE) || false,
 });
 
+// Define interfaces for email template parameters
+interface Reservation {
+  id: string;
+  startTime: string | Date;
+  endTime: string | Date;
+  status: string;
+  price: number;
+}
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface SportField {
+  id: string;
+  name: string;
+  type: string;
+  price: number;
+}
+
+interface Club {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+}
+
 // Email templates
-export const reservationConfirmationTemplate = (reservation: any, user: any, sportField: any, club: any) => {
+export const reservationConfirmationTemplate = (
+  reservation: Reservation,
+  user: User,
+  sportField: SportField,
+  club: Club
+) => {
   const startTime = new Date(reservation.startTime).toLocaleString('en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+    hour: 'numeric',
+    minute: 'numeric',
   });
   
   const endTime = new Date(reservation.endTime).toLocaleString('en-US', {

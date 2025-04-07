@@ -13,6 +13,9 @@ const memberUpdateSchema = z.object({
   membershipType: z.string().optional(),
 });
 
+// Define the type for update values
+type UpdateValue = string | number | boolean | Date | null;
+
 // GET /api/members/[id] - Get a single member
 export async function GET(
   request: Request,
@@ -138,18 +141,18 @@ export async function PATCH(
       }
     }
     
-    // Build SQL parts for the update
-    let updateParts = [];
-    let updateValues = [];
+    // Build the update query dynamically based on provided fields
+    const updateParts: string[] = [];
+    const updateValues: Record<string, UpdateValue> = {};
     
     if (name) {
-      updateParts.push(`name = $${updateValues.length + 1}`);
-      updateValues.push(name);
+      updateParts.push(`name = $${Object.keys(updateValues).length + 1}`);
+      updateValues.name = name;
     }
     
     if (email) {
-      updateParts.push(`email = $${updateValues.length + 1}`);
-      updateValues.push(email);
+      updateParts.push(`email = $${Object.keys(updateValues).length + 1}`);
+      updateValues.email = email;
     }
     
     // status field doesn't exist in the database, so we skip it
@@ -173,13 +176,13 @@ export async function PATCH(
     const updateQuery = `
       UPDATE "User" 
       SET ${updateParts.join(', ')}, "updatedAt" = now()
-      WHERE id = $${updateValues.length + 1}
+      WHERE id = $${Object.keys(updateValues).length + 1}
       RETURNING id, name, email, "createdAt", "lastLogin"
     `;
     
-    updateValues.push(memberId);
+    updateValues['id'] = memberId;
     
-    const updateResult = await prisma.$queryRawUnsafe(updateQuery, ...updateValues);
+    const updateResult = await prisma.$queryRawUnsafe(updateQuery, ...Object.values(updateValues));
     const updatedUser = Array.isArray(updateResult) ? updateResult[0] : updateResult;
     
     // Format the response

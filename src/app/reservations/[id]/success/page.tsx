@@ -7,42 +7,63 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle2, Calendar, MapPin, Clock, Users } from 'lucide-react';
 
+// Define reservation type
+interface Reservation {
+  id: string;
+  startTime: string;
+  endTime: string;
+  status: string;
+  sportField: {
+    id: string;
+    name: string;
+    type: string;
+    price: number;
+  };
+  club: {
+    id: string;
+    name: string;
+    address: string;
+    city: string;
+  };
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
 export default function PaymentSuccessPage() {
   const { id } = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
   const sessionId = searchParams.get('session_id');
   
-  const [reservation, setReservation] = useState<any>(null);
+  const [reservation, setReservation] = useState<Reservation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!sessionId) {
-      setError('Invalid session. Please try again.');
-      setLoading(false);
-      return;
-    }
-
     const fetchReservation = async () => {
       try {
-        const response = await fetch(`/api/reservations/${id}`);
-        
+        const response = await fetch(`/api/reservations/${sessionId}`);
         if (!response.ok) {
           throw new Error('Failed to fetch reservation details');
         }
-        
         const data = await response.json();
         setReservation(data);
       } catch (err) {
-        setError('An error occurred while fetching your reservation. Please try again later.');
+        const error = err as Error;
+        setError(error.message);
+        console.error(error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchReservation();
-  }, [id, sessionId]);
+    if (sessionId) {
+      fetchReservation();
+    }
+  }, [sessionId]);
 
   if (loading) {
     return (

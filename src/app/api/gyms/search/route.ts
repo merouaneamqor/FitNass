@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 
+// Define a type for the where clause
+type WhereClause = {
+  OR: Array<{
+    name?: { contains: string; mode: 'insensitive' };
+    city?: { contains: string; mode: 'insensitive' };
+    address?: { contains: string; mode: 'insensitive' };
+    description?: { contains: string; mode: 'insensitive' };
+  }>;
+  status?: string;
+  city?: { contains: string; mode: 'insensitive' };
+};
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -13,7 +25,7 @@ export async function GET(request: NextRequest) {
     console.log(`Gym search query: "${query}", city: "${city}", page: ${page}, limit: ${limit}`);
 
     // Build where clause
-    const whereClause: any = {
+    const whereClause: WhereClause = {
       OR: [],
     };
 

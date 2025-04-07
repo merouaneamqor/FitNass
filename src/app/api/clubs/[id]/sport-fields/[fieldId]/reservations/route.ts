@@ -3,6 +3,16 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 
+// Define a type for the filter
+type ReservationFilter = {
+  sportFieldId: string;
+  status?: string;
+  OR?: Array<{
+    startTime?: { gte: Date; lte: Date };
+    endTime?: { gte: Date; lte: Date };
+  }>;
+};
+
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string; fieldId: string } }
@@ -14,7 +24,7 @@ export async function GET(
     const status = url.searchParams.get("status");
 
     // Build filter based on query parameters
-    let filter: any = {
+    const filter: ReservationFilter = {
       sportFieldId: params.fieldId,
     };
 

@@ -20,18 +20,36 @@ jest.mock('@/hooks/use-toast', () => ({
   })),
 }));
 
+// Define interface for FullCalendar props
+interface FullCalendarProps {
+  events?: Array<{
+    id: string;
+    title: string;
+    start: string | Date;
+    end: string | Date;
+    extendedProps?: Record<string, unknown>;
+  }>;
+  eventClick?: (info: { event: { id: string } }) => void;
+  initialView?: string;
+  headerToolbar?: {
+    left?: string;
+    center?: string;
+    right?: string;
+  };
+  [key: string]: unknown;
+}
+
 jest.mock('@fullcalendar/react', () => ({
   __esModule: true,
-  default: function MockFullCalendar(props: any) {
+  default: function MockFullCalendar(props: FullCalendarProps) {
     return (
       <div data-testid="mock-calendar">
         <button 
-          data-testid="calendar-date-btn"
-          onClick={() => props.dateClick && props.dateClick({ date: new Date() })}
+          onClick={() => props.eventClick?.({ event: { id: 'test-event' } })}
+          data-testid="calendar-event"
         >
-          Select Date
+          Test Event
         </button>
-        <div>Events: {props.events ? props.events.length : 0}</div>
       </div>
     );
   },

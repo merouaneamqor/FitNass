@@ -33,12 +33,39 @@ type Reservation = {
   sportFieldId: string;
 };
 
+type Club = {
+  id: string;
+  name: string;
+  description: string;
+  address: string;
+  city: string;
+  images: string[];
+  sportFields: SportField[];
+};
+
+type DateClickArg = {
+  date: Date;
+  dateStr: string;
+  allDay: boolean;
+  jsEvent: MouseEvent;
+  view: {
+    type: string;
+  };
+};
+
+// Define error type
+type ApiError = {
+  message: string;
+  code?: string;
+  status?: number;
+};
+
 export default function BookClub() {
   const { id } = useParams();
   const router = useRouter();
   const { toast } = useToast();
   
-  const [club, setClub] = useState<any>(null);
+  const [club, setClub] = useState<Club | null>(null);
   const [sportFields, setSportFields] = useState<SportField[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [selectedField, setSelectedField] = useState<string>('');
@@ -129,7 +156,7 @@ export default function BookClub() {
     fetchReservations();
   }, [id, selectedField, toast]);
 
-  const handleDateClick = (arg: any) => {
+  const handleDateClick = (arg: DateClickArg) => {
     setSelectedDate(arg.date);
     
     // Set default times (current hour rounded up to nearest hour)
@@ -142,35 +169,15 @@ export default function BookClub() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!selectedField || !selectedDate || !startTime || !endTime) {
+    if (!selectedField || !selectedDate) {
       toast({
-        title: 'Missing information',
-        description: 'Please select a field, date, and time',
+        title: 'Error',
+        description: 'Please select a field and date',
         variant: 'destructive',
       });
       return;
     }
-    
-    // Create the start and end date objects
-    const startDateStr = format(selectedDate, 'yyyy-MM-dd');
-    const endDateStr = format(selectedDate, 'yyyy-MM-dd');
-    
-    const startDateTime = new Date(`${startDateStr}T${startTime}:00`);
-    const endDateTime = new Date(`${endDateStr}T${endTime}:00`);
-    
-    // Validate that end time is after start time
-    if (endDateTime <= startDateTime) {
-      toast({
-        title: 'Invalid time selection',
-        description: 'End time must be after start time',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
+
     try {
       const response = await fetch('/api/reservations', {
         method: 'POST',
@@ -179,35 +186,27 @@ export default function BookClub() {
         },
         body: JSON.stringify({
           sportFieldId: selectedField,
-          startTime: startDateTime.toISOString(),
-          endTime: endDateTime.toISOString(),
-          participantCount: participants,
-          notes,
+          startTime: selectedDate.toISOString(),
+          endTime: new Date(selectedDate.getTime() + 60 * 60 * 1000).toISOString(),
         }),
       });
-      
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create reservation');
+        const error = await response.json() as ApiError;
+        throw new Error(error.message || 'Failed to create reservation');
       }
-      
+
       const reservation = await response.json();
-      
-      toast({
-        title: 'Success!',
-        description: 'Your reservation has been created',
-      });
       
       // Redirect to reservation page
       router.push(`/reservations/${reservation.id}`);
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as ApiError;
       toast({
         title: 'Error',
-        description: error.message || 'Failed to create reservation',
+        description: err.message || 'Failed to create reservation',
         variant: 'destructive',
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 

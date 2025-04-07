@@ -30,6 +30,14 @@ const sportFieldSchema = z.object({
   images: z.array(z.string()).optional(),
 });
 
+// Define a type for the filter
+type SportFieldFilter = {
+  clubId: string;
+  status: string;
+  type?: string;
+  indoor?: boolean;
+};
+
 // Get all sport fields for a specific club
 export async function GET(
   req: NextRequest,
@@ -44,7 +52,7 @@ export async function GET(
     const skip = (page - 1) * limit;
 
     // Build filter based on query parameters
-    let filter: any = {
+    const filter: SportFieldFilter = {
       clubId: params.id,
       status: "AVAILABLE",
     };
