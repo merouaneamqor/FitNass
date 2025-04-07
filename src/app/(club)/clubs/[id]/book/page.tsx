@@ -78,9 +78,10 @@ export default function BookClub() {
         const data = await response.json();
         setClub(data);
       } catch (error) {
+        console.error('Error fetching club:', error);
         toast({
           title: 'Error',
-          description: 'Failed to load club details',
+          description: error instanceof Error ? error.message : 'Failed to load club details',
           variant: 'destructive',
         });
       }
@@ -104,9 +105,10 @@ export default function BookClub() {
         
         setIsLoading(false);
       } catch (error) {
+        console.error('Error fetching sport fields:', error);
         toast({
           title: 'Error',
-          description: 'Failed to load sport fields',
+          description: error instanceof Error ? error.message : 'Failed to load sport fields',
           variant: 'destructive',
         });
         setIsLoading(false);
@@ -121,32 +123,23 @@ export default function BookClub() {
   // Fetch reservations when a field is selected
   useEffect(() => {
     const fetchReservations = async () => {
-      if (!selectedFields.length) return;
-      
       try {
-        // Fetch existing reservations for this field to show on calendar
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() - 7); // One week ago
-        
-        const endDate = new Date();
-        endDate.setDate(endDate.getDate() + 30); // 30 days in the future
-        
-        const response = await fetch(`/api/clubs/${id}/sport-fields/${selectedFields[0]}/reservations?start=${startDate.toISOString()}&end=${endDate.toISOString()}`);
+        const response = await fetch(`/api/clubs/${id}/sport-fields/reservations`);
         if (!response.ok) throw new Error('Failed to fetch reservations');
-        
         const data = await response.json();
         setReservations(data.reservations);
       } catch (error) {
+        console.error('Error fetching reservations:', error);
         toast({
           title: 'Error',
-          description: 'Failed to load reservations',
+          description: error instanceof Error ? error.message : 'Failed to load reservations',
           variant: 'destructive',
         });
       }
     };
     
     fetchReservations();
-  }, [id, selectedFields, toast]);
+  }, [id, toast]);
 
   const handleDateClick = (arg: DateClickArg) => {
     setSelectedDate(arg.date);

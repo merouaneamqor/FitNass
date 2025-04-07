@@ -1,30 +1,32 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import prisma from '@/lib/db';
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 // GET handler to retrieve all available subscription plans
 export async function GET() {
   try {
-    // Fetch all active subscription plans and order by price
-    const plans = await prisma.subscriptionPlan.findMany({
+    const subscriptions = await prisma.subscription.findMany({
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        price: true,
+        duration: true,
+        features: true,
+        isActive: true,
+      },
+      where: {
+        isActive: true,
+      },
       orderBy: {
-        price: 'asc'
-      }
+        price: 'asc',
+      },
     });
 
-    // Parse features if stored as string
-    const formattedPlans = plans.map(plan => ({
-      ...plan,
-      features: typeof plan.features === 'string' 
-        ? JSON.parse(plan.features) 
-        : plan.features
-    }));
-
-    return NextResponse.json(formattedPlans);
+    return NextResponse.json({ subscriptions });
   } catch (error) {
-    console.error('Error fetching subscription plans:', error);
+    console.error('Error fetching subscriptions:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch subscription plans' },
+      { error: 'Failed to fetch subscriptions' },
       { status: 500 }
     );
   }

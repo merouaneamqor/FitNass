@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { FiMail, FiPhone, FiUser, FiCalendar, FiSearch, FiUserPlus, FiEdit2, FiTrash2, FiUsers } from 'react-icons/fi';
+import { FiMail, FiPhone, FiUser, FiCalendar, FiUserPlus, FiEdit2, FiTrash2, FiUsers } from 'react-icons/fi';
 import { PageHeader, Card, Button, Modal, Search } from '@/components/dashboard';
 
 interface Member {

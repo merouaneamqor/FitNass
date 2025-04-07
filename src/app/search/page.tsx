@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { FiSearch, FiMapPin, FiStar, FiFilter, FiActivity, FiUsers, FiCalendar, FiAlertCircle, FiX } from 'react-icons/fi';
-import { GiTennisRacket, GiSoccerField, GiWeightLiftingUp, GiRunningShoe } from 'react-icons/gi';
+import { FiSearch, FiMapPin, FiStar, FiActivity, FiUsers, FiCalendar, FiAlertCircle, FiX } from 'react-icons/fi';
+import { GiTennisRacket, GiSoccerField, GiWeightLiftingUp } from 'react-icons/gi';
 import Image from 'next/image';
 
 type SearchResult = {

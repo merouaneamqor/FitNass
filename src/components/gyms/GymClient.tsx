@@ -14,7 +14,6 @@ import {
   SearchBar,
   GymFilters,
   StatsBar,
-  LoadingSpinner,
   ErrorAlert,
   GymCard
 } from '@/components/ui';

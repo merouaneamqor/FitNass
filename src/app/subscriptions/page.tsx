@@ -9,11 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { Check, Loader2 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/loading-spinner';
 
-interface Feature {
-  name: string;
-  included: boolean;
-}
-
 // Define types for subscription plans
 type SubscriptionPlan = {
   id: string;

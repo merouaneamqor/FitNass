@@ -72,7 +72,7 @@ const mockPromotions: Promotion[] = [
 
 export default function PromotionsPage() {
   const { data: session } = useSession();
-  const [promotions, setPromotions] = useState<Promotion[]>(mockPromotions);
+  const [promotions] = useState<Promotion[]>(mockPromotions);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPromotion, setCurrentPromotion] = useState<Promotion | null>(null);

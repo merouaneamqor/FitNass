@@ -1,91 +1,43 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import prisma from "@/lib/db";
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
-// Define a type for the filter
-type ReservationFilter = {
-  sportFieldId: string;
-  status?: string;
-  OR?: Array<{
-    startTime?: { gte: Date; lte: Date };
-    endTime?: { gte: Date; lte: Date };
-  }>;
-};
-
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string; fieldId: string } }
-) {
+export async function GET(request: NextRequest) {
   try {
-    const url = new URL(req.url);
-    const start = url.searchParams.get("start");
-    const end = url.searchParams.get("end");
-    const status = url.searchParams.get("status");
+    const { searchParams } = new URL(request.url);
+    const start = searchParams.get('start');
+    const end = searchParams.get('end');
 
-    // Build filter based on query parameters
-    const filter: ReservationFilter = {
-      sportFieldId: params.fieldId,
-    };
-
-    // If start and end dates are provided, only show reservations in that range
-    if (start && end) {
-      filter.OR = [
-        {
-          // Reservation starts within the range
-          startTime: {
-            gte: new Date(start),
-            lte: new Date(end),
-          },
-        },
-        {
-          // Reservation ends within the range
-          endTime: {
-            gte: new Date(start),
-            lte: new Date(end),
-          },
-        },
-        {
-          // Reservation spans the entire range
-          startTime: {
-            lte: new Date(start),
-          },
-          endTime: {
-            gte: new Date(end),
-          },
-        },
-      ];
+    if (!start || !end) {
+      return NextResponse.json(
+        { error: 'Missing required parameters' },
+        { status: 400 }
+      );
     }
 
-    if (status) {
-      filter.status = status;
-    } else {
-      // By default, only show PENDING and CONFIRMED reservations
-      filter.status = { in: ["PENDING", "CONFIRMED"] };
-    }
-
-    // Get reservations
     const reservations = await prisma.reservation.findMany({
-      where: filter,
+      where: {
+        startTime: {
+          gte: new Date(start),
+        },
+        endTime: {
+          lte: new Date(end),
+        },
+      },
       select: {
         id: true,
         startTime: true,
         endTime: true,
-        status: true,
         sportFieldId: true,
-        userId: true,
         participantCount: true,
-      },
-      orderBy: {
-        startTime: "asc",
+        status: true,
       },
     });
 
     return NextResponse.json({ reservations });
   } catch (error) {
-    console.error("Error fetching reservations:", error);
+    console.error('Error fetching reservations:', error);
     return NextResponse.json(
-      { error: "Failed to fetch reservations" },
+      { error: 'Failed to fetch reservations' },
       { status: 500 }
     );
   }

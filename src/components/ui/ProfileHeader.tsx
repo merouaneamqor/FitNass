@@ -1,6 +1,6 @@
 import React from 'react';
 import { UserProfile } from '@/types/user';
-import { FiUser, FiMail, FiMapPin, FiCalendar } from 'react-icons/fi';
+import { FiMail, FiMapPin, FiCalendar } from 'react-icons/fi';
 import Image from 'next/image';
 
 interface ProfileHeaderProps {

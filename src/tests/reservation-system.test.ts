@@ -1,16 +1,28 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { prisma } from '@/lib/prisma';
 import { NextRequest } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 
-// Define interfaces for mock request and response
-interface RequestOptions {
+// Mock NextRequest
+interface NextRequestOptions {
   method?: string;
   headers?: Record<string, string>;
   body?: string;
 }
 
+jest.mock('next/server', () => ({
+  NextRequest: jest.fn().mockImplementation((url: string, options?: NextRequestOptions) => ({
+    url,
+    json: () => Promise.resolve(JSON.parse(options?.body || '{}')),
+    headers: () => new Headers(options?.headers || {}),
+    method: () => options?.method || 'GET',
+    cookies: new Map(),
+    geo: {},
+    ip: '127.0.0.1',
+    nextUrl: new URL(url),
+  })),
+}));
+
+// Define interfaces for response
 interface ResponseOptions {
   status?: number;
   headers?: Record<string, string>;
@@ -21,47 +33,7 @@ interface ResponseData {
   json: () => Promise<unknown>;
 }
 
-// Define interfaces for request parameters
-interface RequestParams {
-  searchParams?: URLSearchParams;
-  headers?: Record<string, string>;
-  body?: string;
-}
-
-interface ClubRequestParams extends RequestParams {
-  searchParams?: URLSearchParams;
-}
-
-interface ReservationRequestParams {
-  clubId: string;
-  fieldId: string;
-  startDate: string;
-  endDate: string;
-}
-
-interface ReservationData {
-  sportFieldId: string;
-  startTime: string;
-  endTime: string;
-  participantCount: number;
-  userId: string;
-}
-
-// Mock NextRequest and NextResponse
-class MockNextRequest {
-  private url: string;
-  private options: RequestOptions;
-
-  constructor(url: string, options?: RequestOptions) {
-    this.url = url;
-    this.options = options || {};
-  }
-
-  json() {
-    return Promise.resolve(JSON.parse(this.options.body || '{}'));
-  }
-}
-
+// Mock NextResponse
 class MockNextResponse {
   static json(data: unknown, options?: ResponseOptions): ResponseData {
     return {
@@ -146,7 +118,7 @@ describe('Club API', () => {
       (prisma.club.count as jest.Mock).mockResolvedValue(2);
       
       // Mock the implementation of the getClubs handler
-      (getClubs as jest.Mock).mockImplementation(async (req: ClubRequestParams) => {
+      (getClubs as jest.Mock).mockImplementation(async () => {
         return MockNextResponse.json({
           clubs: mockClubs,
           meta: {
@@ -158,8 +130,8 @@ describe('Club API', () => {
       });
       
       // Act: Call the API handler
-      const req = new MockNextRequest('http://localhost:3000/api/clubs');
-      const response = await getClubs(req);
+      const request = new NextRequest('http://localhost:3000/api/clubs');
+      const response = await getClubs(request);
       const data = await response.json();
       
       // Assert: Verify the response
@@ -182,12 +154,12 @@ describe('Club API', () => {
       (prisma.club.create as jest.Mock).mockResolvedValue(mockCreatedClub);
       
       // Mock the implementation of the createClub handler
-      (createClub as jest.Mock).mockImplementation(async (req: RequestParams) => {
+      (createClub as jest.Mock).mockImplementation(async () => {
         return MockNextResponse.json(mockCreatedClub, { status: 201 });
       });
       
       // Act: Call the API handler
-      const req = new MockNextRequest('http://localhost:3000/api/clubs', {
+      const request = new NextRequest('http://localhost:3000/api/clubs', {
         method: 'POST',
         body: JSON.stringify({
           name: 'New Club',
@@ -201,7 +173,7 @@ describe('Club API', () => {
         }),
       });
       
-      const response = await createClub(req);
+      const response = await createClub(request);
       const data = await response.json();
       
       // Assert: Verify the response
@@ -236,39 +208,4 @@ describe('Reservation System', () => {
     expect(getReservations).toBeDefined();
     expect(createReservation).toBeDefined();
   });
-});
-
-// Mock data
-const mockReservation: ReservationData = {
-  sportFieldId: '1',
-  startTime: '2024-02-20T10:00:00Z',
-  endTime: '2024-02-20T11:00:00Z',
-  participantCount: 2,
-  userId: '1'
-};
-
-// Mock handlers
-const mockGetReservations = async (params: ReservationRequestParams) => {
-  return {
-    reservations: [],
-    total: 0
-  };
-};
-
-const mockCreateReservation = async (data: ReservationData) => {
-  return {
-    id: '1',
-    ...data
-  };
-};
-
-const mockUpdateReservation = async (id: string, data: Partial<ReservationData>) => {
-  return {
-    id,
-    ...data
-  };
-};
-
-const mockDeleteReservation = async (id: string) => {
-  return true;
-}; 
+}); 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { FiStar, FiFilter, FiThumbsUp, FiMessageSquare, FiTrash2, FiFlag, FiSearch } from 'react-icons/fi';
+import { FiStar, FiThumbsUp, FiMessageSquare, FiFlag, FiSearch } from 'react-icons/fi';
 import Image from 'next/image';
 
 // Mock data for reviews

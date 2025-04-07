@@ -2,11 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { FiUsers, FiCalendar, FiStar, FiBarChart2, FiDollarSign, FiTrendingUp, FiClock, FiActivity } from 'react-icons/fi';
+import { FiUsers, FiCalendar, FiBarChart2, FiDollarSign, FiTrendingUp, FiClock, FiActivity } from 'react-icons/fi';
 import { PageHeader, Card, StatsCard, Button } from '@/components/dashboard';
-import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
-import prisma from '@/lib/db';
 import SubscriptionInfo from './subscription-info';
 import Link from 'next/link';
 

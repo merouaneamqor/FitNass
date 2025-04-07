@@ -1,21 +1,17 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
+import { AlertCircle, ArrowRight } from 'lucide-react';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
-import { useSession } from 'next-auth/react';
 
-interface SubscriptionInfoProps {
-  userId: string;
-}
-
-// Define types for subscription data
+// Define types for subscription plans
 type SubscriptionPlan = {
   id: string;
   name: string;
@@ -39,122 +35,70 @@ type SubscriptionData = {
   autoRenew?: boolean;
 };
 
-// Define error type
-type ApiError = {
-  message: string;
-  code?: string;
-  status?: number;
-};
-
-export default function SubscriptionInfo({ userId }: SubscriptionInfoProps) {
+export default function SubscriptionInfo() {
   const { data: session } = useSession();
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [cancellingSubscription, setCancellingSubscription] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const subscribed = searchParams.get('subscribed');
 
   useEffect(() => {
-    const fetchSubscriptionData = async () => {
-      try {
-        const subscriptionResponse = await fetch('/api/user/subscription');
-        if (subscriptionResponse.ok) {
-          const data = await subscriptionResponse.json();
-          setSubscriptionData(data);
-          
-          if (subscribed === 'true') {
-            setShowSuccess(true);
-            setTimeout(() => setShowSuccess(false), 5000); // Hide after 5 seconds
-          }
-        }
-      } catch (err) {
-        const error = err as ApiError;
-        setError(error.message || 'Failed to fetch subscription data');
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (session) {
+    if (session?.user) {
       fetchSubscriptionData();
     }
-  }, [session, subscribed]);
+  }, [session]);
+
+  const fetchSubscriptionData = async () => {
+    try {
+      const response = await fetch('/api/subscriptions/current');
+      if (!response.ok) {
+        throw new Error('Failed to fetch subscription data');
+      }
+      const data = await response.json();
+      setSubscriptionData(data);
+    } catch (err) {
+      console.error('Error fetching subscription data:', err);
+      setError('Failed to load subscription data. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCancelSubscription = async () => {
+    if (!subscriptionData?.currentPlan) return;
+
     try {
-      setCancellingSubscription(true);
-      const response = await fetch('/api/user/subscription/cancel', {
+      const response = await fetch('/api/subscriptions/cancel', {
         method: 'POST',
       });
 
       if (!response.ok) {
-        const error = await response.json() as ApiError;
-        throw new Error(error.message || 'Failed to cancel subscription');
+        throw new Error('Failed to cancel subscription');
       }
 
-      const subscriptionResponse = await fetch('/api/user/subscription');
-      if (subscriptionResponse.ok) {
-        const data = await subscriptionResponse.json();
-        setSubscriptionData(data);
-      }
+      // Refresh subscription data
+      await fetchSubscriptionData();
     } catch (err) {
-      const error = err as ApiError;
-      setError(error.message || 'Failed to cancel subscription');
-      console.error(error);
-    } finally {
-      setCancellingSubscription(false);
+      console.error('Error canceling subscription:', err);
+      setError('Failed to cancel subscription. Please try again later.');
     }
-  };
-
-  // Format date to a readable string
-  const formatDate = (dateString: string | null): string => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
   };
 
   if (loading) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex justify-center items-center h-32">
-            <LoadingSpinner size="md" />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex justify-center items-center h-40">
+        <LoadingSpinner />
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>
-              {error}
-              <Button 
-                onClick={() => window.location.reload()} 
-                variant="outline" 
-                size="sm" 
-                className="mt-2"
-              >
-                Try Again
-              </Button>
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
     );
   }
 
@@ -162,143 +106,65 @@ export default function SubscriptionInfo({ userId }: SubscriptionInfoProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Subscription Status</CardTitle>
-          <CardDescription>You don&apos;t have an active subscription</CardDescription>
+          <CardTitle>No Active Subscription</CardTitle>
+          <CardDescription>You don&apos;t have an active subscription plan.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <p>Explore our subscription plans to access premium features and enhance your business.</p>
-          </div>
-        </CardContent>
         <CardFooter>
-          <Button onClick={() => router.push('/subscriptions')} className="w-full">
-            View Subscription Plans <ArrowRight className="ml-2 h-4 w-4" />
+          <Button onClick={() => router.push('/subscriptions')}>
+            View Plans
+            <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </CardFooter>
       </Card>
     );
   }
 
-  // Calculate subscription period progress
-  const startDate = new Date(subscriptionData.currentPlan.startDate || new Date());
-  const endDate = new Date(subscriptionData.currentPlan.endDate || new Date());
-  const currentDate = new Date();
-  const totalDuration = endDate.getTime() - startDate.getTime();
-  const elapsedDuration = currentDate.getTime() - startDate.getTime();
-  const progressPercentage = Math.min(Math.round((elapsedDuration / totalDuration) * 100), 100);
-  
-  const daysRemaining = Math.ceil((endDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
+  const { currentPlan, nextBillingDate, usage, status } = subscriptionData;
 
   return (
     <Card>
-      {showSuccess && (
-        <Alert className="border-green-500 bg-green-50">
-          <CheckCircle2 className="h-4 w-4 text-green-700" />
-          <AlertTitle className="text-green-700">Subscription Activated</AlertTitle>
-          <AlertDescription className="text-green-600">
-            Your subscription has been successfully activated.
-          </AlertDescription>
-        </Alert>
-      )}
-      
       <CardHeader>
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Subscription Status</CardTitle>
-            <CardDescription>Manage your subscription and billing</CardDescription>
+            <CardTitle>{currentPlan.name}</CardTitle>
+            <CardDescription>{currentPlan.description}</CardDescription>
           </div>
-          <Badge className={
-            subscriptionData.status === 'active' 
-              ? 'bg-green-500' 
-              : subscriptionData.status === 'trialing' 
-                ? 'bg-blue-500' 
-                : 'bg-yellow-500'
-          }>
-            {subscriptionData.status}
+          <Badge variant={status === 'active' ? 'default' : 'secondary'}>
+            {status.charAt(0).toUpperCase() + status.slice(1)}
           </Badge>
         </div>
       </CardHeader>
-      
       <CardContent>
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="font-medium text-sm">Current Plan</h3>
-              <p className="text-xl font-semibold">{subscriptionData.currentPlan.name}</p>
-              <p className="text-muted-foreground text-sm">{subscriptionData.currentPlan.description}</p>
-            </div>
-            <Badge className={
-              subscriptionData.status === 'active' 
-                ? 'bg-green-500' 
-                : subscriptionData.status === 'trialing' 
-                  ? 'bg-blue-500' 
-                  : 'bg-yellow-500'
-            }>
-              {subscriptionData.status}
-            </Badge>
-          </div>
-          
           <div>
-            <div className="flex justify-between items-center mb-1">
-              <h3 className="font-medium text-sm">Billing Period</h3>
-              <span className="text-sm">{daysRemaining} days remaining</span>
-            </div>
-            <Progress value={progressPercentage} className="h-2" />
-            <div className="flex justify-between text-xs text-muted-foreground mt-1">
-              <span>{startDate.toLocaleDateString()}</span>
-              <span>{endDate.toLocaleDateString()}</span>
-            </div>
-          </div>
-          
-          <div>
-            <h3 className="font-medium text-sm mb-1">Plan Features</h3>
-            <ul className="space-y-1">
-              {subscriptionData.currentPlan.features.map((feature, index) => (
-                <li key={index} className="text-sm flex items-center">
-                  <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
-                  {feature}
-                </li>
-              ))}
-            </ul>
-          </div>
-          
-          <div>
-            <h3 className="font-medium text-sm">Auto-Renewal</h3>
-            <p className={subscriptionData.autoRenew ? 'text-green-600' : 'text-yellow-600'}>
-              {subscriptionData.autoRenew 
-                ? 'Your subscription will automatically renew on ' + endDate.toLocaleDateString()
-                : 'Your subscription will end on ' + endDate.toLocaleDateString()
-              }
+            <h4 className="text-sm font-medium mb-2">Usage</h4>
+            <Progress value={(usage.used / usage.total) * 100} />
+            <p className="text-sm text-gray-500 mt-1">
+              {usage.used} of {usage.total} features used
             </p>
           </div>
-          
-          <div className="text-sm text-gray-500">You&apos;ll be charged automatically at the end of your subscription period.</div>
+          {nextBillingDate && (
+            <div>
+              <h4 className="text-sm font-medium mb-1">Next Billing Date</h4>
+              <p className="text-sm text-gray-500">
+                {new Date(nextBillingDate).toLocaleDateString()}
+              </p>
+            </div>
+          )}
         </div>
       </CardContent>
-      
       <CardFooter className="flex justify-between">
         <Button
-          onClick={() => router.push('/subscriptions')}
           variant="outline"
+          onClick={handleCancelSubscription}
+          disabled={status !== 'active'}
         >
-          Change Plan
+          Cancel Subscription
         </Button>
-        
-        {subscriptionData.autoRenew && (
-          <Button
-            onClick={handleCancelSubscription}
-            variant="destructive"
-            disabled={cancellingSubscription}
-          >
-            {cancellingSubscription ? (
-              <>
-                <LoadingSpinner size="sm" className="mr-2" /> Processing...
-              </>
-            ) : (
-              'Cancel Subscription'
-            )}
-          </Button>
-        )}
+        <Button onClick={() => router.push('/subscriptions')}>
+          Upgrade Plan
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
       </CardFooter>
     </Card>
   );

@@ -48,33 +48,20 @@ export default function GymDetailsPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     async function fetchGymData() {
       try {
-        setIsLoading(true);
         const response = await fetch(`/api/gyms/${params.id}`);
-        
         if (!response.ok) {
-          throw new Error(`Failed to fetch gym data: ${response.status}`);
+          throw new Error('Failed to fetch gym data');
         }
-        
         const data = await response.json();
-        
-        // Ensure all required properties have default values if missing
-        const safeData = {
-          ...data,
-          facilities: data.facilities || [],
-          images: data.images || [],
-          reviews: data.reviews || [],
-          _count: data._count || { reviews: 0 }
-        };
-        
-        setGym(safeData);
+        setGym(data);
       } catch (err) {
-        console.error('Error fetching gym:', err);
-        setError('Failed to load gym details. Please try again later.');
+        console.error('Error fetching gym data:', err);
+        setError('Failed to load gym data. Please try again later.');
       } finally {
         setIsLoading(false);
       }
     }
-    
+
     fetchGymData();
   }, [params.id]);
 
@@ -105,10 +92,6 @@ export default function GymDetailsPage({ params }: { params: { id: string } }) {
       </div>
     );
   }
-
-  // Use a default image if none are available
-  const defaultImage = 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80';
-  const mainImage = gym.images && gym.images.length > 0 ? gym.images[selectedImage] : defaultImage;
 
   return (
     <div className="min-h-screen bg-gray-50">
