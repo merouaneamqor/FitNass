@@ -163,7 +163,6 @@ async function scrapeClubs() {
     images: place.photos || [],
     facilities: place.types || [],
     openingHours: place.openingHours ? JSON.stringify(place.openingHours) : null,
-    isVerified: false,
     status: 'PENDING_APPROVAL',
     viewCount: 0,
   }));

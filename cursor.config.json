@@ -196,7 +196,7 @@
     },
     "gym": {
       "core": ["id", "name", "address", "city", "rating"],
-      "details": ["description", "facilities", "images", "priceRange", "latitude", "longitude", "status", "isVerified"],
+      "details": ["description", "facilities", "images", "priceRange", "latitude", "longitude", "status"],
       "relations": ["reviews", "owner"]
     },
     "review": {

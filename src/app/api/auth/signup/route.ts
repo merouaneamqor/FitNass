@@ -37,11 +37,11 @@ export async function POST(request: Request) {
         name: validatedData.name,
         email: validatedData.email,
         password: hashedPassword,
-        isVerified: false,
+        role: 'USER',
       },
     });
 
-    // Remove password from response - use proper destructuring to avoid warnings
+    // Remove password from response
     const userWithoutPassword = {
       id: newUser.id,
       name: newUser.name,
@@ -49,7 +49,6 @@ export async function POST(request: Request) {
       role: newUser.role,
       createdAt: newUser.createdAt,
       updatedAt: newUser.updatedAt,
-      isVerified: newUser.isVerified,
       image: newUser.image
     };
 

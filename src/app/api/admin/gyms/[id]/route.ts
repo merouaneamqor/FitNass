@@ -143,7 +143,6 @@ export async function PUT(
     if (data.facilities !== undefined) updateData.facilities = data.facilities;
     if (data.images !== undefined) updateData.images = data.images;
     // Removed status field as it might not exist in the DB yet
-    if (data.isVerified !== undefined) updateData.isVerified = data.isVerified;
     
     // Handle owner change if provided
     if (data.ownerId) {

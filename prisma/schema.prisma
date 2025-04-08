@@ -33,9 +33,9 @@ model User {
   notifications      Notification[]
   reservations       Reservation[]
   reviews            Review[]
+  subscriptions      Subscription[]
   favoriteClubs      Club[]         @relation("UserFavoriteClubs")
   favorites          Gym[]          @relation("UserFavorites")
-  subscriptions      Subscription[]
 }
 
 model Gym {
@@ -189,6 +189,45 @@ model Reservation {
   user             User              @relation(fields: [userId], references: [id])
 }
 
+model SubscriptionPlan {
+  id            String         @id
+  name          String
+  description   String
+  price         Float
+  billingCycle  BillingCycle
+  features      String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id              String             @id @default(cuid())
+  userId          String
+  planId          String
+  status          SubscriptionStatus @default(ACTIVE)
+  startDate       DateTime
+  endDate         DateTime
+  autoRenew       Boolean            @default(true)
+  paymentMethodId String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  payments        PaymentRecord[]
+  plan            SubscriptionPlan   @relation(fields: [planId], references: [id])
+  user            User               @relation(fields: [userId], references: [id])
+}
+
+model PaymentRecord {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  amount         Float
+  status         String
+  paymentMethod  String
+  transactionId  String?
+  createdAt      DateTime     @default(now())
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+}
+
 enum Role {
   USER
   ADMIN
@@ -265,45 +304,6 @@ enum PaymentStatus {
   REFUNDED
   PARTIALLY_REFUNDED
   FAILED
-}
-
-model SubscriptionPlan {
-  id           String        @id
-  name         String
-  description  String
-  price        Float
-  billingCycle BillingCycle
-  features     String        // JSON string
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  subscriptions Subscription[]
-}
-
-model Subscription {
-  id              String             @id @default(cuid())
-  userId          String
-  planId          String
-  status          SubscriptionStatus @default(ACTIVE)
-  startDate       DateTime
-  endDate         DateTime
-  autoRenew       Boolean            @default(true)
-  paymentMethodId String?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  plan            SubscriptionPlan   @relation(fields: [planId], references: [id])
-  user            User               @relation(fields: [userId], references: [id])
-  payments        PaymentRecord[]
-}
-
-model PaymentRecord {
-  id             String        @id @default(cuid())
-  subscriptionId String
-  amount         Float
-  status         String
-  paymentMethod  String
-  transactionId  String?
-  createdAt      DateTime      @default(now())
-  subscription   Subscription  @relation(fields: [subscriptionId], references: [id])
 }
 
 enum BillingCycle {

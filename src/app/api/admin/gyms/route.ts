@@ -96,8 +96,6 @@ export async function POST(request: Request) {
             priceRange: data.priceRange || '$',
             facilities: data.facilities || [],
             images: data.images || [],
-            // Removed status field as it doesn't exist in the DB yet
-            isVerified: data.isVerified || false,
             owner: {
               connect: { id: data.ownerId }
             }

@@ -131,7 +131,6 @@ async function main() {
         name: `${firstName} ${lastName}`,
         password: hashedPassword,
         role: 'GYM_OWNER',
-        isVerified: true,
       },
     });
     
@@ -213,7 +212,6 @@ async function main() {
         facilities,
         images,
         ownerId: owner.id,
-        isVerified: true,
         status: 'ACTIVE',
         viewCount: faker.number.int({ min: 10, max: 500 }),
       }
@@ -241,7 +239,6 @@ async function main() {
             name: `${faker.person.firstName()} ${faker.person.lastName()}`,
             password: await bcrypt.hash('password123', 10),
             role: 'USER',
-            isVerified: true,
           }
         });
       }

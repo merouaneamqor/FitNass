@@ -107,8 +107,7 @@ async function main() {
       email: 'club-owner@example.com',
       name: 'Club Owner',
       password: hashedPassword,
-      role: 'CLUB_OWNER',
-      isVerified: true,
+      role: 'CLUB_OWNER'
     },
   });
   
@@ -161,7 +160,6 @@ async function main() {
         }),
         status: 'ACTIVE',
         ownerId: clubOwner.id,
-        isVerified: true,
       }
     });
     
@@ -231,7 +229,6 @@ async function main() {
         name: faker.person.fullName(),
         password: await bcrypt.hash('password123', 10),
         role: 'USER',
-        isVerified: true,
       },
     });
     

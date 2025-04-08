@@ -106,7 +106,6 @@ export default function EditGymModal({ gym, isOpen, onClose, onSave }: EditGymMo
         priceRange: formData.priceRange,
         facilities: formData.facilities,
         images: formData.images,
-        isVerified: formData.isVerified,
       };
       
       // Only include owner if ownerId is provided

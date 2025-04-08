@@ -37,7 +37,6 @@ export default function NewGymPage() {
     facilities: [] as string[],
     images: [] as string[],
     status: 'ACTIVE' as 'ACTIVE' | 'INACTIVE' | 'PENDING_APPROVAL' | 'CLOSED',
-    isVerified: false,
     ownerId: ''
   });
   const [newFacility, setNewFacility] = useState('');
@@ -409,19 +408,6 @@ export default function NewGymPage() {
                     <option value="PENDING_APPROVAL">Pending Approval</option>
                     <option value="CLOSED">Closed</option>
                   </select>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="isVerified"
-                    name="isVerified"
-                    checked={formData.isVerified}
-                    onChange={handleCheckboxChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="isVerified" className="ml-2 block text-sm text-gray-700">
-                    Verified
-                  </label>
                 </div>
               </div>
             </div>

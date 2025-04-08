@@ -23,8 +23,7 @@ async function main() {
         email: `club-owner-${i}@example.com`,
         name: `${firstName} ${lastName}`,
         password: hashedPassword,
-        role: 'CLUB_OWNER',
-        isVerified: true,
+        role: 'CLUB_OWNER'
       },
     });
     
@@ -103,7 +102,6 @@ async function main() {
           facilities,
           images,
           ownerId: owner.id,
-          isVerified: clubData.verified,
           status: 'ACTIVE',
           viewCount: faker.number.int({ min: 10, max: 500 }),
         }
@@ -131,7 +129,6 @@ async function main() {
               name: `${faker.person.firstName()} ${faker.person.lastName()}`,
               password: await bcrypt.hash('password123', 10),
               role: 'USER',
-              isVerified: true,
             }
           });
         }

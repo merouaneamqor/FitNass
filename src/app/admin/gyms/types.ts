@@ -24,17 +24,31 @@ export interface Gym {
   priceRange: string;
   facilities: string[];
   images: string[];
-  status: 'ACTIVE' | 'INACTIVE' | 'PENDING_APPROVAL' | 'CLOSED';
-  isVerified: boolean;
-  viewCount: number;
-  ownerId: string;
-  owner?: {
-    id: string;
-    name?: string;
-    email: string;
-  };
   createdAt: string;
   updatedAt: string;
+  ownerId: string;
+  status: string;
+  viewCount: number;
+  owner?: User;
+}
+
+// Define form data interface
+export interface GymFormData {
+  name: string;
+  description: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  latitude: number;
+  longitude: number;
+  phone?: string;
+  website?: string;
+  email?: string;
+  priceRange: string;
+  facilities: string[];
+  images: string[];
+  status: string;
 }
 
 // Interface for update operations
@@ -54,6 +68,5 @@ export interface UpdateData {
   priceRange?: string;
   facilities?: string[];
   images?: string[];
-  isVerified?: boolean;
   owner?: { connect: { id: string } };
 } 

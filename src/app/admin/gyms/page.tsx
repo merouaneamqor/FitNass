@@ -85,78 +85,47 @@ export default function GymsPage() {
   };
   
   const handleDeleteGym = async (gymId: string) => {
-    if (confirm('Are you sure you want to delete this gym? This action cannot be undone.')) {
+    if (window.confirm('Are you sure you want to delete this gym?')) {
       try {
         const response = await fetch(`/api/admin/gyms/${gymId}`, {
           method: 'DELETE',
         });
-        
+
         if (!response.ok) {
-          throw new Error(`Failed to delete gym: ${response.status} ${response.statusText}`);
+          throw new Error('Failed to delete gym');
         }
-        
-        // Remove gym from local state to avoid refetching
+
         setGyms(gyms.filter(gym => gym.id !== gymId));
-        
-      } catch (err) {
-        console.error('Error deleting gym:', err);
-        alert('Failed to delete gym. Please try again.');
+      } catch (error) {
+        console.error('Error deleting gym:', error);
       }
     }
   };
   
-  const handleVerifyGym = async (gymId: string, isVerified: boolean) => {
+  const handleStatusChange = async (gymId: string, newStatus: string) => {
     try {
       const response = await fetch(`/api/admin/gyms/${gymId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ isVerified }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to update gym verification: ${response.status} ${response.statusText}`);
-      }
-      
-      // Update gym in local state
-      setGyms(gyms.map(gym => 
-        gym.id === gymId ? {...gym, isVerified} : gym
-      ));
-      
-    } catch (err) {
-      console.error('Error updating gym verification:', err);
-      alert('Failed to update gym verification. Please try again.');
-    }
-  };
-  
-  const handleStatusChange = async (gymId: string, newStatus: Gym['status']) => {
-    try {
-      const response = await fetch(`/api/admin/gyms/${gymId}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ status: newStatus }),
       });
-      
+
       if (!response.ok) {
-        throw new Error(`Failed to update gym status: ${response.status} ${response.statusText}`);
+        throw new Error('Failed to update gym status');
       }
-      
-      // Update gym in local state
+
       setGyms(gyms.map(gym => 
         gym.id === gymId ? {...gym, status: newStatus} : gym
       ));
-      
-    } catch (err) {
-      console.error('Error updating gym status:', err);
-      alert('Failed to update gym status. Please try again.');
+    } catch (error) {
+      console.error('Error updating gym status:', error);
     }
   };
   
   const handleEditGym = (gym: Gym) => {
-    setEditingGym({...gym});
+    setEditingGym(gym);
     setIsModalOpen(true);
   };
   
@@ -314,7 +283,6 @@ export default function GymsPage() {
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Verification</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Views</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
@@ -341,7 +309,7 @@ export default function GymsPage() {
                           </div>
                           <div className="ml-4">
                             <div className="font-medium text-gray-900">{gym.name}</div>
-                            <div className="text-gray-500 text-sm">{gym.owner?.name || 'No owner'}</div>
+                            <div className="text-gray-500 text-sm">{gym.address}</div>
                           </div>
                         </div>
                       </td>
@@ -357,28 +325,14 @@ export default function GymsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <select
-                          className={`text-sm border rounded px-2 py-1`}
                           value={gym.status}
-                          onChange={(e) => handleStatusChange(gym.id, e.target.value as Gym['status'])}
+                          onChange={(e) => handleStatusChange(gym.id, e.target.value)}
+                          className="block w-full px-3 py-2 text-sm border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                         >
                           <option value="ACTIVE">Active</option>
+                          <option value="PENDING">Pending</option>
                           <option value="INACTIVE">Inactive</option>
-                          <option value="PENDING_APPROVAL">Pending Approval</option>
-                          <option value="CLOSED">Closed</option>
                         </select>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={gym.isVerified}
-                            onChange={(e) => handleVerifyGym(gym.id, e.target.checked)}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          />
-                          <span className="ml-2 text-sm text-gray-500">
-                            {gym.isVerified ? 'Verified' : 'Not verified'}
-                          </span>
-                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {gym.viewCount}
