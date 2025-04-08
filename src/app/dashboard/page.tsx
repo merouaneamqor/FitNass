@@ -127,7 +127,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatsCard
           title="Total Members"
-          value={loading ? '...' : memberCount.toString()}
+          value={loading ? '...' : (memberCount ?? 0).toString()}
           icon={FiUsers}
           trend={{ value: 5, isPositive: true }}
         />
