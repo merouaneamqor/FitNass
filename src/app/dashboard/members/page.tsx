@@ -34,27 +34,30 @@ export default function MembersPage() {
 
   const fetchMembers = async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch('/api/members');
       if (!response.ok) {
         throw new Error('Failed to fetch members');
       }
       const data = await response.json();
-      setMembers(data);
+      // Ensure data is an array before setting it
+      setMembers(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching members:', err);
       setError('Failed to load members. Please try again later.');
+      setMembers([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
   };
 
   // Filter members based on search term
-  const filteredMembers = members.filter(member => 
+  const filteredMembers = Array.isArray(members) ? members.filter(member => 
     member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.membershipType.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) : [];
 
   if (!session || session.user.role !== 'GYM_OWNER') {
     return (
