@@ -4,30 +4,26 @@ import { prisma } from '@/lib/prisma';
 // GET handler to retrieve all available subscription plans
 export async function GET() {
   try {
-    const subscriptions = await prisma.subscription.findMany({
+    const plans = await prisma.subscriptionPlan.findMany({
       select: {
         id: true,
         name: true,
         description: true,
         price: true,
-        duration: true,
+        billingCycle: true,
         features: true,
-        isActive: true,
-      },
-      where: {
-        isActive: true,
       },
       orderBy: {
         price: 'asc',
       },
     });
 
-    return NextResponse.json({ subscriptions });
+    return NextResponse.json({ plans });
   } catch (error) {
-    console.error('Error fetching subscriptions:', error);
+    console.error('Error fetching subscription plans:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch subscriptions' },
+      { error: 'Failed to fetch subscription plans' },
       { status: 500 }
     );
   }
-} 
+}

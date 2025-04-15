@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 
 // Define a type for the where clause
+export type GymStatus =
+  | "ACTIVE"
+  | "INACTIVE"
+  | "PENDING_APPROVAL"
+  | "CLOSED";
+
 type WhereClause = {
   OR: Array<{
     name?: { contains: string; mode: 'insensitive' };
@@ -9,9 +15,12 @@ type WhereClause = {
     address?: { contains: string; mode: 'insensitive' };
     description?: { contains: string; mode: 'insensitive' };
   }>;
-  status?: string;
+  status?: GymStatus;
   city?: { contains: string; mode: 'insensitive' };
 };
+
+// Set route as dynamic to avoid static rendering failures
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
@@ -39,12 +48,17 @@ export async function GET(request: NextRequest) {
       ];
     } else {
       // If no query, only return active gyms
-      whereClause.status = 'ACTIVE';
+      whereClause.status = "ACTIVE" as GymStatus;
     }
 
     // Add city filter if provided
     if (city) {
       whereClause.city = { contains: city, mode: 'insensitive' };
+    }
+
+    // Add status filter if provided
+    if (searchParams.get('status')) {
+      whereClause.status = searchParams.get('status')!.toUpperCase() as GymStatus;
     }
 
     // Search gyms with constructed where clause

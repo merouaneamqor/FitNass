@@ -158,7 +158,7 @@ export default function DashboardPage() {
             <h2 className="text-lg font-medium">Subscription Status</h2>
           </div>
           <div className="p-4">
-            <SubscriptionInfo userId={session.user.id} />
+            <SubscriptionInfo />
           </div>
         </Card>
 

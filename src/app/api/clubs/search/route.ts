@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 
+// Set route as dynamic to avoid static rendering failures
+export const dynamic = 'force-dynamic';
+
 // Define a type for the where clause
+// Add a local type to match the ClubStatus enum values
+export type ClubStatus =
+  | "ACTIVE"
+  | "INACTIVE"
+  | "PENDING_APPROVAL"
+  | "CLOSED";
+
 type WhereClause = {
   OR: Array<{
     name?: { contains: string; mode: 'insensitive' };
@@ -9,7 +19,7 @@ type WhereClause = {
     address?: { contains: string; mode: 'insensitive' };
     description?: { contains: string; mode: 'insensitive' };
   }>;
-  status?: string;
+  status?: ClubStatus;
   city?: { contains: string; mode: 'insensitive' };
 };
 
@@ -39,7 +49,11 @@ export async function GET(request: NextRequest) {
       ];
     } else {
       // If no query, only return active clubs
-      whereClause.status = 'ACTIVE';
+      if (searchParams.get('status')) {
+        whereClause.status = searchParams.get('status')!.toUpperCase() as ClubStatus;
+      } else {
+        whereClause.status = "ACTIVE";
+      }
     }
 
     // Add city filter if provided

@@ -1,12 +1,34 @@
 import Stripe from 'stripe';
+import { prisma } from './db';
 
-if (!process.env.STRIPE_SECRET_KEY) {
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+// In development, we allow a dummy key for easier local development
+if (!process.env.STRIPE_SECRET_KEY && !isDevelopment) {
   throw new Error('Missing STRIPE_SECRET_KEY environment variable');
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16',
-});
+// Use a mock implementation in development if the key looks like a dummy
+const isDummyKey = process.env.STRIPE_SECRET_KEY?.includes('dummy');
+
+const stripe = isDummyKey
+  ? (new Proxy({}, {
+      get: (target, prop) => {
+        // Return a mock implementation for checkout.sessions
+        if (prop === 'checkout') {
+          return {
+            sessions: {
+              create: async () => ({ url: '#', id: 'dummy_session_id' }),
+              retrieve: async () => ({ metadata: {} })
+            }
+          };
+        }
+        return () => {}; // Return empty function for other methods
+      }
+    }) as unknown as Stripe)
+  : new Stripe(process.env.STRIPE_SECRET_KEY!, {
+      apiVersion: '2025-03-31.basil',
+    });
 
 export default stripe;
 
@@ -38,7 +60,11 @@ export async function createCheckoutSession(reservationId: string) {
             name: `${reservation.sportField.name} at ${reservation.sportField.club.name}`,
             description: `Reservation for ${new Date(reservation.startTime).toLocaleString()} to ${new Date(reservation.endTime).toLocaleString()}`,
           },
-          unit_amount: Math.round(parseFloat(reservation.totalPrice) * 100), // Stripe uses cents
+          unit_amount: Math.round(
+            typeof reservation.totalPrice === 'object' && 'toNumber' in reservation.totalPrice
+              ? reservation.totalPrice.toNumber() * 100
+              : parseFloat(String(reservation.totalPrice)) * 100
+          ), // Stripe uses cents
         },
         quantity: 1,
       },

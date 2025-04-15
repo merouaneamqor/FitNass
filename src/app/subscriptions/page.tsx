@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Check, Loader2 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/loading-spinner';
 
-// Define types for subscription plans
+// Define types for subscription plans and user subscriptions
 type SubscriptionPlan = {
   id: string;
   name: string;
@@ -23,10 +23,16 @@ type SubscriptionPlan = {
 type UserSubscription = {
   id: string;
   status: string;
-  planId: string;
   startDate: string;
   endDate: string;
   autoRenew: boolean;
+  plan: {
+    id: string;
+    name: string;
+    description?: string;
+    price?: number;
+    interval?: string;
+  };
 };
 
 export default function SubscriptionsPage() {
@@ -130,7 +136,7 @@ export default function SubscriptionsPage() {
     );
   }
 
-  const userHasSubscription = userSubscription?.hasSubscription;
+  const userHasSubscription = !!userSubscription && !!userSubscription.plan && userSubscription.status === 'ACTIVE';
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -145,20 +151,20 @@ export default function SubscriptionsPage() {
         <div className="mb-8 p-4 bg-blue-50 rounded-lg">
           <h2 className="text-xl font-semibold mb-2">Your Current Subscription</h2>
           <p>
-            You are currently subscribed to the <strong>{userSubscription.subscription.plan.name}</strong> plan.
+            You are currently subscribed to the <strong>{userSubscription.plan?.name ?? "Unknown Plan"}</strong> plan.
           </p>
           <p className="mt-2">
-            Status: <Badge>{userSubscription.subscription.status}</Badge>
+            Status: <Badge>{userSubscription.status ?? "Unknown"}</Badge>
           </p>
-          {userSubscription.subscription.autoRenew ? (
+          {userSubscription.autoRenew ? (
             <p className="mt-2">
               Your subscription will automatically renew on{' '}
-              {new Date(userSubscription.subscription.endDate).toLocaleDateString()}.
+              {userSubscription.endDate ? new Date(userSubscription.endDate).toLocaleDateString() : 'N/A'}.
             </p>
           ) : (
             <p className="mt-2">
               Your subscription will end on{' '}
-              {new Date(userSubscription.subscription.endDate).toLocaleDateString()}.
+              {userSubscription.endDate ? new Date(userSubscription.endDate).toLocaleDateString() : 'N/A'}.
             </p>
           )}
         </div>

@@ -191,7 +191,10 @@ export default function BookClub() {
       if (!selectedFields.length || !selectedTime) return;
       
       const selectedFieldsData = sportFields.filter(field => selectedFields.includes(field.id));
-      const totalPrice = selectedFieldsData.reduce((sum, field) => sum + Number(field.pricePerHour), 0);
+      const totalPrice = selectedFieldsData.reduce((sum, field) => {
+        const price = parseFloat(String(field.pricePerHour).replace(/[^0-9.]/g, '')) || 0;
+        return sum + price;
+      }, 0);
       setTotalPrice(totalPrice);
     };
 
@@ -264,7 +267,7 @@ export default function BookClub() {
                 <Label htmlFor="sport-field">Sport Field</Label>
                 <Select 
                   value={selectedFields.join(',')} 
-                  onValueChange={(value) => setSelectedFields(value.split(','))}
+                  onValueChange={(value: string) => setSelectedFields(value.split(','))}
                   disabled={sportFields.length === 0}
                 >
                   <SelectTrigger>
@@ -295,7 +298,7 @@ export default function BookClub() {
                 <Input 
                   id="time" 
                   type="time" 
-                  value={selectedTime} 
+                  value={selectedTime ?? ''} 
                   onChange={(e) => setSelectedTime(e.target.value)}
                   disabled={!selectedDate}
                 />

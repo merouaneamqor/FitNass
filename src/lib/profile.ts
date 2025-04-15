@@ -68,8 +68,8 @@ const mapUserToProfile = async (user: Prisma.UserGetPayload<{ include: { favorit
       favoriteGyms: favoriteGyms.map(gym => gym.id),
       reviews: reviews.map(review => ({
         id: review.id,
-        gymId: review.gymId,
-        gymName: review.gym.name,
+        gymId: review.gymId || '',
+        gymName: review.gym?.name || 'Unknown',
         rating: review.rating,
         comment: review.comment,
         createdAt: review.createdAt.toISOString(),

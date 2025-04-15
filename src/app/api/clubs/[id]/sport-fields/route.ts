@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { Prisma } from "@prisma/client";
 import prisma from "@/lib/db";
 import { z } from "zod";
 
@@ -30,13 +31,17 @@ const sportFieldSchema = z.object({
   images: z.array(z.string()).optional(),
 });
 
-// Define a type for the filter
-type SportFieldFilter = {
-  clubId: string;
-  status: string;
-  type?: string;
-  indoor?: boolean;
-};
+// Add a local type to match the SportFieldType enum values
+type SportFieldType =
+  | "FOOTBALL"
+  | "TENNIS"
+  | "BASKETBALL"
+  | "VOLLEYBALL"
+  | "SQUASH"
+  | "PADEL"
+  | "SWIMMING_POOL"
+  | "GOLF"
+  | "OTHER";
 
 // Get all sport fields for a specific club
 export async function GET(
@@ -52,13 +57,13 @@ export async function GET(
     const skip = (page - 1) * limit;
 
     // Build filter based on query parameters
-    const filter: SportFieldFilter = {
+    const filter: Prisma.SportFieldWhereInput = {
       clubId: params.id,
       status: "AVAILABLE",
     };
 
     if (type) {
-      filter.type = type;
+      filter.type = type.toUpperCase() as SportFieldType;
     }
 
     if (indoor !== null) {

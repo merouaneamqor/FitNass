@@ -13,6 +13,8 @@ interface Reservation {
   startTime: string;
   endTime: string;
   status: string;
+  participantCount?: number;
+  totalPrice?: number;
   sportField: {
     id: string;
     name: string;
@@ -158,7 +160,7 @@ export default function PaymentSuccessPage() {
                 <p className="text-sm text-muted-foreground">Location</p>
                 <div className="flex items-center">
                   <MapPin className="h-4 w-4 mr-1 text-primary" />
-                  <p className="font-medium">{reservation.sportField?.club?.name}</p>
+                  <p className="font-medium">{reservation.club?.name}</p>
                 </div>
               </div>
               <div>

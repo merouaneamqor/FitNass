@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { prisma } from '@/lib/prisma';
 
 // Create a transporter
 const transporter = nodemailer.createTransport({
@@ -18,6 +19,9 @@ interface Reservation {
   endTime: string | Date;
   status: string;
   price: number;
+  participantCount?: number;
+  totalPrice?: number;
+  paymentStatus?: string;
 }
 
 interface User {
@@ -38,6 +42,7 @@ interface Club {
   name: string;
   address: string;
   city: string;
+  zipCode?: string;
 }
 
 // Email templates
@@ -70,7 +75,7 @@ export const reservationConfirmationTemplate = (
         <div style="background-color: #f7fafc; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
           <h2 style="color: #2d3748; margin-top: 0;">${club.name}</h2>
           <p style="color: #4a5568; margin-bottom: 5px;">${club.address}</p>
-          <p style="color: #4a5568; margin-bottom: 0;">${club.city}, ${club.state} ${club.zipCode}</p>
+          <p style="color: #4a5568; margin-bottom: 0;">${club.city}${club.zipCode ? `, ${club.zipCode}` : ''}</p>
         </div>
         
         <div style="background-color: #ebf4ff; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
@@ -103,7 +108,7 @@ export const reservationConfirmationTemplate = (
       Reservation Confirmation - ${club.name}
       
       Club: ${club.name}
-      Address: ${club.address}, ${club.city}, ${club.state} ${club.zipCode}
+      Address: ${club.address}, ${club.city}${club.zipCode ? `, ${club.zipCode}` : ''}
       
       Reservation Details:
       Field: ${sportField.name} (${sportField.type})
@@ -152,6 +157,7 @@ export const sendReservationConfirmationEmail = async (
 ) => {
   try {
     // Fetch reservation with all related data
+    if (!prisma) throw new Error('Prisma client is not initialized');
     const reservation = await prisma.reservation.findUnique({
       where: { id: reservationId },
       include: {
@@ -169,11 +175,74 @@ export const sendReservationConfirmationEmail = async (
     }
 
     // Get email template
+    const reservationData: Reservation = {
+      id: reservation.id,
+      startTime: reservation.startTime,
+      endTime: reservation.endTime,
+      status: reservation.status,
+      price: reservation.totalPrice && typeof reservation.totalPrice === 'object' && 'toNumber' in reservation.totalPrice ? reservation.totalPrice.toNumber() : reservation.totalPrice ?? 0,
+      participantCount: reservation.participantCount ?? undefined,
+      totalPrice: reservation.totalPrice && typeof reservation.totalPrice === 'object' && 'toNumber' in reservation.totalPrice ? reservation.totalPrice.toNumber() : reservation.totalPrice ?? undefined,
+      paymentStatus: reservation.paymentStatus ?? undefined,
+    };
+
+    const userData: User = {
+      id: reservation.user.id,
+      name: reservation.user.name ?? '',
+      email: reservation.user.email,
+    };
+
+    // Defensive: sportField might be nested under reservation.sportField, or reservation.sportField.sportField
+    const sportFieldRaw = reservation.sportField && typeof reservation.sportField === 'object' ? reservation.sportField : null;
+    const sportField = sportFieldRaw && 'sportField' in sportFieldRaw && typeof sportFieldRaw.sportField === 'object' ? sportFieldRaw.sportField : sportFieldRaw;
+    const clubRaw = sportField && typeof sportField === 'object' && 'club' in sportField ? sportField.club : null;
+    const club = clubRaw && typeof clubRaw === 'object' ? clubRaw : null;
+
+    // Use type assertion to bypass complex type checking
+    const sportFieldData: SportField = {
+      id: '',
+      name: '',
+      type: '',
+      price: 0
+    };
+
+    // Set properties safely if they exist
+    if (sportField) {
+      if ('id' in sportField) sportFieldData.id = String(sportField.id || '');
+      if ('name' in sportField) sportFieldData.name = String(sportField.name || '');
+      if ('type' in sportField) sportFieldData.type = String(sportField.type || '');
+      if ('pricePerHour' in sportField) {
+        const price = sportField.pricePerHour;
+        if (typeof price === 'object' && price && 'toNumber' in price && typeof price.toNumber === 'function') {
+          sportFieldData.price = price.toNumber();
+        } else {
+          sportFieldData.price = Number(price) || 0;
+        }
+      }
+    }
+
+    // Use type assertion to bypass complex type checking
+    const clubData: Club = {
+      id: '',
+      name: '',
+      address: '',
+      city: ''
+    };
+
+    // Set properties safely if they exist
+    if (club) {
+      if ('id' in club) clubData.id = String(club.id || '');
+      if ('name' in club) clubData.name = String(club.name || '');
+      if ('address' in club) clubData.address = String(club.address || '');
+      if ('city' in club) clubData.city = String(club.city || '');
+      if ('zipCode' in club) clubData.zipCode = club.zipCode ? String(club.zipCode) : undefined;
+    }
+
     const { subject, html, text } = reservationConfirmationTemplate(
-      reservation,
-      reservation.user,
-      reservation.sportField,
-      reservation.sportField.club
+      reservationData,
+      userData,
+      sportFieldData,
+      clubData
     );
 
     // Send email

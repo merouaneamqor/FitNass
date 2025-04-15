@@ -10,6 +10,8 @@ type ToastProps = {
   description?: string
   variant?: 'default' | 'destructive'
   action?: ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 const actionTypes = {

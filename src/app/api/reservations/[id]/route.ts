@@ -7,7 +7,7 @@ import { z } from "zod";
 // Schema for reservation update
 const reservationUpdateSchema = z.object({
   status: z.enum(["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED", "NO_SHOW"]).optional(),
-  paymentStatus: z.enum(["UNPAID", "PAID", "REFUNDED", "PARTIALLY_PAID"]).optional(),
+  paymentStatus: z.enum(["UNPAID", "PAID", "REFUNDED", "PARTIALLY_REFUNDED", "FAILED"]).optional(),
   paymentId: z.string().optional(),
   notes: z.string().optional(),
 });

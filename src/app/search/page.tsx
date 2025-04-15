@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FiSearch, FiMapPin, FiStar, FiActivity, FiUsers, FiCalendar, FiAlertCircle, FiX } from 'react-icons/fi';
 import { GiTennisRacket, GiSoccerField, GiWeightLiftingUp } from 'react-icons/gi';
 import Image from 'next/image';
+
+// Set as dynamic to avoid static rendering issues
+export const dynamic = 'force-dynamic';
 
 type SearchResult = {
   id: string;
@@ -19,10 +22,12 @@ type SearchResult = {
   type: 'club' | 'gym';
 };
 
-export default function SearchPage() {
+// Create a component that wraps the search params usage with Suspense
+function SearchContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
   const initialCity = searchParams.get('city') || '';
+  const router = useRouter();
   
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [cityFilter, setCityFilter] = useState(initialCity);
@@ -30,7 +35,6 @@ export default function SearchPage() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [activeFilter, setActiveFilter] = useState<'all' | 'gyms' | 'clubs'>('all');
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   // Popular cities in Morocco
   const popularCities = ['Casablanca', 'Rabat', 'Marrakech', 'Tangier', 'Fez', 'Agadir'];
@@ -439,5 +443,13 @@ function SearchResultCard({ result }: { result: SearchResult }) {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading search results...</div>}>
+      <SearchContent />
+    </Suspense>
   );
 } 

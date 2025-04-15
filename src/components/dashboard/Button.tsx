@@ -11,9 +11,10 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   isLoading?: boolean;
 }
 
-interface LinkButtonProps extends Omit<ButtonProps, 'onClick'> {
+type LinkButtonProps = React.AnchorHTMLAttributes<HTMLAnchorElement> & {
   href: string;
-}
+  children: React.ReactNode;
+};
 
 const variantClasses = {
   primary:
@@ -89,12 +90,18 @@ export function Button({
   );
 }
 
-export function LinkButton({ href, children, ...rest }: LinkButtonProps) {
+export function LinkButton({ href, children, className = '', ...rest }: LinkButtonProps) {
   return (
-    <Link href={href} passHref>
-      <Button as="a" {...rest}>
+    <Link href={href} legacyBehavior>
+      <a
+        className={
+          "inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 " +
+          className
+        }
+        {...rest}
+      >
         {children}
-      </Button>
+      </a>
     </Link>
   );
 }

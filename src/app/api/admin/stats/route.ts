@@ -116,7 +116,7 @@ async function getRecentActivity() {
     rating: number;
     createdAt: Date;
     user: { name: string | null };
-    gym: { name: string | null };
+    gym: { name: string } | null;
   }> = [];
   let recentPromotions: Array<{
     id: string;

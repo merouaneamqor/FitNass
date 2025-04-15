@@ -225,7 +225,7 @@ export async function PUT(request: Request) {
 
     await prisma.gym.update({
       where: {
-        id: review.gymId,
+        id: review.gymId ?? undefined,
       },
       data: {
         rating: Number(newAverageRating.toFixed(1)),
@@ -310,7 +310,7 @@ export async function DELETE(request: Request) {
 
     await prisma.gym.update({
       where: {
-        id: gymId,
+        id: gymId ?? undefined,
       },
       data: {
         rating: Number(newAverageRating.toFixed(1)),

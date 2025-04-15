@@ -14,10 +14,18 @@ const reservationSchema = z.object({
   notes: z.string().optional(),
 });
 
+// Add a local type to match the ReservationStatus enum values
+export type ReservationStatus =
+  | "PENDING"
+  | "CONFIRMED"
+  | "CANCELLED"
+  | "COMPLETED"
+  | "NO_SHOW";
+
 // Define a type for the filter
 type ReservationFilter = {
   userId?: string;
-  status?: string;
+  status?: ReservationStatus;
   sportFieldId?: string;
   startTime?: { gte: Date };
   endTime?: { lte: Date };
@@ -48,7 +56,7 @@ export async function GET(req: NextRequest) {
     };
 
     if (status) {
-      filter.status = status;
+      filter.status = status.toUpperCase() as ReservationStatus;
     }
 
     // Get reservations with pagination
@@ -182,7 +190,7 @@ export async function POST(req: NextRequest) {
     const durationInHours = durationInMs / (1000 * 60 * 60);
 
     // Calculate total price
-    const totalPrice = parseFloat(sportField.pricePerHour) * durationInHours;
+    const totalPrice = sportField.pricePerHour.toNumber() * durationInHours;
 
     // Create the reservation
     const reservation = await prisma.reservation.create({
