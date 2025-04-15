@@ -53,7 +53,7 @@ export interface GymFormData {
 
 // Interface for update operations
 export interface UpdateData {
-  id?: string;
+  id: string;
   name?: string;
   description?: string;
   address?: string;
@@ -69,4 +69,4 @@ export interface UpdateData {
   facilities?: string[];
   images?: string[];
   owner?: { connect: { id: string } };
-} 
+}

@@ -67,12 +67,23 @@ export default function EditGymModal({ gym, isOpen, onClose, onSave }: EditGymMo
   };
 
   const addImage = () => {
-    if (newImage.trim() && formData.images) {
+    const isValidUrl = (url: string) => {
+      try {
+        new URL(url);
+        return url.match(/\.(jpg|jpeg|png|gif|webp)$/i) !== null;
+      } catch {
+        return false;
+      }
+    };
+
+    if (newImage.trim() && formData.images && isValidUrl(newImage.trim())) {
       setFormData(prev => ({
         ...prev,
         images: [...(prev.images || []), newImage.trim()]
       }));
       setNewImage('');
+    } else {
+      setError('Please enter a valid image URL (must end with .jpg, .jpeg, .png, .gif, or .webp)');
     }
   };
 
@@ -92,6 +103,7 @@ export default function EditGymModal({ gym, isOpen, onClose, onSave }: EditGymMo
 
     try {
       const updateData: UpdateData = {
+        id: formData.id!,  
         name: formData.name,
         description: formData.description,
         address: formData.address,

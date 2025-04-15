@@ -191,7 +191,7 @@ export default function BookClub() {
       if (!selectedFields.length || !selectedTime) return;
       
       const selectedFieldsData = sportFields.filter(field => selectedFields.includes(field.id));
-      const totalPrice = selectedFieldsData.reduce((sum, field) => sum + field.price, 0);
+      const totalPrice = selectedFieldsData.reduce((sum, field) => sum + Number(field.pricePerHour), 0);
       setTotalPrice(totalPrice);
     };
 
