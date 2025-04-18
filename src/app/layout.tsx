@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Inter, Bebas_Neue, Poppins } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/ui/Header";
-import Footer from "@/components/ui/Footer";
-import AuthProvider from "@/components/AuthProvider";
+import ClientSideHeader from "@/components/ui/ClientSideHeader";
+import Footer from "@/components/Footer";
+import Providers from "./providers";
 import { FiLogIn, FiLogOut, FiMapPin, FiSearch, FiStar, FiTarget, FiUser } from "react-icons/fi";
 
 // Configure fonts
@@ -34,15 +34,15 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`${bebasNeue.variable} ${poppins.variable}`}>
       <body className="min-h-screen bg-jet-black font-poppins text-base-foreground">
-        <AuthProvider>
+        <Providers>
           <div className="flex flex-col min-h-screen">
-            <Header />
+            <ClientSideHeader />
             <main className="flex-grow">
               {children}
             </main>
             <Footer />
           </div>
-        </AuthProvider>
+        </Providers>
       </body>
     </html>
   );
