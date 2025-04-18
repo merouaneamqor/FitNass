@@ -2,10 +2,12 @@
   <!-- Background: Jet Black rounded square -->
   <rect x="0" y="0" width="100" height="100" fill="#1A1A1A" rx="10"/>
 
-  <!-- Stylized F resembling Bebas Neue font - Blood Red -->
-  <!-- Path defines the main letter shape -->
-  <path d="M 30 15 H 85 V 30 H 48 V 48 H 75 V 63 H 48 V 90 H 30 Z" fill="#DC143C"/>
+  <!-- Central Aggressive Shape (Represents 'Fit') - Blood Red -->
+  <!-- A dynamic, upward-thrusting sharp shape suggesting power/energy -->
+  <path d="M 50 15 L 70 45 L 55 50 L 55 85 L 45 85 L 45 50 L 30 45 Z" fill="#DC143C"/>
 
-  <!-- Neon Yellow accent - Sharp underline/detail -->
-  <rect x="30" y="92" width="55" height="5" fill="#FFF01F"/>
+  <!-- Supporting Angled Shapes (Represents 'Nass') - Neon Yellow -->
+  <!-- Two sharp, flanking elements suggesting support/community -->
+  <path d="M 20 65 L 40 55 L 40 75 Z" fill="#FFF01F"/>
+  <path d="M 80 65 L 60 55 L 60 75 Z" fill="#FFF01F"/>
 </svg> 

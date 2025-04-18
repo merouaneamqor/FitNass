@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import prisma from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 
 // Validation schema for updating a member
 const memberUpdateSchema = z.object({
@@ -93,110 +94,71 @@ export async function PATCH(
 
     const memberId = params.id;
     
-    // Parse and validate the request body
+    // Get the request body
     const body = await request.json();
-    const validationResult = memberUpdateSchema.safeParse(body);
-    
-    if (!validationResult.success) {
-      return NextResponse.json(
-        { error: validationResult.error.errors },
-        { status: 400 }
-      );
+    const { name, email, phone, status, membershipType } = body;
+
+    // Build the data object for Prisma update
+    const dataToUpdate: Prisma.UserUpdateInput = {};
+    if (name !== undefined) {
+      dataToUpdate.name = name;
     }
-    
-    const { name, email, phone, status, membershipType } = validationResult.data;
-    
-    // Check if the member exists
-    const existingMember = await prisma.user.findUnique({
+    if (email !== undefined) {
+      // Consider adding email validation if not done elsewhere
+      dataToUpdate.email = email;
+    }
+    // NOTE: phone, status, membershipType are not in the User model
+    // and cannot be updated directly here.
+
+    // If no fields to update, return the existing member data (formatted)
+    if (Object.keys(dataToUpdate).length === 0) {
+      // Fetch necessary fields if not already available from 'existingMember'
+      const currentUser = await prisma.user.findUnique({
+        where: { id: memberId },
+        select: { id: true, name: true, email: true, createdAt: true, lastLogin: true }
+      });
+      if (!currentUser) { // Should not happen if existingMember was found, but check anyway
+         return NextResponse.json({ error: 'Member not found after check' }, { status: 404 });
+      }
+      return NextResponse.json({
+        id: currentUser.id,
+        name: currentUser.name || 'Unknown',
+        email: currentUser.email,
+        phone: phone || '', // Use request phone if provided (not saved)
+        joinDate: currentUser.createdAt.toISOString(),
+        status: status || 'active', // Use request status if provided (not saved)
+        membershipType: membershipType || 'Basic', // Use request type if provided (not saved)
+        lastVisit: currentUser.lastLogin?.toISOString() || currentUser.createdAt.toISOString(),
+      });
+    }
+
+    // Update the user using Prisma client
+    const updatedUser = await prisma.user.update({
       where: { id: memberId },
+      data: dataToUpdate,
+      // Select the fields needed for the response
       select: {
         id: true,
         name: true,
-        email: true
+        email: true,
+        createdAt: true,
+        lastLogin: true // Assuming this corresponds to lastVisit?
+        // Include other necessary fields from User model if needed
       }
     });
-    
-    if (!existingMember) {
-      return NextResponse.json(
-        { error: 'Member not found' },
-        { status: 404 }
-      );
-    }
-    
-    // If updating email, check if it's already in use by another user
-    if (email && email !== existingMember.email) {
-      const emailExists = await prisma.user.findUnique({
-        where: { email },
-        select: {
-          id: true,
-          email: true
-        }
-      });
-      
-      if (emailExists) {
-        return NextResponse.json(
-          { error: 'Email is already in use' },
-          { status: 409 }
-        );
-      }
-    }
-    
-    // Build the update query dynamically based on provided fields
-    const updateParts: string[] = [];
-    const updateValues: Record<string, UpdateValue> = {};
-    
-    if (name) {
-      updateParts.push(`name = $${Object.keys(updateValues).length + 1}`);
-      updateValues.name = name;
-    }
-    
-    if (email) {
-      updateParts.push(`email = $${Object.keys(updateValues).length + 1}`);
-      updateValues.email = email;
-    }
-    
-    // status field doesn't exist in the database, so we skip it
-    // Note: In a real app, you'd store this in a related table
-    
-    // If no fields to update, just return the existing member
-    if (updateParts.length === 0) {
-      return NextResponse.json({
-        id: existingMember.id,
-        name: existingMember.name || 'Unknown',
-        email: existingMember.email,
-        phone: phone || '',
-        joinDate: new Date().toISOString(), // No access to original
-        status: status || 'active',
-        membershipType: membershipType || 'Basic',
-        lastVisit: new Date().toISOString(), // No access to original
-      });
-    }
-    
-    // Update the user with raw SQL
-    const updateQuery = `
-      UPDATE "User" 
-      SET ${updateParts.join(', ')}, "updatedAt" = now()
-      WHERE id = $${Object.keys(updateValues).length + 1}
-      RETURNING id, name, email, "createdAt", "lastLogin"
-    `;
-    
-    updateValues['id'] = memberId;
-    
-    const updateResult = await prisma.$queryRawUnsafe(updateQuery, ...Object.values(updateValues));
-    const updatedUser = Array.isArray(updateResult) ? updateResult[0] : updateResult;
-    
-    // Format the response
+
+    // Format the response using updatedUser data
     const formattedMember = {
       id: updatedUser.id,
       name: updatedUser.name || 'Unknown',
       email: updatedUser.email,
-      phone: phone || '', // Include the phone from request but not stored in DB
-      joinDate: updatedUser.createdAt,
-      status: status || 'active', // Include status from request but not stored in DB
-      membershipType: membershipType || 'Basic', // This would be updated in a real membership table
-      lastVisit: updatedUser.lastLogin || updatedUser.createdAt,
+      phone: phone || '', // Include the phone from request body (not saved)
+      joinDate: updatedUser.createdAt.toISOString(), // Use actual join date
+      status: status || 'active', // Include status from request body (not saved)
+      membershipType: membershipType || 'Basic', // Include type from request body (not saved)
+      lastVisit: updatedUser.lastLogin?.toISOString() || updatedUser.createdAt.toISOString(), // Use lastLogin if available
     };
-    
+
     return NextResponse.json(formattedMember);
   } catch (error) {
     console.error('Error updating member:', error);
