@@ -44,8 +44,8 @@ async function fetchSearchResults(searchParams: SearchParams) {
     console.log(`Server Fetch: query="${query}", city="${city}", type="${typeFilter}", page=${page}`);
 
     // --- Build Common Where Clause Components ---
-    let cityWhereClause = city ? { city: { contains: city, mode: 'insensitive' as const } } : {};
-    let queryWhereClause = query ? {
+    const cityWhereClause = city ? { city: { contains: city, mode: 'insensitive' as const } } : {};
+    const queryWhereClause = query ? {
         OR: [
             { name: { contains: query, mode: 'insensitive' as const } },
             { address: { contains: query, mode: 'insensitive' as const } },

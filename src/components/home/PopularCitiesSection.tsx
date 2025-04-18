@@ -22,7 +22,7 @@ export default function PopularCitiesSection({ cities }: PopularCitiesSectionPro
             Explore Top Fitness Cities
           </h2>
           <p className="text-base md:text-lg text-muted-foreground font-medium max-w-2xl mx-auto">
-            Find elite gyms and clubs in Morocco's major hubs.
+            Find elite gyms and clubs in Morocco&apos;s major hubs.
           </p>
         </div>
 
