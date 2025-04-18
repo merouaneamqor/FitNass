@@ -199,7 +199,7 @@ export async function POST(req: NextRequest) {
         endTime,
         sportFieldId,
         userId: session.user.id,
-        totalPrice: totalPrice.toString(),
+        totalPrice: totalPrice,
         participantCount,
         notes,
         status: "PENDING",
