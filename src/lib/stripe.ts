@@ -60,11 +60,7 @@ export async function createCheckoutSession(reservationId: string) {
             name: `${reservation.sportField.name} at ${reservation.sportField.club.name}`,
             description: `Reservation for ${new Date(reservation.startTime).toLocaleString()} to ${new Date(reservation.endTime).toLocaleString()}`,
           },
-          unit_amount: Math.round(
-            typeof reservation.totalPrice === 'object' && 'toNumber' in reservation.totalPrice
-              ? reservation.totalPrice.toNumber() * 100
-              : parseFloat(String(reservation.totalPrice)) * 100
-          ), // Stripe uses cents
+          unit_amount: Math.round(Number(reservation.totalPrice ?? 0) * 100),
         },
         quantity: 1,
       },
