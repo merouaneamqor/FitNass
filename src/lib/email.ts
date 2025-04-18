@@ -174,15 +174,31 @@ export const sendReservationConfirmationEmail = async (
       throw new Error('Reservation, user, sport field, or club not found');
     }
 
+    // Helper function to safely get price as number, handling potential Decimal type
+    const getPriceAsNumber = (priceValue: any, defaultValue: number = 0): number => {
+      if (typeof priceValue === 'number') {
+        return priceValue;
+      }
+      if (typeof priceValue === 'object' && priceValue !== null && typeof priceValue.toNumber === 'function') {
+        // Looks like a Decimal object
+        return priceValue.toNumber();
+      }
+      // Attempt direct conversion or return default
+      const num = Number(priceValue);
+      return isNaN(num) ? defaultValue : num;
+    };
+
     // Get email template
     const reservationData: Reservation = {
       id: reservation.id,
       startTime: reservation.startTime,
       endTime: reservation.endTime,
       status: reservation.status,
-      price: reservation.totalPrice && typeof reservation.totalPrice === 'object' && 'toNumber' in reservation.totalPrice ? reservation.totalPrice.toNumber() : reservation.totalPrice ?? 0,
+      // Use helper function for safe conversion
+      price: getPriceAsNumber(reservation.totalPrice, 0),
       participantCount: reservation.participantCount ?? undefined,
-      totalPrice: reservation.totalPrice && typeof reservation.totalPrice === 'object' && 'toNumber' in reservation.totalPrice ? reservation.totalPrice.toNumber() : reservation.totalPrice ?? undefined,
+      // Use helper function for safe conversion
+      totalPrice: getPriceAsNumber(reservation.totalPrice, undefined),
       paymentStatus: reservation.paymentStatus ?? undefined,
     };
 
