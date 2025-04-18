@@ -6,9 +6,10 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import {
   FiUser, FiMenu, FiX,
-  FiSearch, FiChevronDown, FiLogIn, FiLogOut,
-  FiShield, FiSettings, FiGrid, FiPlusCircle, FiTarget // Added FiTarget as possible logo
+  FiChevronDown, FiLogOut,
+  FiShield, FiSettings, FiGrid, FiPlusCircle
 } from 'react-icons/fi';
+import { Bebas_Neue } from 'next/font/google';
 
 // Helper function to convert auth role to our app roles
 const mapRoleToUserRole = (role: string | undefined): 'user' | 'admin' | 'owner' | null => {

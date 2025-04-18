@@ -1,8 +1,9 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FiSearch, FiMapPin, FiStar, FiAlertCircle, FiHeart, FiArrowLeft, FiArrowRight, FiX } from 'react-icons/fi';
-import { GiTennisRacket, GiSoccerField, GiWeightLiftingUp } from 'react-icons/gi';
-import prisma from '@/lib/db'; // Import Prisma client directly
+import { FiSearch, FiMapPin, FiStar, FiAlertCircle, FiChevronLeft, FiChevronRight, FiFilter, FiX } from 'react-icons/fi';
+import { GiSoccerField } from "react-icons/gi";
+import prisma from '@/lib/db';
 import { Prisma } from '@prisma/client';
 
 // --- TYPES ---
@@ -262,12 +263,12 @@ function PaginationControls({ currentPage, totalPages, searchParams }: {
             {hasPrev ? (
                 <Link href={createPageURL(currentPage - 1)}
                       className="inline-flex items-center px-4 py-2 bg-gunmetal-gray text-neutral-300 border border-neutral-700 rounded-md text-sm font-medium hover:bg-neutral-700 transition-colors">
-                    <FiArrowLeft className="mr-2 h-4 w-4" />
+                    <FiChevronLeft className="mr-2 h-4 w-4" />
                     Previous
                 </Link>
             ) : (
                 <span className="inline-flex items-center px-4 py-2 bg-neutral-800 text-neutral-600 border border-neutral-700 rounded-md text-sm font-medium cursor-not-allowed">
-                    <FiArrowLeft className="mr-2 h-4 w-4" />
+                    <FiChevronLeft className="mr-2 h-4 w-4" />
                     Previous
                 </span>
             )}
@@ -280,12 +281,12 @@ function PaginationControls({ currentPage, totalPages, searchParams }: {
                 <Link href={createPageURL(currentPage + 1)}
                       className="inline-flex items-center px-4 py-2 bg-gunmetal-gray text-neutral-300 border border-neutral-700 rounded-md text-sm font-medium hover:bg-neutral-700 transition-colors">
                     Next
-                    <FiArrowRight className="ml-2 h-4 w-4" />
+                    <FiChevronRight className="ml-2 h-4 w-4" />
                 </Link>
             ) : (
                  <span className="inline-flex items-center px-4 py-2 bg-neutral-800 text-neutral-600 border border-neutral-700 rounded-md text-sm font-medium cursor-not-allowed">
                     Next
-                    <FiArrowRight className="ml-2 h-4 w-4" />
+                    <FiChevronRight className="ml-2 h-4 w-4" />
                 </span>
             )}
         </div>
@@ -414,7 +415,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
                                 : 'text-neutral-400 border-transparent hover:text-white'
                                 }`}
                         >
-                            <GiWeightLiftingUp className="h-4 w-4" />
+                            <FiFilter className="h-4 w-4" />
                             <span>Gyms ({/* TODO: Show gym count? */})</span>
                         </Link>
                         <Link
@@ -425,7 +426,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
                                 : 'text-neutral-400 border-transparent hover:text-white'
                                 }`}
                         >
-                            <GiTennisRacket className="h-4 w-4" />
+                            <GiSoccerField className="h-4 w-4" />
                             <span>Clubs ({/* TODO: Show club count? */})</span>
                         </Link>
                     </div>

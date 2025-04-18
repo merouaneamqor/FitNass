@@ -164,7 +164,7 @@ export async function POST(
     const sportField = await prisma.sportField.create({
       data: {
         ...result.data,
-        pricePerHour: result.data.pricePerHour.toString(),
+        pricePerHour: result.data.pricePerHour,
         amenities: result.data.amenities || [],
         images: result.data.images || [],
         clubId: params.id,

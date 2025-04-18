@@ -1,6 +1,7 @@
 'use client';
 
-import { FiMapPin, FiUsers, FiStar, FiCheckSquare, FiTarget } from 'react-icons/fi';
+import React from 'react';
+import { FiMapPin, FiUsers, FiCheckSquare, FiTarget } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 
 type Stat = {
