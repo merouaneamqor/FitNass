@@ -80,38 +80,35 @@ export async function POST(request: Request) {
       );
     }
     
-    // Create new user as a member using raw SQL to avoid schema mismatches
-    const newMember = await prisma.$queryRaw`
-      INSERT INTO "User" (
-        id, 
-        name, 
-        email, 
-        role, 
-        "createdAt", 
-        "updatedAt"
-      ) VALUES (
-        ${`usr_${Date.now()}`}, 
-        ${name}, 
-        ${email}, 
-        'USER'::public."Role", 
-        now(), 
-        now()
-      ) 
-      RETURNING id, name, email, "createdAt"
-    `;
+    // Create new user using Prisma client
+    const newMember = await prisma.user.create({
+      data: {
+        name: name,
+        email: email,
+        role: 'USER', // Set default role
+        // Prisma handles ID, createdAt, updatedAt automatically for MongoDB
+        // No password is set here based on the original raw query logic
+      },
+      // Select fields needed for the response
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+        lastLogin: true // Or select other relevant fields
+      }
+    });
     
-    // Format the response - newMember is now an array with one object
-    const member = Array.isArray(newMember) ? newMember[0] : newMember;
-    
+    // Format the response
     const formattedMember = {
-      id: member.id,
-      name: member.name || 'Unknown',
-      email: member.email,
-      phone: phone || '', // Store phone from input, but it's not saved to the database
-      joinDate: member.createdAt,
+      id: newMember.id,
+      name: newMember.name || 'Unknown',
+      email: newMember.email,
+      phone: phone || '', // Include phone from input, but it's not saved to the database
+      joinDate: newMember.createdAt.toISOString(), // Use actual join date
       status: 'active', // Default status since field doesn't exist in database
-      membershipType: membershipType,
-      lastVisit: member.createdAt,
+      membershipType: membershipType, // Use type from input (not saved to User model)
+      lastVisit: newMember.lastLogin?.toISOString() || newMember.createdAt.toISOString(), // Use lastLogin or join date
     };
     
     return NextResponse.json(formattedMember, { status: 201 });
