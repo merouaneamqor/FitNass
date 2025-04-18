@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
 import { useFormState, useFormStatus } from 'react-dom';
 import Link from 'next/link';
 import Image from 'next/image';
 import { User } from '@prisma/client';
-import { FiUser, FiSettings, FiLock, FiStar, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
+import { FiUser, FiSettings, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 import { updateProfile, changePassword } from '../actions'; // Corrected path
 
 // --- Helper Components ---

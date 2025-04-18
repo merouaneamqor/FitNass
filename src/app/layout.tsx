@@ -4,7 +4,6 @@ import "./globals.css";
 import ClientSideHeader from "@/components/ui/ClientSideHeader";
 import Footer from "@/components/Footer";
 import Providers from "./providers";
-import { FiLogIn, FiLogOut, FiMapPin, FiSearch, FiStar, FiTarget, FiUser } from "react-icons/fi";
 
 // Configure fonts
 const bebasNeue = Bebas_Neue({

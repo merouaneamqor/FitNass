@@ -175,13 +175,23 @@ export const sendReservationConfirmationEmail = async (
     }
 
     // Helper function to safely get price as number, handling potential Decimal type
-    const getPriceAsNumber = (priceValue: any, defaultValue: number = 0): number => {
+    const getPriceAsNumber = (priceValue: unknown, defaultValue: number = 0): number => {
+      // Check if it's already a number
       if (typeof priceValue === 'number') {
         return priceValue;
       }
-      if (typeof priceValue === 'object' && priceValue !== null && typeof priceValue.toNumber === 'function') {
-        // Looks like a Decimal object
-        return priceValue.toNumber();
+      // Check if it looks like a Decimal object with toNumber()
+      if (
+        typeof priceValue === 'object' && 
+        priceValue !== null && 
+        typeof (priceValue as any).toNumber === 'function' // Use type assertion carefully here
+      ) {
+        try {
+          return (priceValue as any).toNumber();
+        } catch (e) {
+          // Handle cases where toNumber exists but fails
+          console.error("Failed to convert Decimal-like object:", e);
+        }
       }
       // Attempt direct conversion or return default
       const num = Number(priceValue);

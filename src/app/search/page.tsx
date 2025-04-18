@@ -1,10 +1,10 @@
-import { Suspense } from 'react';
+// import { Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FiSearch, FiMapPin, FiStar, FiAlertCircle, FiChevronLeft, FiChevronRight, FiFilter, FiX } from 'react-icons/fi';
 import { GiSoccerField } from "react-icons/gi";
 import prisma from '@/lib/db';
-import { Prisma } from '@prisma/client';
+// import { Prisma } from '@prisma/client';
 
 // --- TYPES ---
 // Combine Gym & Club for search results, ensuring necessary fields exist
