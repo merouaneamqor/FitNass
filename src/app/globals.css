@@ -1,10 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;500;700;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@layer base {
+  :root {
+    /* Fitnass Aggressive Palette */
+    --color-blood-red: 215 38 61; /* #D7263D */
+    --color-jet-black: 10 10 10; /* #0A0A0A */
+    --color-gunmetal-gray: 46 46 46; /* #2E2E2E */
+    --color-neon-yellow: 255 214 10; /* #FFD60A */
+    --color-white: 255 255 255;
+    --color-text-base: 229 231 235; /* gray-200 for base text on dark */
+    --color-text-muted: 156 163 175; /* gray-400 for muted text */
+
+    /* Base Tailwind Colors (Map if needed, or override directly) */
+    --background: var(--color-jet-black);
+    --foreground: var(--color-text-base);
+
+    --card: var(--color-gunmetal-gray);
+    --card-foreground: var(--color-text-base);
+
+    --popover: var(--color-gunmetal-gray);
+    --popover-foreground: var(--color-text-base);
+
+    --primary: var(--color-blood-red);
+    --primary-foreground: var(--color-white);
+
+    --secondary: var(--color-gunmetal-gray);
+    --secondary-foreground: var(--color-white);
+
+    --muted: 113 113 122; /* zinc-500 */
+    --muted-foreground: 228 228 231; /* zinc-200 */
+
+    --accent: var(--color-neon-yellow);
+    --accent-foreground: var(--color-jet-black); /* Black text on yellow */
+
+    --destructive: 239 68 68; /* red-500 */
+    --destructive-foreground: var(--color-white);
+
+    --border: 63 63 70; /* zinc-700 */
+    --input: 63 63 70; /* zinc-700 */
+    --ring: var(--color-neon-yellow);
+
+    --radius: 0.5rem;
+  }
+
+  /* Apply base styles */
+  body {
+    @apply bg-black text-base-foreground;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Bebas Neue', sans-serif;
+    @apply tracking-tight font-black uppercase;
+  }
+
+  /* Example of applying custom colors with Tailwind */
+  .bg-blood-red { background-color: rgb(var(--color-blood-red)); }
+  .text-blood-red { color: rgb(var(--color-blood-red)); }
+  .bg-jet-black { background-color: rgb(var(--color-jet-black)); }
+  .text-jet-black { color: rgb(var(--color-jet-black)); }
+  .bg-gunmetal-gray { background-color: rgb(var(--color-gunmetal-gray)); }
+  .text-gunmetal-gray { color: rgb(var(--color-gunmetal-gray)); }
+  .bg-neon-yellow { background-color: rgb(var(--color-neon-yellow)); }
+  .text-neon-yellow { color: rgb(var(--color-neon-yellow)); }
+  .text-base-foreground { color: rgb(var(--color-text-base)); }
+  .text-muted-foreground { color: rgb(var(--color-text-muted)); }
+  .border-strong { border-color: rgb(var(--border)); }
+  .ring-accent { --tw-ring-color: rgb(var(--ring)); }
 }
 
 @theme inline {

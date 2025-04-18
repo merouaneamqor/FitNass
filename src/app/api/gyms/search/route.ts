@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/db';
+import prisma from '@/lib/db'; // Import prisma directly
 
-// Define a type for the where clause
+// Define types (keep these)
 export type GymStatus =
   | "ACTIVE"
   | "INACTIVE"
@@ -9,7 +9,7 @@ export type GymStatus =
   | "CLOSED";
 
 type WhereClause = {
-  OR: Array<{
+  OR?: Array<{ // Make OR optional
     name?: { contains: string; mode: 'insensitive' };
     city?: { contains: string; mode: 'insensitive' };
     address?: { contains: string; mode: 'insensitive' };
@@ -28,40 +28,55 @@ export async function GET(request: NextRequest) {
     const query = searchParams.get('q') || '';
     const city = searchParams.get('city') || '';
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const limit = parseInt(searchParams.get('limit') || '20'); // Keep limit reasonable
     const skip = (page - 1) * limit;
+    const statusParam = searchParams.get('status');
 
-    console.log(`Gym search query: "${query}", city: "${city}", page: ${page}, limit: ${limit}`);
+    console.log(`API: Gym search query: "${query}", city: "${city}", page: ${page}, limit: ${limit}, status: ${statusParam}`);
 
-    // Build where clause
-    const whereClause: WhereClause = {
-      OR: [],
-    };
+    // Build where clause directly for Prisma
+    const whereClause: WhereClause = {};
 
-    // Add query conditions if a search query is provided
     if (query) {
       whereClause.OR = [
         { name: { contains: query, mode: 'insensitive' } },
         { city: { contains: query, mode: 'insensitive' } },
         { address: { contains: query, mode: 'insensitive' } },
-        { description: { contains: query, mode: 'insensitive' } },
+        // Removed description search for simplicity, add back if needed
+        // { description: { contains: query, mode: 'insensitive' } },
       ];
     } else {
-      // If no query, only return active gyms
-      whereClause.status = "ACTIVE" as GymStatus;
+      // Default to only active gyms if no specific query or status
+      if (!statusParam) {
+          whereClause.status = "ACTIVE";
+      }
     }
 
-    // Add city filter if provided
     if (city) {
       whereClause.city = { contains: city, mode: 'insensitive' };
     }
 
-    // Add status filter if provided
-    if (searchParams.get('status')) {
-      whereClause.status = searchParams.get('status')!.toUpperCase() as GymStatus;
+    // Add status filter only if explicitly provided
+    if (statusParam) {
+       // Basic validation for status
+       const validStatuses: GymStatus[] = ["ACTIVE", "INACTIVE", "PENDING_APPROVAL", "CLOSED"];
+       const upperStatus = statusParam.toUpperCase();
+       if (validStatuses.includes(upperStatus as GymStatus)) {
+           whereClause.status = upperStatus as GymStatus;
+       } else {
+           console.warn(`Invalid status parameter received: ${statusParam}`);
+           // Optionally return an error or ignore invalid status
+           // For now, we proceed without the invalid status filter
+       }
+    } else if (!query && !city) {
+        // Ensure default status is ACTIVE only when no other filters are applied
+        whereClause.status = "ACTIVE";
     }
 
-    // Search gyms with constructed where clause
+
+    console.log("Prisma Where Clause:", JSON.stringify(whereClause, null, 2));
+
+    // Execute Prisma query directly
     const gyms = await prisma.gym.findMany({
       where: whereClause,
       select: {
@@ -80,6 +95,7 @@ export async function GET(request: NextRequest) {
         priceRange: true,
         facilities: true,
         images: true,
+        status: true, // Include status in selection
         _count: {
           select: {
             reviews: true,
@@ -89,56 +105,31 @@ export async function GET(request: NextRequest) {
       skip,
       take: limit,
       orderBy: {
-        rating: 'desc',
+        // Optional: Add default sorting if needed, e.g., by name or rating
+         name: 'asc',
+        // rating: 'desc',
       },
     });
 
-    console.log(`Found ${gyms.length} gyms matching query "${query}"${city ? ` in city "${city}"` : ''}`);
-    
-    // If no results are found and we have search criteria, try a more general search
-    if (gyms.length === 0 && (query || city)) {
-      console.log('No results found, attempting a more general search');
-      
-      // Just get some gyms to show something
-      const allGyms = await prisma.gym.findMany({
-        take: limit,
-        orderBy: {
-          rating: 'desc',
-        },
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          address: true,
-          city: true,
-          state: true,
-          latitude: true,
-          longitude: true,
-          phone: true,
-          website: true,
-          email: true,
-          rating: true,
-          priceRange: true,
-          facilities: true,
-          images: true,
-          _count: {
-            select: {
-              reviews: true,
-            },
-          },
-        },
-      });
-      
-      console.log(`Returning ${allGyms.length} gyms for general results`);
-      return NextResponse.json(allGyms);
-    }
+    console.log(`API: Found ${gyms.length} gyms.`);
 
-    return NextResponse.json(gyms);
+    // Get total count for pagination (optional but good practice)
+    const totalGyms = await prisma.gym.count({ where: whereClause });
+    console.log(`API: Total matching gyms: ${totalGyms}`);
+
+    // Return results (and optionally pagination info)
+    return NextResponse.json(gyms // Could return { data: gyms, total: totalGyms, page, limit } for pagination
+    );
+
   } catch (error) {
-    console.error('Error searching gyms:', error);
+    console.error('API Error searching gyms:', error);
+
+    // Return a proper error response instead of mock data
     return NextResponse.json(
-      { error: 'Failed to search gyms' },
-      { status: 500 }
+        { message: 'Failed to search gyms', error: (error instanceof Error) ? error.message : 'Unknown error' },
+        { status: 500 }
     );
   }
-} 
+}
+
+// Removed mock data and filterMockGyms function 

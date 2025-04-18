@@ -3,12 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "mongodb"
+  url      = env("MONGO_URL")
 }
 
 model User {
-  id                 String         @id @default(cuid())
+  id                 String         @id @default(auto()) @map("_id") @db.ObjectId
   name               String?
   email              String         @unique
   emailVerified      DateTime?
@@ -34,94 +34,17 @@ model User {
   reservations       Reservation[]
   reviews            Review[]
   subscriptions      Subscription[]
-  favoriteClubs      Club[]         @relation("UserFavoriteClubs")
-  favorites          Gym[]          @relation("UserFavorites")
+  favoriteClubs      Club[]         @relation("UserFavoriteClubs", fields: [favoriteClubIds], references: [id])
+  favorites          Gym[]          @relation("UserFavorites", fields: [favoriteGymIds], references: [id])
+
+  favoriteClubIds    String[]       @db.ObjectId
+  favoriteGymIds     String[]       @db.ObjectId
+  ownerClubIds       String[]       @db.ObjectId
+  ownerGymIds        String[]       @db.ObjectId
 }
 
 model Gym {
-  id          String      @id @default(cuid())
-  name        String
-  description String
-  address     String
-  city        String
-  state       String
-  zipCode     String
-  latitude    Float
-  longitude   Float
-  phone       String?
-  website     String?
-  email       String?
-  rating      Float       @default(0)
-  priceRange  String
-  facilities  String[]
-  images      String[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  ownerId     String
-  isVerified  Boolean     @default(false)
-  status      GymStatus   @default(ACTIVE)
-  viewCount   Int         @default(0)
-  owner       User        @relation("GymOwner", fields: [ownerId], references: [id])
-  promotions  Promotion[]
-  reviews     Review[]
-  favoritedBy User[]      @relation("UserFavorites")
-}
-
-model Review {
-  id        String       @id @default(cuid())
-  rating    Int
-  comment   String
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  userId    String
-  gymId     String?
-  isHelpful Int          @default(0)
-  status    ReviewStatus @default(PUBLISHED)
-  clubId    String?
-  club      Club?        @relation("ClubReviews", fields: [clubId], references: [id])
-  gym       Gym?         @relation(fields: [gymId], references: [id])
-  user      User         @relation(fields: [userId], references: [id])
-}
-
-model Promotion {
-  id              String          @id @default(cuid())
-  title           String
-  description     String
-  startDate       DateTime
-  endDate         DateTime
-  discount        String?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  gymId           String
-  redemptionCount Int             @default(0)
-  status          PromotionStatus @default(ACTIVE)
-  gym             Gym             @relation(fields: [gymId], references: [id])
-}
-
-model LoginHistory {
-  id        String   @id @default(cuid())
-  ipAddress String?
-  device    String?
-  browser   String?
-  location  String?
-  createdAt DateTime @default(now())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Notification {
-  id        String   @id @default(cuid())
-  title     String
-  message   String
-  isRead    Boolean  @default(false)
-  type      String
-  createdAt DateTime @default(now())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Club {
-  id           String       @id @default(cuid())
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
   name         String
   description  String
   address      String
@@ -133,24 +56,110 @@ model Club {
   phone        String?
   website      String?
   email        String?
-  rating       Float        @default(0)
-  images       String[]
+  rating       Float      @default(0)
+  priceRange   String
   facilities   String[]
-  openingHours Json?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  ownerId      String
-  isVerified   Boolean      @default(false)
-  status       ClubStatus   @default(ACTIVE)
-  viewCount    Int          @default(0)
-  owner        User         @relation("ClubOwner", fields: [ownerId], references: [id])
-  reviews      Review[]     @relation("ClubReviews")
-  sportFields  SportField[]
-  favoritedBy  User[]       @relation("UserFavoriteClubs")
+  images       String[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  ownerId      String     @db.ObjectId
+  isVerified   Boolean    @default(false)
+  status       GymStatus  @default(ACTIVE)
+  viewCount    Int        @default(0)
+  owner        User       @relation("GymOwner", fields: [ownerId], references: [id])
+  promotions   Promotion[]
+  reviews      Review[]
+  favoritedBy  User[]     @relation("UserFavorites", fields: [favoritedByIds], references: [id])
+
+  favoritedByIds String[] @db.ObjectId
+}
+
+model Review {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  rating      Int
+  comment     String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  userId      String       @db.ObjectId
+  gymId       String?      @db.ObjectId
+  isHelpful   Int          @default(0)
+  status      ReviewStatus @default(PUBLISHED)
+  clubId      String?      @db.ObjectId
+  club        Club?        @relation("ClubReviews", fields: [clubId], references: [id])
+  gym         Gym?         @relation(fields: [gymId], references: [id])
+  user        User         @relation(fields: [userId], references: [id])
+}
+
+model Promotion {
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  title           String
+  description     String
+  startDate       DateTime
+  endDate         DateTime
+  discount        String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  gymId           String          @db.ObjectId
+  redemptionCount Int             @default(0)
+  status          PromotionStatus @default(ACTIVE)
+  gym             Gym             @relation(fields: [gymId], references: [id])
+}
+
+model LoginHistory {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  ipAddress String?
+  device    String?
+  browser   String?
+  location  String?
+  createdAt DateTime @default(now())
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  type      String
+  createdAt DateTime @default(now())
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Club {
+  id            String       @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  description   String
+  address       String
+  city          String
+  state         String
+  zipCode       String
+  latitude      Float
+  longitude     Float
+  phone         String?
+  website       String?
+  email         String?
+  rating        Float        @default(0)
+  images        String[]
+  facilities    String[]
+  openingHours  Json?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  ownerId       String       @db.ObjectId
+  isVerified    Boolean      @default(false)
+  status        ClubStatus   @default(ACTIVE)
+  viewCount     Int          @default(0)
+  owner         User         @relation("ClubOwner", fields: [ownerId], references: [id])
+  reviews       Review[]     @relation("ClubReviews")
+  sportFields   SportField[]
+  favoritedBy   User[]       @relation("UserFavoriteClubs", fields: [favoritedByIds], references: [id])
+
+  favoritedByIds String[]    @db.ObjectId
 }
 
 model SportField {
-  id           String         @id @default(cuid())
+  id           String         @id @default(auto()) @map("_id") @db.ObjectId
   name         String
   description  String
   type         SportFieldType
@@ -158,12 +167,12 @@ model SportField {
   indoor       Boolean        @default(false)
   size         String?
   maxCapacity  Int?
-  pricePerHour Decimal
+  pricePerHour Float // Changed from Decimal
   currency     String         @default("MAD")
   availability Json?
   amenities    String[]
   images       String[]
-  clubId       String
+  clubId       String         @db.ObjectId
   status       FieldStatus    @default(AVAILABLE)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
@@ -172,13 +181,13 @@ model SportField {
 }
 
 model Reservation {
-  id               String            @id @default(cuid())
+  id               String            @id @default(auto()) @map("_id") @db.ObjectId
   startTime        DateTime
   endTime          DateTime
   status           ReservationStatus @default(PENDING)
-  totalPrice       Decimal
-  userId           String
-  sportFieldId     String
+  totalPrice       Float // Changed from Decimal
+  userId           String            @db.ObjectId
+  sportFieldId     String            @db.ObjectId
   paymentStatus    PaymentStatus     @default(UNPAID)
   paymentId        String?
   notes            String?
@@ -190,7 +199,7 @@ model Reservation {
 }
 
 model SubscriptionPlan {
-  id            String         @id
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId // Changed ID type
   name          String
   description   String
   price         Float
@@ -202,9 +211,9 @@ model SubscriptionPlan {
 }
 
 model Subscription {
-  id              String             @id @default(cuid())
-  userId          String
-  planId          String
+  id              String             @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String             @db.ObjectId
+  planId          String             @db.ObjectId
   status          SubscriptionStatus @default(ACTIVE)
   startDate       DateTime
   endDate         DateTime
@@ -218,8 +227,8 @@ model Subscription {
 }
 
 model PaymentRecord {
-  id             String       @id @default(cuid())
-  subscriptionId String
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  subscriptionId String       @db.ObjectId
   amount         Float
   status         String
   paymentMethod  String

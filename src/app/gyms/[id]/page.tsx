@@ -1,268 +1,332 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-// Import icons individually instead of using the FI namespace
-import { FiMapPin, FiStar, FiPhone, FiGlobe, FiMail, FiLoader } from 'react-icons/fi';
+import Link from 'next/link';
 import Image from 'next/image';
+import { FiMapPin, FiStar, FiPhone, FiGlobe, FiMail, FiArrowLeft, FiHeart, FiX } from 'react-icons/fi';
+import { notFound } from 'next/navigation';
+import prisma from '@/lib/db'; // Import Prisma client
+import { Prisma } from '@prisma/client'; // Import Prisma types if needed for complex selects
+import { toggleFavoriteGym } from '../actions'; // Import the server action
 
-// Gym data interface
-interface Gym {
-  id: string;
-  name: string;
-  description: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  phone?: string;
-  website?: string;
-  email?: string;
-  rating: number;
-  priceRange: string;
-  facilities: string[];
-  images: string[];
-  owner?: {
-    name: string;
-  };
-  reviews?: {
-    id?: string;
-    rating: number;
-    comment: string;
-    createdAt: string;
-    user: {
-      name: string;
-      image?: string;
-    };
-  }[];
-  _count?: {
-    reviews: number;
-  };
-}
-
-export default function GymDetailsPage({ params }: { params: { id: string } }) {
-  const [gym, setGym] = useState<Gym | null>(null);
-  const [selectedImage, setSelectedImage] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchGymData() {
-      try {
-        const response = await fetch(`/api/gyms/${params.id}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch gym data');
+// --- Fetch Function (Server-Side) ---
+async function getGymData(id: string) {
+  try {
+    const gym = await prisma.gym.findUnique({
+      where: { id },
+      select: { // Select specific fields needed
+        id: true,
+        name: true,
+        description: true,
+        address: true,
+        city: true,
+        state: true,
+        zipCode: true,
+        phone: true,
+        website: true,
+        email: true,
+        rating: true,
+        priceRange: true,
+        facilities: true,
+        images: true,
+        latitude: true,
+        longitude: true, // Need coordinates for map
+        owner: {
+          select: { name: true }
+        },
+        reviews: {
+          select: {
+            id: true,
+            rating: true,
+            comment: true,
+            createdAt: true,
+            user: {
+              select: { name: true, image: true }
+            }
+          },
+          orderBy: {
+            createdAt: 'desc' // Order reviews, newest first
+          },
+          take: 5 // Limit initial reviews displayed
+        },
+        _count: {
+          select: { reviews: true }
         }
-        const data = await response.json();
-        setGym(data);
-      } catch (err) {
-        console.error('Error fetching gym data:', err);
-        setError('Failed to load gym data. Please try again later.');
-      } finally {
-        setIsLoading(false);
       }
+    });
+
+    if (!gym) {
+      notFound(); // Trigger 404 if gym not found
     }
 
-    fetchGymData();
-  }, [params.id]);
+    // Provide default values for potentially missing arrays/numbers
+    return {
+      ...gym,
+      images: Array.isArray(gym.images) && gym.images.length > 0 ? gym.images : ['https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'], // Default image
+      facilities: Array.isArray(gym.facilities) ? gym.facilities : [],
+      reviews: Array.isArray(gym.reviews) ? gym.reviews : [],
+      rating: typeof gym.rating === 'number' ? gym.rating : null, // Use null if not a number
+      latitude: typeof gym.latitude === 'number' ? gym.latitude : null,
+      longitude: typeof gym.longitude === 'number' ? gym.longitude : null,
+    };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex flex-col items-center">
-          <FiLoader className="w-12 h-12 animate-spin text-blue-500" />
-          <p className="mt-4 text-gray-600">Loading gym details...</p>
-        </div>
-      </div>
-    );
+  } catch (error) {
+    console.error("Failed to fetch gym data:", error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+       // Explicitly handle 'Record not found' from findUniqueOrThrow if used, or just rely on null check above
+       notFound();
+    }
+    // For other errors, let Next.js handle it (will show error.tsx or default error page)
+    throw new Error('Failed to load gym details. Please try again later.');
   }
+}
 
-  if (error || !gym) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-          <h1 className="text-2xl font-bold text-red-500 mb-4">Error</h1>
-          <p className="text-gray-600">{error || 'Gym not found'}</p>
-          <button 
-            onClick={() => window.history.back()}
-            className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
-  }
+// --- UI Components ---
+
+// Moved ImageGrid definition before its usage
+function ImageGrid({ images, gymName }: { images: string[]; gymName: string }) {
+  if (!images || images.length === 0) return null;
+
+  const mainImage = images[0];
+  const gridImages = images.slice(1, 5); // Max 4 grid images
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Gym Header */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="relative h-96 w-full">
-            <Image
-              src={gym.images[0]}
-              alt={gym.name}
-              fill
-              className="object-cover rounded-xl"
-            />
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-6">
-              <h1 className="text-3xl font-bold text-white">{gym.name}</h1>
-              <div className="flex items-center text-white mt-2">
-                <FiMapPin className="h-5 w-5 mr-1" />
-                <span>{gym.city}, {gym.state}</span>
+    <div className="grid grid-cols-4 grid-rows-2 gap-2 h-96 overflow-hidden rounded-xl mb-8 shadow-lg border border-neutral-700/50">
+      {/* Main Image */} 
+      <div className="col-span-4 sm:col-span-2 row-span-2 relative group">
+        <Image
+          src={mainImage}
+          alt={`${gymName} - Main View`}
+          fill
+          priority
+          className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
+        />
+         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
+      </div>
+
+      {/* Grid Images */}
+      {gridImages.map((image, index) => (
+        <div key={index} className={`relative group hidden ${index < 2 ? 'sm:block' : 'sm:hidden md:block'}`}> {/* Responsive grid */}
+          <Image
+            src={image}
+            alt={`${gymName} - View ${index + 2}`}
+            fill
+            sizes="(max-width: 640px) 30vw, 20vw"
+            className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
+          />
+           <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
+        </div>
+      ))}
+
+       {/* TODO: Add a "Show all photos" button overlaying the grid */}
+    </div>
+  );
+}
+
+// --- Main Page Component (Server Component) ---
+export default async function GymDetailsPage({ params }: { params: { id: string } }) {
+
+  // Fetch data directly on the server
+  const gym = await getGymData(params.id);
+
+  // TODO: Fetch favorite status
+  // const session = await getServerSession(authOptions);
+  // const isFavorited = session?.user?.id ? await checkFavoriteStatus(session.user.id, gym.id) : false;
+  const isFavorited = false; // Placeholder
+
+  return (
+    <div className="min-h-screen bg-jet-black text-neutral-200 font-poppins">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        {/* Back Link (Optional) */}
+        <div className="mb-6">
+            <Link href="/search" className="inline-flex items-center text-neutral-400 hover:text-neon-yellow transition-colors text-sm font-medium group">
+                <FiArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+                Back to Search
+            </Link>
+        </div>
+
+        {/* Gym Name & Basic Info Header */}
+        <div className="mb-4 md:mb-6">
+          <h1 className="text-4xl md:text-5xl font-bebas text-white uppercase tracking-wider mb-2">
+            {gym.name}
+          </h1>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-neutral-400">
+            {gym.rating !== null && (
+              <div className="flex items-center">
+                <FiStar className="h-4 w-4 text-neon-yellow fill-current mr-1" />
+                <span className="font-semibold text-white">{gym.rating.toFixed(1)}</span>
+                <span className="ml-1.5">({gym._count?.reviews || 0} reviews)</span>
               </div>
-            </div>
-          </div>
-          <div className="p-6">
+            )}
             <div className="flex items-center">
-              <FiStar className="h-5 w-5 text-yellow-400" />
-              <span className="ml-1 text-gray-600">
-                {typeof gym.rating === 'number' ? gym.rating.toFixed(1) : '0.0'} 
-                ({gym._count?.reviews || 0} reviews)
-              </span>
+              <FiMapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+              <span>{gym.address}, {gym.city}{gym.state ? `, ${gym.state}` : ''}</span>
             </div>
-            <p className="mt-4 text-gray-600">{gym.description}</p>
+             {/* TODO: Add link to share/save actions */} 
           </div>
         </div>
 
-        {/* Gym Details */}
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            {/* Image Gallery */}
-            {gym.images && gym.images.length > 0 && (
-              <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                <h2 className="text-xl font-semibold mb-4">Gallery</h2>
-                <div className="grid grid-cols-3 gap-4">
-                  {gym.images.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImage(index)}
-                      className={`relative h-32 rounded-lg overflow-hidden ${
-                        selectedImage === index ? 'ring-2 ring-blue-500' : ''
-                      }`}
-                    >
-                      <Image
-                        src={image}
-                        fill
-                        alt={`${gym.name} ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+        {/* Image Grid - Now correctly placed after definition */}
+        <ImageGrid images={gym.images} gymName={gym.name} />
 
-            {/* Facilities */}
+        {/* Main Content Grid (Two Columns) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 md:gap-16">
+
+          {/* --- Left Column (Main Content) --- */}
+          <div className="lg:col-span-2 space-y-10">
+            {/* Divider/Owner Info (Optional) */}
+            {/* <div className="pb-6 border-b border-neutral-700/80">
+               <h3 className="text-xl font-semibold text-white">Gym managed by {gym.owner?.name || 'Owner'}</h3> 
+            </div> */}
+
+            {/* Description Card */}
+            <section id="description">
+              <h2 className="text-2xl font-bebas text-white uppercase tracking-wide mb-4">Description</h2>
+              <p className="text-neutral-300 text-sm leading-relaxed whitespace-pre-wrap prose prose-sm prose-invert max-w-none prose-p:my-2">
+                {gym.description || 'No description provided.'}
+              </p>
+            </section>
+
+            {/* Facilities Card */}
             {gym.facilities && gym.facilities.length > 0 && (
-              <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                <h2 className="text-xl font-semibold mb-4">Facilities</h2>
-                <div className="flex flex-wrap gap-2">
+              <section id="facilities" className="pt-8 border-t border-neutral-700/80">
+                <h2 className="text-2xl font-bebas text-white uppercase tracking-wide mb-4">Facilities</h2>
+                <div className="flex flex-wrap gap-3">
                   {gym.facilities.map((facility, idx) => (
                     <span
                       key={idx}
-                      className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full"
+                      className="px-3 py-1.5 bg-gunmetal-gray text-neutral-300 rounded-md text-xs uppercase font-medium border border-neutral-600/70"
                     >
                       {facility}
                     </span>
                   ))}
                 </div>
-              </div>
+              </section>
             )}
 
-            {/* Reviews */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold mb-4">Reviews</h2>
+            {/* Reviews Card */}
+            <section id="reviews" className="pt-8 border-t border-neutral-700/80">
+               <h2 className="text-2xl font-bebas text-white uppercase tracking-wide mb-5">Reviews ({gym._count?.reviews || 0})</h2>
               {gym.reviews && gym.reviews.length > 0 ? (
                 <div className="space-y-6">
                   {gym.reviews.map((review, index) => (
-                    <div key={review.id || index} className="border-b border-gray-200 pb-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className="flex">
-                            {[...Array(5)].map((_, i) => (
-                              <FiStar
-                                key={i}
-                                className={`h-5 w-5 ${
-                                  i < review.rating ? 'text-yellow-400' : 'text-gray-300'
-                                }`}
-                              />
-                            ))}
+                    <div key={review.id || index}>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          {review.user?.image && (
+                             <Image src={review.user.image} alt={review.user.name || 'User'} width={36} height={36} className="rounded-full border-2 border-neutral-600" />
+                          )}
+                          <div className="flex flex-col">
+                             <h4 className={`font-bebas text-base uppercase tracking-wide text-white ${!review.user?.image ? 'ml-0' : ''}`}> 
+                                {review.user?.name || 'Anonymous'}
+                             </h4>
+                              <div className="flex items-center mt-0.5">
+                                {[...Array(5)].map((_, i) => (
+                                  <FiStar key={i} className={`h-3.5 w-3.5 ${i < review.rating ? 'text-neon-yellow fill-current' : 'text-neutral-600'}`}/>
+                                ))}
+                              </div>
                           </div>
-                          <span className="ml-2 text-gray-600">{review.user?.name || 'Anonymous'}</span>
                         </div>
-                        <span className="text-gray-500">
-                          {review.createdAt ? new Date(review.createdAt).toLocaleDateString() : 'Unknown date'}
+                        <span className="text-neutral-500 text-xs font-medium">
+                          {review.createdAt ? new Date(review.createdAt).toLocaleDateString() : ''}
                         </span>
                       </div>
-                      <p className="mt-2 text-gray-600">{review.comment}</p>
+                      <p className="text-neutral-300 text-sm font-poppins italic pl-12">
+                        &quot;{review.comment}&quot;
+                      </p>
                     </div>
                   ))}
+                  {/* TODO: Add "Show all reviews" button/link */} 
                 </div>
               ) : (
-                <p className="text-gray-500">No reviews yet for this gym.</p>
+                <p className="text-neutral-400 text-sm font-poppins italic">No reviews yet for this battleground.</p>
               )}
-            </div>
+            </section>
+
+             {/* Map Section Placeholder */}
+             <section id="location" className="pt-8 border-t border-neutral-700/80">
+                 <h2 className="text-2xl font-bebas text-white uppercase tracking-wide mb-4">Location</h2>
+                 <div className="aspect-video bg-gunmetal-gray rounded-lg border border-neutral-700/60 flex items-center justify-center">
+                    {/* {gym.latitude && gym.longitude ? (
+                        <GymMap lat={gym.latitude} lng={gym.longitude} />
+                    ) : ( */} 
+                         <p className="text-neutral-500 italic">Map data unavailable</p>
+                    {/* )} */} 
+                 </div>
+                  <p className="text-neutral-400 text-sm mt-3">{gym.address}, {gym.city}{gym.state ? `, ${gym.state}` : ''}</p>
+             </section>
+
           </div>
 
+          {/* --- Right Column (Sticky Sidebar) --- */}
           <div className="lg:col-span-1">
-            {/* Contact Information */}
-            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-              <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
-              <div className="space-y-4">
-                <div className="flex items-center text-gray-600">
-                  <FiMapPin className="h-5 w-5 mr-2" />
-                  <span>{gym.address}, {gym.city}, {gym.state} {gym.zipCode}</span>
-                </div>
-                {gym.phone && (
-                  <div className="flex items-center text-gray-600">
-                    <FiPhone className="h-5 w-5 mr-2" />
-                    <span>{gym.phone}</span>
-                  </div>
-                )}
-                {gym.website && (
-                  <div className="flex items-center text-gray-600">
-                    <FiGlobe className="h-5 w-5 mr-2" />
-                    <a href={gym.website.startsWith('http') ? gym.website : `https://${gym.website}`} 
-                       className="text-blue-600 hover:underline" 
-                       target="_blank" 
-                       rel="noopener noreferrer">
-                      {gym.website}
-                    </a>
-                  </div>
-                )}
-                {gym.email && (
-                  <div className="flex items-center text-gray-600">
-                    <FiMail className="h-5 w-5 mr-2" />
-                    <a href={`mailto:${gym.email}`} className="text-blue-600 hover:underline">
-                      {gym.email}
-                    </a>
-                  </div>
-                )}
-              </div>
-            </div>
+             <div className="lg:sticky lg:top-24 space-y-6">
+                 {/* Action Card (Booking & Favorite) */}
+                 <div className="bg-gunmetal-gray rounded-lg shadow-xl p-6 border border-neutral-600/80">
+                     <div className="flex justify-between items-center mb-4">
+                         <h3 className="text-xl font-semibold text-white">Book Your Session</h3>
+                         {gym.priceRange && <span className="font-bold text-lg text-neon-yellow">{gym.priceRange}</span>}
+                     </div>
+                     {/* TODO: Add date/time pickers if needed */} 
+                     <Link href={`/gyms/${gym.id}/book`} 
+                         className="block w-full text-center bg-neon-yellow text-black px-6 py-3 rounded-md font-bold uppercase tracking-wider text-sm hover:bg-yellow-400 transition-colors shadow-lg mb-4"
+                     >
+                         Check Availability
+                     </Link>
+                     <form action={toggleFavoriteGym} className="w-full">
+                         <input type="hidden" name="gymId" value={gym.id} />
+                         <button
+                             type="submit"
+                             className={`w-full flex items-center justify-center gap-2 px-6 py-2.5 rounded-md font-semibold uppercase tracking-wider text-xs border transition-colors shadow-sm ${isFavorited
+                                 ? 'bg-blood-red/20 text-blood-red border-blood-red/50 hover:bg-blood-red/30'
+                                 : 'bg-neutral-700/60 text-neutral-200 border-neutral-600 hover:bg-neutral-600/80 hover:border-neutral-500'
+                                 }`}
+                         >
+                             <FiHeart className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
+                             {isFavorited ? 'Favorited' : 'Add to Favorites'}
+                         </button>
+                     </form>
+                 </div>
 
-            {/* Price Range */}
-            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-              <h2 className="text-xl font-semibold mb-4">Price Range</h2>
-              <div className="flex items-center">
-                <span className="text-2xl font-bold text-gray-800">{gym.priceRange}</span>
-                <span className="ml-2 text-gray-600">
-                  {gym.priceRange === '$' && 'Budget-friendly'}
-                  {gym.priceRange === '$$' && 'Mid-range'}
-                  {gym.priceRange === '$$$' && 'Premium'}
-                  {gym.priceRange === '$$$$' && 'Luxury'}
-                </span>
-              </div>
-            </div>
+                 {/* Contact Info Card */}
+                 <div className="bg-gunmetal-gray rounded-lg shadow-lg p-6 border border-neutral-700/60">
+                     <h2 className="text-xl font-bebas text-white uppercase tracking-wide mb-5">Contact</h2>
+                     <div className="space-y-3">
+                         <div className="flex items-start text-neutral-300 text-sm">
+                         <FiMapPin className="h-4 w-4 mr-3 mt-0.5 flex-shrink-0 text-blood-red" />
+                         <span>{gym.address}<br/>{gym.city}, {gym.state} {gym.zipCode}</span>
+                         </div>
+                         {gym.phone && (
+                         <div className="flex items-center text-neutral-300 text-sm">
+                             <FiPhone className="h-4 w-4 mr-3 flex-shrink-0 text-blood-red" />
+                             <a href={`tel:${gym.phone}`} className="hover:text-neon-yellow transition-colors">{gym.phone}</a>
+                         </div>
+                         )}
+                         {gym.website && (
+                         <div className="flex items-center text-neutral-300 text-sm">
+                             <FiGlobe className="h-4 w-4 mr-3 flex-shrink-0 text-blood-red" />
+                             <a href={gym.website.startsWith('http') ? gym.website : `https://${gym.website}`}
+                             className="hover:text-neon-yellow transition-colors truncate" target="_blank" rel="noopener noreferrer">
+                             {gym.website.replace(/^https?:\/\//, '')}
+                             </a>
+                         </div>
+                         )}
+                         {gym.email && (
+                         <div className="flex items-center text-neutral-300 text-sm">
+                             <FiMail className="h-4 w-4 mr-3 flex-shrink-0 text-blood-red" />
+                             <a href={`mailto:${gym.email}`} className="hover:text-neon-yellow transition-colors truncate">
+                             {gym.email}
+                             </a>
+                         </div>
+                         )}
+                     </div>
+                 </div>
 
-            {/* Owner Information */}
-            {gym.owner && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-semibold mb-4">Managed By</h2>
-                <p className="text-gray-600">{gym.owner.name}</p>
-              </div>
-            )}
+                {/* Optional Owner Card - Consider removing if redundant */} 
+                {/* {gym.owner?.name && (
+                    <div className="bg-gunmetal-gray rounded-lg shadow-lg p-6 border border-neutral-700/60">
+                    <h2 className="text-xl font-bebas text-white uppercase tracking-wide mb-3">Managed By</h2>
+                    <p className="text-neutral-300 font-medium text-sm">{gym.owner.name}</p>
+                    </div>
+                )} */}
+             </div>
           </div>
         </div>
       </div>

@@ -14,49 +14,62 @@ type FeaturesSectionProps = {
 };
 
 export default function FeaturesSection({ features }: FeaturesSectionProps) {
-  // Default features if none provided
+  // Default features with updated styling classes
   const defaultFeatures = [
     {
-      icon: <FiSearch className="h-8 w-8 text-indigo-600" />,
-      title: "Find Fitness Venues",
-      description: "Discover gyms and sports clubs based on location, facilities, and pricing. Filter by amenities, pricing, and user ratings."
+      icon: <FiSearch className="h-8 w-8 text-blood-red" />, // Red icon
+      title: "Pinpoint Your Perfect Venue",
+      description: "Advanced search and filters to find gyms or clubs matching your exact needs – equipment, classes, location, and vibe."
     },
     {
-      icon: <FiCalendar className="h-8 w-8 text-indigo-600" />,
-      title: "Book Online",
-      description: "Reserve sports fields, classes, and personal training sessions with real-time availability. Receive instant confirmations."
+      icon: <FiCalendar className="h-8 w-8 text-blood-red" />, // Red icon
+      title: "Instant Booking & Scheduling",
+      description: "Check real-time availability for courts, classes, or trainers. Book your spot instantly, no phone calls needed."
     },
     {
-      icon: <FiUsers className="h-8 w-8 text-indigo-600" />,
-      title: "Community Verified",
-      description: "Read authentic reviews from real members. View high-quality photos and detailed information about facilities."
+      icon: <FiUsers className="h-8 w-8 text-blood-red" />, // Red icon
+      title: "Verified Reviews & Community",
+      description: "Access genuine feedback and ratings from the FitNass community. Connect with other athletes and find training partners."
     }
   ];
 
   const displayFeatures = features || defaultFeatures;
 
   return (
-    <section className="py-20 bg-gray-50">
+    // Gunmetal Gray background
+    <section className="py-16 md:py-24 bg-gunmetal-gray">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose FitNass?</h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Everything you need to find and book the perfect fitness venue
+        <div className="text-center mb-12 md:mb-16">
+          {/* Bebas Neue heading, white text */}
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bebas text-white uppercase tracking-wider mb-4">
+            Engineered for Performance
+          </h2>
+          {/* Poppins text */}
+          <p className="text-base md:text-lg text-muted-foreground font-medium max-w-2xl mx-auto">
+            FitNass cuts through the noise. Find, book, and train – faster and smarter.
           </p>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+
+        {/* Responsive grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
           {displayFeatures.map((feature, index) => (
-            <motion.div 
+            <motion.div
               key={index}
-              whileHover={{ y: -10 }}
-              className="flex flex-col items-center text-center p-6 rounded-xl bg-white shadow-sm hover:shadow-lg transition-all"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              // Jet Black card, subtle border, maybe red/yellow accent on hover (optional)
+              className="flex flex-col items-center text-center p-6 md:p-8 rounded-md bg-jet-black border border-neutral-700/70 shadow-md transition-all duration-300 hover:border-blood-red"
             >
-              <div className="h-16 w-16 bg-indigo-100 rounded-full flex items-center justify-center mb-6">
+              {/* Icon with dark background */}
+              <div className="h-16 w-16 bg-gunmetal-gray rounded-full flex items-center justify-center mb-6 border border-neutral-600">
                 {feature.icon}
               </div>
-              <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
-              <p className="text-gray-600">
+              {/* Bebas Neue title, white text */}
+              <h3 className="text-2xl md:text-3xl font-bebas text-white uppercase tracking-wide mb-3">{feature.title}</h3>
+              {/* Poppins description */}
+              <p className="text-neutral-400 text-sm font-poppins">
                 {feature.description}
               </p>
             </motion.div>

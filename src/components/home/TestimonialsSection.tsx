@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
+// import Link from 'next/link'; // Removed Link as CTA is separate
 import { FiStar } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 
@@ -21,65 +21,69 @@ type TestimonialsSectionProps = {
 
 export default function TestimonialsSection({ testimonials }: TestimonialsSectionProps) {
   return (
-    <section className="py-20 bg-gray-50">
+    // Gunmetal Gray background, adjust padding
+    <section className="py-16 md:py-24 bg-gunmetal-gray">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">What Our Users Say</h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Join thousands of satisfied users who found their perfect fitness venue through FitNass
+        <div className="text-center mb-12 md:mb-16">
+          {/* Bebas Neue heading, white text */}
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bebas text-white uppercase tracking-wider mb-4">
+            COMMUNITY FEEDBACK
+          </h2>
+          {/* Poppins text, lighter */}
+          <p className="text-base md:text-lg text-neutral-300 font-poppins max-w-2xl mx-auto">
+            Hear from athletes who leveled up with FitNass.
           </p>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {testimonials.map((testimonial) => (
-            <motion.div 
-              whileHover={{ y: -5 }}
-              key={testimonial.id} 
-              className="bg-white p-8 rounded-2xl shadow-md hover:shadow-lg transition-all"
+
+        {/* Responsive grid for testimonials */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          {testimonials.map((testimonial, index) => (
+            <motion.div
+              key={testimonial.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              // Jet Black card, subtle border, Red accent on hover (optional)
+              className="flex flex-col bg-jet-black p-6 rounded-md shadow-lg border border-neutral-700/70 hover:border-blood-red transition-all duration-300"
             >
-              <div className="flex mb-6">
+              <div className="flex mb-4">
                 {[...Array(5)].map((_, i) => (
-                  <FiStar key={i} className={`h-5 w-5 mr-1 ${i < testimonial.rating ? 'text-amber-400 fill-current' : 'text-gray-300'}`} />
+                  <FiStar
+                    key={i}
+                    className={`h-4 w-4 mr-1 ${
+                      i < testimonial.rating
+                        ? 'text-neon-yellow fill-current' // Neon Yellow stars
+                        : 'text-neutral-600'
+                    }`}
+                  />
                 ))}
               </div>
-              <p className="text-gray-700 mb-6 italic">&quot;{testimonial.comment}&quot;</p>
-              <div className="flex items-center">
-                <div className="h-14 w-14 rounded-full overflow-hidden">
-                  <Image 
-                    src={testimonial.image} 
+              {/* Poppins quote text */}
+              <p className="text-neutral-200 mb-6 text-sm font-poppins flex-grow italic">
+                &quot;{testimonial.comment}&quot;
+              </p>
+              <div className="flex items-center mt-auto pt-4 border-t border-neutral-700/50">
+                <div className="h-10 w-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-neutral-600">
+                  <Image
+                    src={testimonial.image}
                     alt={testimonial.name}
-                    width={56}
-                    height={56}
-                    className="w-full h-full object-cover"
+                    width={40}
+                    height={40}
+                    className="object-cover"
                   />
                 </div>
-                <div className="ml-4">
-                  <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
-                  <p className="text-gray-500 text-sm">{testimonial.city}</p>
+                <div className="ml-3">
+                  {/* Bebas Neue name, Poppins city */}
+                  <h4 className="font-bebas text-lg uppercase tracking-wide text-white">{testimonial.name}</h4>
+                  <p className="text-neutral-400 text-xs font-poppins">{testimonial.city}</p>
                 </div>
               </div>
             </motion.div>
           ))}
         </div>
-        
-        <div className="mt-16 p-6 md:p-8 bg-indigo-600 rounded-3xl text-white max-w-4xl mx-auto shadow-lg">
-          <div className="flex flex-col md:flex-row items-center">
-            <div className="mb-6 md:mb-0 md:mr-8">
-              <h3 className="text-2xl font-bold mb-3">Ready to find your perfect fitness space?</h3>
-              <p className="text-indigo-100">
-                Sign up today and get access to exclusive deals and promotions
-              </p>
-            </div>
-            <div className="shrink-0">
-              <Link
-                href="/auth/signup"
-                className="inline-block bg-white text-indigo-600 px-6 py-3 rounded-lg font-bold text-base hover:bg-gray-100 transition-all shadow-md"
-              >
-                Sign Up Free
-              </Link>
-            </div>
-          </div>
-        </div>
+
+        {/* Removed CTA block - will be handled by CTASection component */}
       </div>
     </section>
   );

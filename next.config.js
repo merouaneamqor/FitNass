@@ -8,7 +8,19 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'plus.unsplash.com',
+      },
+      {
+        protocol: 'https',
         hostname: 'clubs.ma',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.clubs.ma',
+      },
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
       },
       {
         protocol: 'https',

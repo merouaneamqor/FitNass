@@ -117,11 +117,11 @@ const testimonials = [
 
 // Popular cities
 const popularCities = [
-  { name: 'Casablanca', image: 'https://images.unsplash.com/photo-1577135485912-f94c1a0e9fc1?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80' },
-  { name: 'Rabat', image: 'https://images.unsplash.com/photo-1579017331263-ef82f3574ea6?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80' },
-  { name: 'Marrakech', image: 'https://images.unsplash.com/photo-1547636780-e41778614c28?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80' },
-  { name: 'Fes', image: 'https://images.unsplash.com/photo-1553159925-681bb2a48073?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80' },
-  { name: 'Tangier', image: 'https://images.unsplash.com/photo-1539037116277-4db20889f987?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80' }
+  { name: 'Casablanca', image: 'https://images.unsplash.com/photo-1581443459255-e895f2a4222f?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' }, // Dynamic Casablanca shot
+  { name: 'Rabat', image: 'https://images.unsplash.com/photo-1622924159221-c73e7245a2ea?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' }, // Rabat waterfront/activity
+  { name: 'Marrakech', image: 'https://images.unsplash.com/photo-1585004607620-fb4c44331e73?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' }, // Fes Medina shot
+  { name: 'Tangier', image: 'https://images.unsplash.com/photo-1633264542743-c1acdb5eff0e?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' }, // Tangier coast/activity
+  { name: 'Fes', image: 'https://plus.unsplash.com/premium_photo-1697729887553-b0392581a691?q=80&w=2071&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' } // Tangier coast/activity
 ];
 
 export default function Home() {
