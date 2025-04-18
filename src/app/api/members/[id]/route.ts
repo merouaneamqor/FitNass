@@ -2,20 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import prisma from '@/lib/db';
 import { authOptions } from '@/lib/auth';
-import { z } from 'zod';
 import { Prisma } from '@prisma/client';
-
-// Validation schema for updating a member
-const memberUpdateSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters').optional(),
-  email: z.string().email('Invalid email address').optional(),
-  phone: z.string().optional(),
-  status: z.enum(['active', 'inactive']).optional(), // Keep for API compatibility but won't be stored
-  membershipType: z.string().optional(),
-});
-
-// Define the type for update values
-type UpdateValue = string | number | boolean | Date | null;
 
 // GET /api/members/[id] - Get a single member
 export async function GET(

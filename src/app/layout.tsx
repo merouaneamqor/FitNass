@@ -1,9 +1,11 @@
-import type { Metadata } from "next";
-import { Inter, Bebas_Neue, Poppins } from "next/font/google";
+// import type { Metadata } from "next";
+// import { Inter, } from "next/font/google";
 import "./globals.css";
 import ClientSideHeader from "@/components/ui/ClientSideHeader";
 import Footer from "@/components/Footer";
 import Providers from "./providers";
+import { Bebas_Neue, Poppins } from "next/font/google";
+import { Suspense } from 'react';
 
 // Configure fonts
 const bebasNeue = Bebas_Neue({
@@ -35,7 +37,9 @@ export default function RootLayout({
       <body className="min-h-screen bg-jet-black font-poppins text-base-foreground">
         <Providers>
           <div className="flex flex-col min-h-screen">
-            <ClientSideHeader />
+            <Suspense fallback={<div className="h-16 bg-jet-black border-b border-neutral-800/60">{/* Simple Placeholder */}</div>}>
+              <ClientSideHeader />
+            </Suspense>
             <main className="flex-grow">
               {children}
             </main>

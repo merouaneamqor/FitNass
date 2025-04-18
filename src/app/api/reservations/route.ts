@@ -189,8 +189,8 @@ export async function POST(req: NextRequest) {
     const durationInMs = endTime.getTime() - startTime.getTime();
     const durationInHours = durationInMs / (1000 * 60 * 60);
 
-    // Calculate total price
-    const totalPrice = sportField.pricePerHour * durationInHours;
+    // Calculate total price, explicitly casting pricePerHour to Number
+    const totalPrice = Number(sportField.pricePerHour ?? 0) * durationInHours;
 
     // Create the reservation
     const reservation = await prisma.reservation.create({

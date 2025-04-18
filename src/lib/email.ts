@@ -156,59 +156,68 @@ export const sendReservationConfirmationEmail = async (
   reservationId: string
 ) => {
   try {
-    // Fetch reservation with all related data
+    // Fetch reservation with explicitly selected related data
     if (!prisma) throw new Error('Prisma client is not initialized');
     const reservation = await prisma.reservation.findUnique({
       where: { id: reservationId },
-      include: {
-        user: true,
-        sportField: {
-          include: {
-            club: true,
-          },
+      select: {
+        id: true,
+        startTime: true,
+        endTime: true,
+        status: true,
+        totalPrice: true,
+        participantCount: true,
+        paymentStatus: true,
+        user: { // Select specific user fields
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          }
+        },
+        sportField: { // Select specific sportField and nested club fields
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            pricePerHour: true,
+            club: {
+              select: {
+                id: true,
+                name: true,
+                address: true,
+                city: true,
+                zipCode: true,
+              }
+            }
+          }
         },
       },
     });
 
+    // Check if essential data exists after fetching
     if (!reservation || !reservation.user || !reservation.sportField || !reservation.sportField.club) {
-      throw new Error('Reservation, user, sport field, or club not found');
+      // Log more specific error
+      console.error(`Missing data for reservation ID: ${reservationId}. Found:`, {
+        reservation: !!reservation,
+        user: !!reservation?.user,
+        sportField: !!reservation?.sportField,
+        club: !!reservation?.sportField?.club,
+      });
+      throw new Error('Required data for reservation email not found');
     }
 
-    // Helper function to safely get price as number, handling potential Decimal type
-    const getPriceAsNumber = (priceValue: unknown, defaultValue: number = 0): number => {
-      // Check if it's already a number
-      if (typeof priceValue === 'number') {
-        return priceValue;
-      }
-      // Check if it looks like a Decimal object with toNumber()
-      if (
-        typeof priceValue === 'object' && 
-        priceValue !== null && 
-        typeof (priceValue as any).toNumber === 'function' // Use type assertion carefully here
-      ) {
-        try {
-          return (priceValue as any).toNumber();
-        } catch (e) {
-          // Handle cases where toNumber exists but fails
-          console.error("Failed to convert Decimal-like object:", e);
-        }
-      }
-      // Attempt direct conversion or return default
-      const num = Number(priceValue);
-      return isNaN(num) ? defaultValue : num;
-    };
-
-    // Get email template
+    // Directly map data now that types are enforced by Prisma select
     const reservationData: Reservation = {
       id: reservation.id,
       startTime: reservation.startTime,
       endTime: reservation.endTime,
       status: reservation.status,
-      // Use helper function for safe conversion
-      price: getPriceAsNumber(reservation.totalPrice, 0),
+      // Explicitly convert to Number to satisfy linter
+      price: Number(reservation.totalPrice ?? 0),
       participantCount: reservation.participantCount ?? undefined,
-      // Use helper function for safe conversion
-      totalPrice: getPriceAsNumber(reservation.totalPrice, undefined),
+      // Explicitly convert to Number to satisfy linter
+      totalPrice: Number(reservation.totalPrice ?? undefined),
       paymentStatus: reservation.paymentStatus ?? undefined,
     };
 
@@ -218,51 +227,21 @@ export const sendReservationConfirmationEmail = async (
       email: reservation.user.email,
     };
 
-    // Defensive: sportField might be nested under reservation.sportField, or reservation.sportField.sportField
-    const sportFieldRaw = reservation.sportField && typeof reservation.sportField === 'object' ? reservation.sportField : null;
-    const sportField = sportFieldRaw && 'sportField' in sportFieldRaw && typeof sportFieldRaw.sportField === 'object' ? sportFieldRaw.sportField : sportFieldRaw;
-    const clubRaw = sportField && typeof sportField === 'object' && 'club' in sportField ? sportField.club : null;
-    const club = clubRaw && typeof clubRaw === 'object' ? clubRaw : null;
-
-    // Use type assertion to bypass complex type checking
     const sportFieldData: SportField = {
-      id: '',
-      name: '',
-      type: '',
-      price: 0
+      id: reservation.sportField.id,
+      name: reservation.sportField.name ?? '',
+      type: reservation.sportField.type ?? '',
+      // Explicitly convert to Number to satisfy linter
+      price: Number(reservation.sportField.pricePerHour ?? 0),
     };
 
-    // Set properties safely if they exist
-    if (sportField) {
-      if ('id' in sportField) sportFieldData.id = String(sportField.id || '');
-      if ('name' in sportField) sportFieldData.name = String(sportField.name || '');
-      if ('type' in sportField) sportFieldData.type = String(sportField.type || '');
-      if ('pricePerHour' in sportField) {
-        const price = sportField.pricePerHour;
-        if (typeof price === 'object' && price && 'toNumber' in price && typeof price.toNumber === 'function') {
-          sportFieldData.price = price.toNumber();
-        } else {
-          sportFieldData.price = Number(price) || 0;
-        }
-      }
-    }
-
-    // Use type assertion to bypass complex type checking
     const clubData: Club = {
-      id: '',
-      name: '',
-      address: '',
-      city: ''
+      id: reservation.sportField.club.id,
+      name: reservation.sportField.club.name ?? '',
+      address: reservation.sportField.club.address ?? '',
+      city: reservation.sportField.club.city ?? '',
+      zipCode: reservation.sportField.club.zipCode ?? undefined,
     };
-
-    // Set properties safely if they exist
-    if (club) {
-      if ('id' in club) clubData.id = String(club.id || '');
-      if ('name' in club) clubData.name = String(club.name || '');
-      if ('address' in club) clubData.address = String(club.address || '');
-      if ('city' in club) clubData.city = String(club.city || '');
-      if ('zipCode' in club) clubData.zipCode = club.zipCode ? String(club.zipCode) : undefined;
-    }
 
     const { subject, html, text } = reservationConfirmationTemplate(
       reservationData,
