@@ -5,11 +5,6 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/db';
 
-// Define the expected structure of the form data
-interface FavoriteFormData {
-  gymId: string;
-}
-
 /**
  * Toggles the favorite status of a gym for the currently logged-in user.
  */
