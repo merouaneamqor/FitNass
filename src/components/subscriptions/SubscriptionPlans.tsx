@@ -14,16 +14,6 @@ import { useToast } from "@/hooks/use-toast"; // Corrected import path for the h
 // for initial load in Next.js App Router. It's better to fetch in the Page (Server Component)
 // and pass the data down. However, for simplicity in connecting the action,
 // we'll keep the fetch here for now. Consider refactoring later.
-async function fetchSubscriptionPlans(): Promise<SubscriptionPlan[]> {
-  // This will now run client-side unless called during SSR/build
-  // A better approach would be a separate API route or Server Action for fetching.
-  // OR pass plans as props from the parent server component (PricingPage).
-  // Let's assume for now this works or plans are passed as props.
-  // *** Simulating fetch result for client-side ***
-  console.warn("fetchSubscriptionPlans running client-side - consider refactoring to pass props");
-  // Returning empty array as client-side Prisma access isn't straightforward without an API/Action
-  return []; 
-}
 
 interface SubscriptionPlansProps {
   plans: SubscriptionPlan[]; // Expect plans to be passed as props now
@@ -32,7 +22,7 @@ interface SubscriptionPlansProps {
 // Renamed component to reflect it expects props
 export default function SubscriptionPlansClient({ plans }: SubscriptionPlansProps) {
   const { toast } = useToast();
-  const { data: session, status } = useSession(); // Get session status
+  const { status } = useSession(); // Get session status
   const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
 
   const isLoggedIn = status === 'authenticated';

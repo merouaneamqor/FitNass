@@ -1,10 +1,13 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth'; // Assuming NextAuth session utility
-import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
-// import { stripe } from '@/lib/stripe'; // We'll add Stripe later
+// import { auth } from '@/lib/auth'; // Incorrect import for v4
+import { getServerSession } from 'next-auth/next'; // Import getServerSession for v4
+import { authOptions } from '@/lib/auth';      // Import your authOptions
+// import { revalidatePath } from 'next/cache'; // Removed unused import
+// import { redirect } from 'next/navigation'; // Removed unused import
+import Stripe from 'stripe'; // Import Stripe for types
+// import { stripe } from '@/lib/stripe'; // Stripe client instance will be added later
 
 /**
  * Creates a Stripe Checkout Session for a user to subscribe to a plan.
@@ -13,9 +16,12 @@ import { redirect } from 'next/navigation';
  * TODO: Error handling.
  */
 export async function createCheckoutSession(planId: string) {
-  const session = await auth();
+  // Get session using getServerSession and authOptions
+  const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    throw new Error('User must be logged in to subscribe.');
+    // It's better to return an error object than throw in server actions usually
+    // throw new Error('User must be logged in to subscribe.');
+    return { success: false, message: 'User must be logged in to subscribe.', error: 'UNAUTHENTICATED' };
   }
 
   const userId = session.user.id;
@@ -27,7 +33,8 @@ export async function createCheckoutSession(planId: string) {
   });
 
   if (!plan) {
-    throw new Error(`Plan with ID ${planId} not found.`);
+    // throw new Error(`Plan with ID ${planId} not found.`);
+     return { success: false, message: `Plan with ID ${planId} not found.`, error: 'PLAN_NOT_FOUND' };
   }
 
   // --- Placeholder Logic --- 
@@ -88,29 +95,71 @@ export async function createSubscription(userId: string, planId: string, stripeS
  * Handles Stripe Webhooks (placeholder).
  * Needs a corresponding API route (e.g., /api/webhooks/stripe).
  */
-export async function handleStripeWebhook(event: any) { // Use specific Stripe event type later
+export async function handleStripeWebhook(event: Stripe.Event) { 
   console.log(`Received Stripe webhook event: ${event.type}`);
 
+  // Use specific types from Stripe.Event where possible
   switch (event.type) {
-    case 'checkout.session.completed':
-      const session = event.data.object;
+    case 'checkout.session.completed': {
+      // Added braces to allow lexical declaration
+      const checkoutSession = event.data.object as Stripe.Checkout.Session;
       // TODO: Extract user ID and plan ID from session metadata
-      // TODO: Extract stripeSubscriptionId
-      // TODO: Call createSubscription
-      console.log('Checkout session completed:', session.id);
+      const userId = checkoutSession.metadata?.userId;
+      const planId = checkoutSession.metadata?.planId;
+      const stripeSubscriptionId = checkoutSession.subscription;
+      
+      if (!userId || !planId || !stripeSubscriptionId) {
+        console.error('Missing metadata or subscription ID in checkout.session.completed', checkoutSession.id);
+        // Consider returning an error status code if this were an API route
+        return { received: false, error: 'Missing metadata' };
+      }
+      
+      console.log('Checkout session completed:', checkoutSession.id, { userId, planId });
+      // Call createSubscription
+      await createSubscription(userId, planId, stripeSubscriptionId as string);
       break;
-    case 'invoice.payment_succeeded':
-      // TODO: Handle recurring payments, update subscription end date
-      console.log('Invoice payment succeeded');
+    }
+    case 'invoice.payment_succeeded': {
+      const invoice = event.data.object as Stripe.Invoice;
+      let stripeSubscriptionId: string | null = null;
+      // Attempt to get subscription ID ONLY from the first line item, assuming it exists
+      if (invoice.lines?.data?.length > 0) {
+        // Directly access subscription property, assuming it's present on line items for subscription invoices
+        stripeSubscriptionId = invoice.lines.data[0].subscription as string | null;
+      }
+
+      if (stripeSubscriptionId) {
+        console.log('Invoice payment succeeded for subscription ID:', stripeSubscriptionId);
+        // TODO: DB updates
+      } else {
+        console.warn('Could not determine subscription ID from invoice.payment_succeeded event:', invoice.id);
+      }
       break;
-    case 'invoice.payment_failed':
-      // TODO: Update subscription status (e.g., PAST_DUE)
-      console.log('Invoice payment failed');
+    }
+    case 'invoice.payment_failed': {
+      const invoice = event.data.object as Stripe.Invoice;
+      let stripeSubscriptionId: string | null = null;
+       // Attempt to get subscription ID ONLY from the first line item, assuming it exists
+      if (invoice.lines?.data?.length > 0) {
+         // Directly access subscription property, assuming it's present on line items for subscription invoices
+         stripeSubscriptionId = invoice.lines.data[0].subscription as string | null;
+      }
+
+      if (stripeSubscriptionId) {
+        console.log('Invoice payment failed for subscription ID:', stripeSubscriptionId);
+         // TODO: DB updates
+      } else {
+        console.warn('Could not determine subscription ID from invoice.payment_failed event:', invoice.id);
+      }
       break;
-    case 'customer.subscription.deleted':
+    }
+    case 'customer.subscription.deleted': {
+      const subscription = event.data.object as Stripe.Subscription;
       // TODO: Handle subscription cancellation in Stripe
-      console.log('Customer subscription deleted');
+      console.log('Customer subscription deleted:', subscription.id);
+      // Update subscription status to CANCELLED or EXPIRED in your DB
       break;
+    }
     // ... handle other relevant events
     default:
       console.log(`Unhandled event type ${event.type}`);
