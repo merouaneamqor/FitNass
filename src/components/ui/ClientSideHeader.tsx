@@ -66,6 +66,7 @@ export default function ClientSideHeader() {
               <Link href="/" className={navLinkClasses(pathname === '/')}>Home</Link>
               <Link href="/search?type=gym" className={navLinkClasses(pathname === '/search' && searchParams.get('type') === 'gym')}>Gyms</Link>
               <Link href="/search?type=club" className={navLinkClasses(pathname === '/search' && searchParams.get('type') === 'club')}>Clubs</Link>
+              <Link href="/pricing" className={navLinkClasses(pathname === '/pricing')}>Pricing</Link>
               {/* Add Coaches link if route exists */}
               {/* <Link href="/coaches" className={navLinkClasses(pathname.startsWith('/coaches'))}>Coaches</Link> */}
 
@@ -153,6 +154,7 @@ export default function ClientSideHeader() {
             <Link href="/" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-bebas uppercase tracking-wider text-neutral-200 hover:bg-neutral-700 hover:text-neon-yellow">Home</Link>
             <Link href="/search?type=gym" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-bebas uppercase tracking-wider text-neutral-200 hover:bg-neutral-700 hover:text-neon-yellow">Gyms</Link>
             <Link href="/search?type=club" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-bebas uppercase tracking-wider text-neutral-200 hover:bg-neutral-700 hover:text-neon-yellow">Clubs</Link>
+            <Link href="/pricing" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-bebas uppercase tracking-wider text-neutral-200 hover:bg-neutral-700 hover:text-neon-yellow">Pricing</Link>
             {/* Add Coaches link */}
 
             {isLoggedIn ? (

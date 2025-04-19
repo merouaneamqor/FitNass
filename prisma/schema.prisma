@@ -27,13 +27,17 @@ model User {
   status             UserStatus     @default(ACTIVE)
   tokenExpiry        DateTime?
   verificationToken  String?
+
+  // SaaS Fields
+  stripeCustomerId   String?        @unique // Store Stripe Customer ID
+
   createdClubs       Club[]         @relation("ClubOwner")
   createdGyms        Gym[]          @relation("GymOwner")
   loginHistory       LoginHistory[]
   notifications      Notification[]
   reservations       Reservation[]
   reviews            Review[]
-  subscriptions      Subscription[]
+  subscriptions      Subscription[] // Relation to user's subscriptions
   favoriteClubs      Club[]         @relation("UserFavoriteClubs", fields: [favoriteClubIds], references: [id])
   favorites          Gym[]          @relation("UserFavorites", fields: [favoriteGymIds], references: [id])
 
@@ -72,6 +76,8 @@ model Gym {
   favoritedBy  User[]     @relation("UserFavorites", fields: [favoritedByIds], references: [id])
 
   favoritedByIds String[] @db.ObjectId
+
+  @@unique([name])
 }
 
 model Review {
@@ -199,31 +205,40 @@ model Reservation {
 }
 
 model SubscriptionPlan {
-  id            String         @id @default(auto()) @map("_id") @db.ObjectId // Changed ID type
-  name          String
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  name          String         // e.g., "Basic", "Pro", "Enterprise"
+  tier          PlanTier       @default(BASIC) // Enum for plan level
   description   String
-  price         Float
-  billingCycle  BillingCycle
-  features      String
+  price         Float          // Price per billing cycle
+  billingCycle  BillingCycle   // Monthly, Annually, etc.
+  features      String[]       // List of included features
+  maxGyms       Int?           // Limit for gym owners
+  maxClubs      Int?           // Limit for club owners
+  maxLocations  Int?           // Limit for multi-location businesses
+  analyticsLevel PlanAnalyticsLevel @default(NONE)
+  supportLevel  PlanSupportLevel   @default(BASIC)
+  isActive      Boolean        @default(true) // To easily enable/disable plans
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  subscriptions Subscription[]
+  subscriptions Subscription[] // Relation to subscriptions using this plan
 }
 
 model Subscription {
-  id              String             @id @default(auto()) @map("_id") @db.ObjectId
-  userId          String             @db.ObjectId
-  planId          String             @db.ObjectId
-  status          SubscriptionStatus @default(ACTIVE)
-  startDate       DateTime
-  endDate         DateTime
-  autoRenew       Boolean            @default(true)
-  paymentMethodId String?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  payments        PaymentRecord[]
-  plan            SubscriptionPlan   @relation(fields: [planId], references: [id])
-  user            User               @relation(fields: [userId], references: [id])
+  id                  String             @id @default(auto()) @map("_id") @db.ObjectId
+  userId              String             @db.ObjectId // Link to the User
+  planId              String             @db.ObjectId // Link to the SubscriptionPlan
+  status              SubscriptionStatus @default(ACTIVE) // Active, PastDue, Cancelled, etc.
+  startDate           DateTime
+  endDate             DateTime?          // Can be null for ongoing subscriptions
+  trialEndDate        DateTime?          // End date for free trials
+  autoRenew           Boolean            @default(true)
+  paymentMethodId     String?            // Reference to payment method (e.g., Stripe PaymentMethod ID)
+  stripeSubscriptionId String?           @unique // Store Stripe Subscription ID
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  payments            PaymentRecord[]    // History of payments for this subscription
+  plan                SubscriptionPlan   @relation(fields: [planId], references: [id])
+  user                User               @relation(fields: [userId], references: [id])
 }
 
 model PaymentRecord {
@@ -319,12 +334,35 @@ enum BillingCycle {
   MONTHLY
   QUARTERLY
   ANNUALLY
+  ONE_TIME // For potential lifetime deals etc.
 }
 
 enum SubscriptionStatus {
   ACTIVE
   TRIALING
   PAST_DUE
-  CANCELLED
-  EXPIRED
+  CANCELLED // User cancelled, active until period end
+  EXPIRED   // Period ended after cancellation or non-renewal
+  INCOMPLETE // Payment failed during signup
+  INCOMPLETE_EXPIRED // Payment failed and grace period passed
+}
+
+enum PlanTier {
+  FREE
+  BASIC
+  PRO
+  ENTERPRISE
+}
+
+enum PlanAnalyticsLevel {
+  NONE
+  BASIC
+  ADVANCED
+}
+
+enum PlanSupportLevel {
+  NONE
+  BASIC
+  PRIORITY
+  DEDICATED
 }

@@ -1,3 +1,8 @@
+require('dotenv').config(); // Load environment variables from .env file
+
+// Debug: Print the loaded MONGO_URL
+console.log('DEBUG: MONGO_URL =', process.env.MONGO_URL);
+
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
@@ -232,10 +237,25 @@ async function main() {
     
     try {
       const gym = await prisma.gym.upsert({
-        where: { id: `scraped-gym-${i + 1}` },
-        update: {},
+        where: { name: club.name },
+        update: {
+          description: club.description || 'Centre sportif à Casablanca offrant des services de qualité',
+          address: club.address || `${Math.floor(Math.random() * 200) + 1} Avenue Mohammed V`,
+          city: cityName || 'Casablanca',
+          state: '',
+          zipCode: `${Math.floor(Math.random() * 90000) + 10000}`,
+          latitude: coordinates.lat,
+          longitude: coordinates.lng,
+          phone: club.phone !== 'N/A' ? club.phone : `+212 ${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10000000) + 1000000}`,
+          website: website !== 'N/A' ? website : null,
+          email: email,
+          rating: club.rating || parseFloat((3 + Math.random() * 2).toFixed(1)),
+          priceRange: priceRange,
+          facilities: facilities,
+          images: images,
+          ownerId: randomItem(gymOwners).id
+        },
         create: {
-          id: `scraped-gym-${i + 1}`,
           name: club.name,
           description: club.description || 'Centre sportif à Casablanca offrant des services de qualité',
           address: club.address || `${Math.floor(Math.random() * 200) + 1} Avenue Mohammed V`,
