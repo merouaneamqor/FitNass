@@ -39,93 +39,96 @@ export default function ClientSideHeader() {
     router.push('/');
   };
 
-  // --- Updated Nav Link Classes ---
+  // --- Refined Light Theme Nav Link Classes ---
   const navLinkClasses = (isActive: boolean) =>
-    `inline-flex items-center px-1 pt-1 border-b-2 text-sm uppercase font-bebas tracking-wider transition-colors duration-150 ${
+    // Premium navigation styling with subtle transitions
+    `inline-flex items-center px-1.5 pt-1 border-b-2 text-sm font-medium transition-all duration-200 ${
       isActive
-        ? 'text-neon-yellow border-neon-yellow' // Active state: Neon Yellow text and border
-        : 'text-neutral-300 border-transparent hover:text-white hover:border-neutral-500' // Inactive state
+        ? 'text-yellow-600 border-yellow-500 font-semibold' // Active state
+        : 'text-gray-600 border-transparent hover:text-gray-800 hover:opacity-90' // Inactive with subtle hover
     }`;
 
-  // --- Updated Dropdown Item Classes ---
-  const dropdownItemClasses = "block px-4 py-2 text-sm text-neutral-200 font-poppins hover:bg-neutral-700 hover:text-neon-yellow transition-colors duration-150";
-  const dropdownDestructiveItemClasses = "block w-full text-left px-4 py-2 text-sm text-blood-red font-poppins hover:bg-neutral-700 hover:text-red-400 transition-colors duration-150";
+  // --- Premium Dropdown Item Classes ---
+  const dropdownItemClasses = "block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-yellow-600 transition-all duration-200";
+  const dropdownDestructiveItemClasses = "block w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200";
 
   return (
-    // Main header styling
-    <header className="bg-jet-black border-b border-neutral-800/60 sticky top-0 z-50 shadow-md">
+    // Premium header with refined shadow
+    <header className="bg-white border-b border-gray-200/80 sticky top-0 z-50 backdrop-blur-sm bg-white/95 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          {/* Logo - Using SVG */}
           <div className="flex items-center">
-            <Link href="/" className="flex-shrink-0 flex items-center group">
-              <Image src="/images/logo.svg" alt="Fitnass Logo" width={32} height={32} className="mr-2" />
+            <Link href="/" className="flex-shrink-0 flex items-center group mr-4">
+              <Image 
+                src="/images/logo.svg" 
+                alt="Fitnass Logo" 
+                width={34} 
+                height={34} 
+                className="transition-transform duration-300 group-hover:scale-105" 
+              />
+              {/* Premium text logo with refined hover */}
+              <span className="hidden sm:inline font-bebas text-2xl text-gray-900 uppercase tracking-wider group-hover:text-yellow-600 transition-colors ml-2.5">FITNASS</span>
             </Link>
-            {/* Desktop Navigation - Using Bebas Neue via font variable */}
-            <nav className="hidden md:ml-10 md:flex md:space-x-8"> {/* Increased spacing */}
+            {/* Desktop Navigation - Refined spacing */}
+            <nav className="hidden md:ml-8 md:flex md:space-x-7">
               <Link href="/" className={navLinkClasses(pathname === '/')}>Home</Link>
               <Link href="/search?type=gym" className={navLinkClasses(pathname === '/search' && searchParams.get('type') === 'gym')}>Gyms</Link>
               <Link href="/search?type=club" className={navLinkClasses(pathname === '/search' && searchParams.get('type') === 'club')}>Clubs</Link>
               <Link href="/pricing" className={navLinkClasses(pathname === '/pricing')}>Pricing</Link>
-              {/* Add Coaches link if route exists */}
-              {/* <Link href="/coaches" className={navLinkClasses(pathname.startsWith('/coaches'))}>Coaches</Link> */}
-
-              {/* Admin/Owner Links - Adjusted styling */}
+              {/* Admin/Owner Links - Icons provide visual cue */}
               {userRole === 'admin' && (
                 <Link href="/admin" className={navLinkClasses(pathname.startsWith('/admin'))}>
-                  <FiShield className="mr-1.5 h-4 w-4" /> Admin
+                  <FiShield className="mr-1.5 h-4 w-4 opacity-80" aria-hidden="true" /> Admin
                 </Link>
               )}
               {userRole === 'owner' && (
                 <Link href="/dashboard" className={navLinkClasses(pathname.startsWith('/dashboard'))}>
-                  <FiGrid className="mr-1.5 h-4 w-4" /> Dashboard
+                  <FiGrid className="mr-1.5 h-4 w-4 opacity-80" aria-hidden="true" /> Dashboard
                 </Link>
               )}
             </nav>
           </div>
 
-          {/* Desktop Auth Buttons & User Menu */}
-          <div className="hidden md:flex items-center space-x-4"> {/* Increased spacing */}
+          {/* Premium Auth Buttons & User Menu */}
+          <div className="hidden md:flex items-center space-x-3">
             {isLoggedIn ? (
-              // --- Updated User Dropdown ---
               <div className="relative group">
-                <button className="inline-flex items-center px-3 py-1.5 border-2 border-neutral-700 rounded-md text-sm font-medium text-neutral-200 hover:bg-gunmetal-gray hover:border-neutral-500 transition-colors font-poppins">
-                  <FiUser className="mr-2 h-4 w-4 text-blood-red" />
+                <button className="inline-flex items-center px-3.5 py-1.5 border border-gray-300/90 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 bg-white/90 backdrop-blur-sm">
+                  <FiUser className="mr-2 h-4 w-4 text-yellow-600" />
                   {session?.user?.name || 'Account'}
-                  <FiChevronDown className="ml-1.5 h-3 w-3" />
+                  <FiChevronDown className="ml-1.5 h-3 w-3 text-gray-500 group-hover:text-gray-700 transition-colors" />
                 </button>
-                {/* Dropdown styling */}
-                <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-md shadow-lg bg-gunmetal-gray ring-1 ring-black ring-opacity-5 focus:outline-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 ease-in-out border border-neutral-700">
-                  <div className="py-1">
-                    <Link href="/profile/me" className={dropdownItemClasses}>
-                      <FiUser className="inline mr-2 h-4 w-4" /> Profile
+                <div className="absolute right-0 mt-1 w-56 origin-top-right rounded-md shadow-[0_4px_20px_rgba(0,0,0,0.08)] bg-white ring-1 ring-black/5 focus:outline-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out transform group-hover:translate-y-0 translate-y-1 border border-gray-200/80 py-1">
+                  {/* Premium dropdown content with refined icons */}
+                  <Link href="/profile/me" className={dropdownItemClasses}>
+                    <FiUser className="inline mr-2.5 h-4 w-4 opacity-80 text-yellow-600" aria-hidden="true"/> Profile
+                  </Link>
+                  {userRole === 'owner' && (
+                    <Link href="/dashboard/add" className={dropdownItemClasses}>
+                      <FiPlusCircle className="inline mr-2.5 h-4 w-4 opacity-80 text-yellow-600" aria-hidden="true"/> Add Venue
                     </Link>
-                    {userRole === 'owner' && (
-                      <Link href="/dashboard/add" className={dropdownItemClasses}>
-                        <FiPlusCircle className="inline mr-2 h-4 w-4" /> Add Venue
-                      </Link>
-                    )}
-                    <Link href="/profile/settings" className={dropdownItemClasses}>
-                      <FiSettings className="inline mr-2 h-4 w-4" /> Settings
-                    </Link>
-                    <button onClick={handleLogout} className={dropdownDestructiveItemClasses}>
-                      <FiLogOut className="inline mr-2 h-4 w-4" /> Sign Out
-                    </button>
-                  </div>
+                  )}
+                  <Link href="/profile/settings" className={dropdownItemClasses}>
+                    <FiSettings className="inline mr-2.5 h-4 w-4 opacity-80 text-yellow-600" aria-hidden="true"/> Settings
+                  </Link>
+                  {/* Refined divider */}
+                  <div className="border-t border-gray-100 my-1"></div> 
+                  <button onClick={handleLogout} className={`${dropdownDestructiveItemClasses} flex items-center`}> 
+                    <FiLogOut className="inline mr-2.5 h-4 w-4 opacity-80" aria-hidden="true"/> Sign Out
+                  </button>
                 </div>
               </div>
             ) : (
-              // --- Updated Auth Buttons ---
               <>
                 <Link
                   href="/auth/signin"
-                  className="inline-flex items-center px-4 py-1.5 border-2 border-neutral-600 rounded-md text-sm font-medium text-neutral-200 hover:bg-neutral-700 hover:border-neutral-500 transition-colors font-poppins"
+                  className="inline-flex items-center px-4 py-1.5 border border-gray-300/90 rounded-md text-sm font-medium text-gray-700 bg-white/90 hover:bg-gray-50 transition-all duration-200 backdrop-blur-sm"
                 >
                   Sign In
                 </Link>
                 <Link
                   href="/auth/signup"
-                  className="inline-flex items-center px-4 py-2 bg-neon-yellow border-2 border-neon-yellow rounded-md text-sm font-bold text-black hover:bg-yellow-400 hover:border-yellow-400 transition-colors shadow-md uppercase font-poppins tracking-wide"
+                  className="inline-flex items-center px-5 py-1.5 bg-gradient-to-r from-yellow-500 to-yellow-400 border border-transparent rounded-md text-sm font-semibold text-black hover:from-yellow-600 hover:to-yellow-500 transition-all duration-200 shadow-sm"
                 >
                   Sign Up
                 </Link>
@@ -133,56 +136,61 @@ export default function ClientSideHeader() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Premium Mobile Menu Button */} 
           <div className="flex items-center md:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-neutral-300 hover:text-white focus:outline-none p-1 rounded-md hover:bg-neutral-700"
+              className="text-gray-500 hover:text-gray-900 focus:outline-none p-1.5 rounded-md hover:bg-gray-50 transition-all duration-200"
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
             >
-              {mobileMenuOpen ? <FiX className="h-6 w-6" /> : <FiMenu className="h-6 w-6" />}
+              {mobileMenuOpen ? <FiX className="h-5 w-5" /> : <FiMenu className="h-5 w-5" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu Panel - Updated Styling */}
+      {/* Premium Mobile Menu Panel */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-gunmetal-gray border-t border-neutral-700 shadow-lg">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {/* Use Bebas Neue for main mobile links */}
-            <Link href="/" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-bebas uppercase tracking-wider text-neutral-200 hover:bg-neutral-700 hover:text-neon-yellow">Home</Link>
-            <Link href="/search?type=gym" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-bebas uppercase tracking-wider text-neutral-200 hover:bg-neutral-700 hover:text-neon-yellow">Gyms</Link>
-            <Link href="/search?type=club" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-bebas uppercase tracking-wider text-neutral-200 hover:bg-neutral-700 hover:text-neon-yellow">Clubs</Link>
-            <Link href="/pricing" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-bebas uppercase tracking-wider text-neutral-200 hover:bg-neutral-700 hover:text-neon-yellow">Pricing</Link>
-            {/* Add Coaches link */}
+        <div className="md:hidden bg-white/95 backdrop-blur-sm border-t border-gray-200/80 shadow-[0_8px_16px_rgba(0,0,0,0.08)] absolute top-full left-0 right-0 z-20">
+          <div className="px-3 pt-3 pb-4 space-y-1.5 sm:px-4">
+            {/* Premium Mobile Nav links */}
+            <Link href="/" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2.5 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-yellow-600 transition-all duration-200">Home</Link>
+            <Link href="/search?type=gym" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2.5 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-yellow-600 transition-all duration-200">Gyms</Link>
+            <Link href="/search?type=club" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2.5 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-yellow-600 transition-all duration-200">Clubs</Link>
+            <Link href="/pricing" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2.5 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-yellow-600 transition-all duration-200">Pricing</Link>
 
+            {/* Premium User/Auth Section */}
             {isLoggedIn ? (
-              <div className="border-t border-neutral-700 pt-4 mt-4">
-                 <div className="flex items-center px-3 mb-3">
+              <div className="border-t border-gray-200/80 pt-4 mt-3">
+                 <div className="flex items-center px-3 mb-3.5">
                     <div className="flex-shrink-0">
-                      {/* Add user image */}
-                      <FiUser className="h-8 w-8 text-blood-red"/>
+                      {/* Enhanced user avatar */}
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-gray-100 to-white shadow-inner flex items-center justify-center">
+                        <FiUser className="h-5 w-5 text-yellow-500"/>
+                      </div>
                     </div>
-                    <div className="ml-3">
-                      <div className="text-base font-medium text-white font-poppins">{session?.user?.name || 'User'}</div>
-                      <div className="text-sm font-medium text-neutral-400 font-poppins">{session?.user?.email}</div>
+                    <div className="ml-3.5">
+                      <div className="text-base font-semibold text-gray-900">{session?.user?.name || 'User'}</div>
+                      <div className="text-sm font-medium text-gray-500">{session?.user?.email}</div>
                     </div>
                   </div>
-                {/* Mobile Dropdown items use Poppins */}
-                <Link href="/profile/me" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-neutral-200 hover:bg-neutral-700 hover:text-neon-yellow font-poppins">Profile</Link>
-                {userRole === 'admin' && <Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-neutral-200 hover:bg-neutral-700 hover:text-neon-yellow font-poppins">Admin</Link>}
-                {userRole === 'owner' && <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-neutral-200 hover:bg-neutral-700 hover:text-neon-yellow font-poppins">Dashboard</Link>}
-                <Link href="/profile/settings" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-neutral-200 hover:bg-neutral-700 hover:text-neon-yellow font-poppins">Settings</Link>
-                <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-blood-red hover:bg-neutral-700 hover:text-red-400 font-poppins">
-                  Sign Out
-                </button>
+                <div className="mt-3 space-y-1.5">
+                  {/* Premium Mobile Dropdown items */}
+                  <Link href="/profile/me" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2.5 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-yellow-600 transition-all duration-200">Profile</Link>
+                  {userRole === 'admin' && <Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2.5 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-yellow-600 transition-all duration-200">Admin</Link>}
+                  {userRole === 'owner' && <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2.5 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-yellow-600 transition-all duration-200">Dashboard</Link>}
+                  <Link href="/profile/settings" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2.5 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-yellow-600 transition-all duration-200">Settings</Link>
+                  {/* Premium divider */}
+                  <div className="border-t border-gray-100 !my-2.5"></div>
+                  <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="block w-full text-left px-3 py-2.5 rounded-md text-base font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200">
+                    Sign Out
+                  </button>
+                </div>
               </div>
             ) : (
-              // Mobile Auth Buttons - Updated styling
-              <div className="border-t border-neutral-700 pt-4 mt-4 space-y-2">
-                <Link href="/auth/signin" onClick={() => setMobileMenuOpen(false)} className="block w-full text-center px-3 py-2 rounded-md text-base font-medium text-neutral-200 border-2 border-neutral-600 hover:bg-neutral-700 hover:border-neutral-500 font-poppins">Sign In</Link>
-                <Link href="/auth/signup" onClick={() => setMobileMenuOpen(false)} className="block w-full text-center px-3 py-2 rounded-md text-base font-bold text-black bg-neon-yellow border-2 border-neon-yellow hover:bg-yellow-400 hover:border-yellow-400 uppercase font-poppins tracking-wide">Sign Up</Link>
+              <div className="border-t border-gray-200/80 pt-4 mt-3 space-y-2.5">
+                <Link href="/auth/signin" onClick={() => setMobileMenuOpen(false)} className="block w-full text-center px-3 py-2.5 rounded-md text-base font-medium text-gray-700 border border-gray-300/90 hover:bg-gray-50 transition-all duration-200">Sign In</Link>
+                <Link href="/auth/signup" onClick={() => setMobileMenuOpen(false)} className="block w-full text-center px-3 py-2.5 rounded-md text-base font-semibold text-black bg-gradient-to-r from-yellow-500 to-yellow-400 border border-transparent hover:from-yellow-600 hover:to-yellow-500 transition-all duration-200">Sign Up</Link>
               </div>
             )}
           </div>

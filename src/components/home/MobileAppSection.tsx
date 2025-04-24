@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { FaApple, FaGooglePlay } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { FiBell } from 'react-icons/fi';
 
 type MobileAppSectionProps = {
   appImageUrl?: string;
@@ -26,8 +27,8 @@ export default function MobileAppSection({ appImageUrl }: MobileAppSectionProps)
                 <h2 className="text-4xl md:text-5xl lg:text-6xl font-bebas text-white mb-5 leading-tight uppercase tracking-wider">
                   Dominate Your Training <span className="text-neon-yellow">On The Go.</span>
                 </h2>
-                <p className="text-base md:text-lg text-neutral-300 font-poppins mb-8">
-                  Get the FitNass app for brutal workout tracking, instant booking, and exclusive drops.
+                <p className="text-base md:text-lg text-neutral-300 mb-8">
+                  Access exclusive features, track progress, and stay motivated with the Fitnass mobile app. Download now and take your fitness journey anywhere.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <button className="inline-flex items-center justify-center bg-jet-black hover:bg-neutral-800 text-white py-3 px-6 rounded-md transition-colors duration-200 font-semibold border border-neutral-700 hover:border-neon-yellow group">

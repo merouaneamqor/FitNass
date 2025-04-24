@@ -70,7 +70,7 @@ export default function SubscriptionPlansClient({ plans }: SubscriptionPlansProp
   // }, []); // Fetch on mount - Requires API/Action or passing props
 
   if (!plans || plans.length === 0) {
-    return <p className="text-center text-neutral-400 font-poppins">No subscription plans available at the moment.</p>;
+    return <p className="text-center text-neutral-400">No subscription plans available at the moment.</p>;
   }
 
   return (
@@ -84,13 +84,13 @@ export default function SubscriptionPlansClient({ plans }: SubscriptionPlansProp
           >
             <CardHeader className="border-b border-neutral-600 pb-4">
               <CardTitle className="text-3xl font-bebasNeue tracking-wider uppercase text-white text-center">{plan.name}</CardTitle>
-              <CardDescription className="text-neutral-300 font-poppins text-center text-sm pt-1">{plan.description}</CardDescription>
+              <CardDescription className="text-neutral-300 text-center text-sm pt-1">{plan.description}</CardDescription>
             </CardHeader>
             <CardContent className="flex-grow pt-6">
               <div className="mb-6 text-center">
                 <span className="text-5xl font-extrabold text-neon-yellow">${plan.price > 0 ? plan.price.toFixed(2) : 'Free'}</span>
                 {plan.price > 0 && (
-                  <span className="text-sm text-neutral-400 font-poppins">/{plan.billingCycle.toLowerCase()}</span>
+                  <span className="text-sm text-neutral-400">/{plan.billingCycle.toLowerCase()}</span>
                 )}
               </div>
               <ul className="space-y-3 font-poppins">

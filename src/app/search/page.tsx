@@ -1,10 +1,16 @@
 // import { Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FiSearch, FiMapPin, FiStar, FiAlertCircle, FiChevronLeft, FiChevronRight, FiFilter, FiX } from 'react-icons/fi';
+import { FiSearch, FiMapPin, FiStar, FiAlertCircle, FiChevronLeft, FiChevronRight, FiFilter, FiX, FiCpu } from 'react-icons/fi';
 import { GiSoccerField } from "react-icons/gi";
 import prisma from '@/lib/db';
+import { motion } from 'framer-motion'; // Import motion
 // import { Prisma } from '@prisma/client';
+
+// Import NEW client components
+import AnimatedBackground from '@/components/ui/AnimatedBackground';
+import SearchResultsGrid from '@/components/search/SearchResultsGrid';
+import PaginationControls from '@/components/search/PaginationControls';
 
 // --- TYPES ---
 // Combine Gym & Club for search results, ensuring necessary fields exist
@@ -142,316 +148,139 @@ async function fetchSearchResults(searchParams: SearchParams) {
     }
 }
 
-// --- UI COMPONENTS ---
-
-// Error Message (Server Component)
+// --- SERVER UI COMPONENTS --- (Keep ErrorMessage and NoResultsMessage)
+// Error Message (Remains a Server Component)
 function ErrorMessage({ message }: { message: string }) {
     return (
-        <div className="flex flex-col items-center justify-center py-20 text-center bg-blood-red/10 p-6 rounded-md border border-blood-red/50">
-            <FiAlertCircle className="h-10 w-10 text-blood-red mb-4" />
-            <p className="text-blood-red font-semibold mb-2 font-poppins">Search Failed</p>
-            <p className="text-neutral-300 text-sm font-poppins">{message}</p>
+        <div className="flex flex-col items-center justify-center py-16 text-center bg-red-50/70 p-6 rounded-lg border border-red-200/80">
+            <FiAlertCircle className="h-10 w-10 text-red-500 mb-4" />
+            <p className="text-red-700 font-semibold mb-2">Search Failed</p>
+            <p className="text-gray-600 text-sm">{message}</p>
         </div>
     );
 }
 
-// No Results Message (Server Component)
+// No Results Message (Remains a Server Component)
 function NoResultsMessage() {
     return (
         <div className="text-center py-20">
-            <FiAlertCircle className="h-10 w-10 mx-auto text-neutral-500 mb-4" />
-            <p className="text-neutral-400 font-semibold font-poppins">No venues found matching your criteria.</p>
-            <p className="text-neutral-500 text-sm mt-1 font-poppins">Try adjusting your search query or city.</p>
+            <FiAlertCircle className="h-10 w-10 mx-auto text-gray-400 mb-4" />
+            <p className="text-gray-500 font-semibold">No venues found matching your criteria.</p>
+            <p className="text-gray-500 text-sm mt-1">Try adjusting your search query or city.</p>
         </div>
     );
 }
 
-// Search Result Card (Server Component)
-function SearchResultCard({ result }: { result: SearchResult }) {
-    const defaultImage = 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
-    const imageUrl = Array.isArray(result.images) && result.images.length > 0 ? result.images[0] : defaultImage;
-
-    return (
-        <div className="bg-gunmetal-gray rounded-lg overflow-hidden transition-all duration-300 border border-neutral-700/80 hover:border-blood-red group flex flex-col shadow-lg">
-            <div className="relative h-52 sm:h-56 overflow-hidden">
-                <Image
-                    src={imageUrl}
-                    alt={result.name}
-                    fill
-                    className="object-cover transform group-hover:scale-105 transition-transform duration-500 ease-in-out opacity-80 group-hover:opacity-100"
-                />
-                <span className={`absolute top-3 left-3 inline-flex items-center px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${result.type === 'gym' ? 'bg-blood-red/80 text-white' : 'bg-neon-yellow text-black'}`}>
-                    {result.type}
-                </span>
-                {/* Placeholder for favorite button - would need client interaction or server action */}
-                {/* <button className="absolute top-3 right-3 h-8 w-8 bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:text-blood-red transition-colors duration-200">
-                    <FiHeart className="h-4 w-4" />
-                </button> */}
-            </div>
-            <div className="p-5 flex flex-col flex-grow">
-                <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-bebas uppercase tracking-wide text-white group-hover:text-neon-yellow transition-colors pr-2 line-clamp-1">
-                        <Link href={`/${result.type}s/${result.id}`}>{result.name}</Link>
-                    </h3>
-                    {typeof result.rating === 'number' && result.rating > 0 && (
-                        <div className="flex-shrink-0 flex items-center bg-jet-black/50 px-2 py-0.5 rounded-md border border-neutral-700">
-                            <FiStar className="h-3 w-3 text-neon-yellow fill-current" />
-                            <span className="ml-1.5 font-bold text-xs text-white">{result.rating.toFixed(1)}</span>
-                        </div>
-                    )}
-                </div>
-                {result.address && (
-                    <div className="mb-3 flex items-center text-neutral-400 text-xs font-poppins">
-                        <FiMapPin className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
-                        <span className="line-clamp-1">{result.address}, {result.city}</span>
-                    </div>
-                )}
-                {result.facilities && result.facilities.length > 0 && (
-                    <div className="mb-4 flex flex-wrap gap-1.5">
-                        {result.facilities.slice(0, 3).map((facility) => (
-                            <span
-                                key={facility}
-                                className="px-2 py-0.5 bg-neutral-700/60 text-neutral-300 rounded-sm text-[10px] uppercase font-medium"
-                            >
-                                {facility}
-                            </span>
-                        ))}
-                    </div>
-                )}
-                <div className="mt-auto pt-4 border-t border-neutral-700/60 flex justify-between items-center">
-                    <span className="text-neutral-500 text-xs font-medium">
-                        {/* Display review count or sport field count? */}
-                        {result.type === 'club' && result._count?.sportFields ? `${result._count.sportFields} Fields` : ``}
-                        {result.type === 'gym' && result._count?.reviews ? `${result._count.reviews} Reviews` : ``}
-                         {/* Fallback or combined logic might be needed */}
-                    </span>
-                    <Link
-                        href={`/${result.type}s/${result.id}`}
-                        className="inline-block bg-neon-yellow hover:bg-yellow-400 text-black px-4 py-1.5 rounded-sm font-bold text-xs uppercase tracking-wider transition-colors duration-200 shadow-sm"
-                    >
-                        Details
-                    </Link>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// Pagination Controls (Server Component)
-function PaginationControls({ currentPage, totalPages, searchParams }: {
-    currentPage: number;
-    totalPages: number;
-    searchParams: SearchParams;
-}) {
-    if (totalPages <= 1) return null;
-
-    const createPageURL = (pageNumber: number) => {
-        const params = new URLSearchParams();
-        if (searchParams.q) params.set('q', searchParams.q);
-        if (searchParams.city) params.set('city', searchParams.city);
-        if (searchParams.type && searchParams.type !== 'all') params.set('type', searchParams.type);
-        params.set('page', String(pageNumber));
-        return `/search?${params.toString()}`;
-    };
-
-    const hasPrev = currentPage > 1;
-    const hasNext = currentPage < totalPages;
-
-    // Basic Next/Prev links
-    return (
-        <div className="flex justify-center items-center gap-4 mt-12">
-            {hasPrev ? (
-                <Link href={createPageURL(currentPage - 1)}
-                      className="inline-flex items-center px-4 py-2 bg-gunmetal-gray text-neutral-300 border border-neutral-700 rounded-md text-sm font-medium hover:bg-neutral-700 transition-colors">
-                    <FiChevronLeft className="mr-2 h-4 w-4" />
-                    Previous
-                </Link>
-            ) : (
-                <span className="inline-flex items-center px-4 py-2 bg-neutral-800 text-neutral-600 border border-neutral-700 rounded-md text-sm font-medium cursor-not-allowed">
-                    <FiChevronLeft className="mr-2 h-4 w-4" />
-                    Previous
-                </span>
-            )}
-
-            <span className="text-neutral-400 text-sm">
-                Page {currentPage} of {totalPages}
-            </span>
-
-            {hasNext ? (
-                <Link href={createPageURL(currentPage + 1)}
-                      className="inline-flex items-center px-4 py-2 bg-gunmetal-gray text-neutral-300 border border-neutral-700 rounded-md text-sm font-medium hover:bg-neutral-700 transition-colors">
-                    Next
-                    <FiChevronRight className="ml-2 h-4 w-4" />
-                </Link>
-            ) : (
-                 <span className="inline-flex items-center px-4 py-2 bg-neutral-800 text-neutral-600 border border-neutral-700 rounded-md text-sm font-medium cursor-not-allowed">
-                    Next
-                    <FiChevronRight className="ml-2 h-4 w-4" />
-                </span>
-            )}
-        </div>
-    );
-    // TODO: Add numbered pagination if desired
-}
-
-
-// --- MAIN PAGE COMPONENT (Server Component) ---
+// --- SEARCH PAGE COMPONENT (Server Component) ---
 export default async function SearchPage({ searchParams }: { searchParams: SearchParams }) {
 
-    // Fetch data on the server
     const { results, currentPage, totalPages, totalResults, error } = await fetchSearchResults(searchParams);
-
-    // Read filters directly from searchParams for UI state
     const currentQuery = searchParams.q || '';
     const currentCity = searchParams.city || '';
-    const currentType = searchParams.type || 'all';
+    const currentType = searchParams.type || null;
 
-    const popularCities = ['Casablanca', 'Rabat', 'Marrakech', 'Tangier', 'Fez', 'Agadir'];
-
-    // Helper to create URLs for filters
     const createFilterURL = (param: keyof SearchParams, value: string | null) => {
         const params = new URLSearchParams();
-        if (searchParams.q) params.set('q', searchParams.q);
-        if (searchParams.city && param !== 'city') params.set('city', searchParams.city);
-        if (searchParams.type && searchParams.type !== 'all' && param !== 'type') params.set('type', searchParams.type);
-        // page reset is implicit as it's not carried over
-
-        if (value && value !== 'all') {
+        Object.entries(searchParams).forEach(([key, val]) => {
+             if (val && key !== 'page' && key !== param) { 
+                 params.set(key, String(val));
+             }
+        });
+        if (value) { 
             params.set(param, value);
-        } else {
-           // Remove the param if value is null or 'all' (except for query)
-           if (param === 'city') params.delete('city');
-           if (param === 'type') params.delete('type');
-        }
+        } 
         return `/search?${params.toString()}`;
     };
 
     return (
-        <div className="min-h-screen bg-jet-black text-neutral-200 font-poppins">
-            {/* Header Section */}
-            <div className="bg-gunmetal-gray py-10 md:py-12 px-6 border-b border-neutral-700/80">
-                <div className="max-w-7xl mx-auto">
-                    <h1 className="text-4xl md:text-5xl font-bebas text-white uppercase tracking-wider mb-6">
-                        Find Your Battleground
+        <div className="min-h-screen relative overflow-hidden">
+             {/* Use AnimatedBackground client component */}
+             <AnimatedBackground />
+
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+                <div className="mb-8 md:mb-12">
+                    <h1 className="text-3xl md:text-4xl font-bebas uppercase tracking-wider text-gray-900">
+                        Search Venues
                     </h1>
-
-                    {/* Search Form - Uses GET method for SSR */}
-                    <form method="GET" action="/search" className="relative w-full max-w-2xl mb-5">
-                        {/* Preserve existing city/type filters when searching */}
-                        {currentCity && <input type="hidden" name="city" value={currentCity} />}
-                        {currentType && currentType !== 'all' && <input type="hidden" name="type" value={currentType} />}
-
-                        <input
-                            type="text"
-                            name="q" // Name attribute is crucial for GET form
-                            placeholder="Search Gym, Club, Skill..."
-                            defaultValue={currentQuery} // Use defaultValue for server components
-                            className="w-full pl-10 pr-4 py-3 rounded-md bg-jet-black/50 text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-neon-yellow focus:bg-jet-black/80 transition-colors duration-200 border border-neutral-600/70 text-base"
-                        />
-                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-500 pointer-events-none" />
-                        <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 bg-neon-yellow text-black px-4 py-1.5 rounded-md font-bold text-xs uppercase tracking-wider hover:bg-yellow-400 transition-colors">
-                            Search
-                        </button>
-                    </form>
-
-                    {/* Popular Cities Links */}
-                    <div className="flex flex-wrap gap-2 items-center">
-                        <span className="text-neutral-400 text-xs uppercase font-semibold mr-2">Popular Cities:</span>
-                        {popularCities.map(city => (
-                            <Link
-                                key={city}
-                                href={createFilterURL('city', city)}
-                                scroll={false} // Prevent scroll jump on navigation
-                                className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors duration-150 uppercase tracking-wide border ${currentCity === city
-                                    ? 'bg-neon-yellow text-black border-neon-yellow'
-                                    : 'bg-neutral-700/60 text-neutral-300 border-neutral-600/80 hover:bg-neutral-600/80 hover:border-neutral-500'
-                                    }`}
-                            >
-                                {city}
-                            </Link>
-                        ))}
-                    </div>
-
-                    {/* Active City Filter Badge */}
-                    {currentCity && (
-                        <div className="mt-4 flex items-center">
-                            <span className="text-neutral-400 text-xs uppercase font-semibold mr-2">Filtering by:</span>
-                            <span className="bg-blood-red/80 text-white px-3 py-1 rounded-md flex items-center text-sm font-semibold">
-                                <FiMapPin className="mr-1.5 h-4 w-4" />
-                                {currentCity}
-                                <Link
-                                    href={createFilterURL('city', null)} // Link to clear filter
-                                    scroll={false}
-                                    className="ml-2 p-0.5 rounded-full hover:bg-black/20 transition-colors"
-                                    aria-label="Clear city filter"
-                                >
-                                    <FiX className="h-4 w-4" />
-                                </Link>
-                            </span>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Filter Tabs - Use Links for SSR */}
-            <div className="bg-jet-black border-b border-neutral-800 sticky top-0 z-40"> {/* Adjust top offset if header height changes */} 
-                <div className="max-w-7xl mx-auto px-6">
-                    <div className="flex space-x-2 overflow-x-auto py-3">
-                        <Link
-                            href={createFilterURL('type', 'all')}
-                            scroll={false}
-                            className={`px-4 py-1.5 rounded-md font-bebas uppercase tracking-wider text-sm transition-all duration-150 border-b-2 ${currentType === 'all'
-                                ? 'text-neon-yellow border-neon-yellow'
-                                : 'text-neutral-400 border-transparent hover:text-white'
-                                }`}
-                        >
-                            All ({/* TODO: Get accurate combined count if needed */ totalResults})
-                        </Link>
-                        <Link
-                           href={createFilterURL('type', 'gym')}
-                            scroll={false}
-                            className={`px-4 py-1.5 rounded-md font-bebas uppercase tracking-wider text-sm transition-all duration-150 border-b-2 flex items-center space-x-1.5 ${currentType === 'gym'
-                                ? 'text-neon-yellow border-neon-yellow'
-                                : 'text-neutral-400 border-transparent hover:text-white'
-                                }`}
-                        >
-                            <FiFilter className="h-4 w-4" />
-                            <span>Gyms ({/* TODO: Show gym count? */})</span>
-                        </Link>
-                        <Link
-                            href={createFilterURL('type', 'club')}
-                            scroll={false}
-                            className={`px-4 py-1.5 rounded-md font-bebas uppercase tracking-wider text-sm transition-all duration-150 border-b-2 flex items-center space-x-1.5 ${currentType === 'club'
-                                ? 'text-neon-yellow border-neon-yellow'
-                                : 'text-neutral-400 border-transparent hover:text-white'
-                                }`}
-                        >
-                            <GiSoccerField className="h-4 w-4" />
-                            <span>Clubs ({/* TODO: Show club count? */})</span>
-                        </Link>
+                    <div className="flex items-center text-gray-600 mt-2 text-sm">
+                         <FiCpu className="h-4 w-4 mr-1.5 text-yellow-600"/>
+                        <span>
+                             {totalResults > 0 ? `AI found ${totalResults} potential matches.` : 'Discover gyms or clubs near you.'}
+                        </span>
                     </div>
                 </div>
-            </div>
 
-            {/* Main Content Area */}
-            <div className="max-w-7xl mx-auto px-6 py-8 md:py-12">
-                {error ? (
-                    <ErrorMessage message={error} />
-                ) : results.length > 0 ? (
-                    <>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-                            {results.map(result => (
-                                <SearchResultCard key={result.id} result={result} />
-                            ))}
-                        </div>
-                        <PaginationControls
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            searchParams={searchParams} />
-                    </>
-                ) : (
-                    <NoResultsMessage />
-                )}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <aside className="md:col-span-1">
+                        {/* Filter sidebar content remains the same - it doesn't use motion */}
+                        <div className="bg-white/80 backdrop-blur-lg p-5 rounded-xl border border-gray-200/60 shadow-lg shadow-black/5 sticky top-20">
+                             <h2 className="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200/80 pb-2 flex items-center">
+                                 <FiFilter className="h-4 w-4 mr-2"/> Filters
+                             </h2>
+                             {/* Read-only Keyword Filter */}
+                             <div className="mb-5">
+                                 <label htmlFor="search-term" className="block text-sm font-medium text-gray-700 mb-1.5">Keywords</label>
+                                 <input 
+                                     type="text" id="search-term" readOnly value={currentQuery} 
+                                     placeholder="Any keywords..."
+                                     className="w-full px-3 py-2 rounded-lg bg-gray-100/80 text-sm text-gray-600 border border-gray-200/70 cursor-not-allowed"
+                                 />
+                             </div>
+                             {/* Read-only City Filter */}
+                             <div className="mb-5">
+                                 <label htmlFor="city-term" className="block text-sm font-medium text-gray-700 mb-1.5">City</label>
+                                 <input 
+                                     type="text" id="city-term" readOnly value={currentCity} 
+                                     placeholder="Any city"
+                                     className="w-full px-3 py-2 rounded-lg bg-gray-100/80 text-sm text-gray-600 border border-gray-200/70 cursor-not-allowed"
+                                 />
+                             </div>
+                             {/* Type Filter Links */}
+                             <div className="mb-5">
+                                 <label className="block text-sm font-medium text-gray-700 mb-2">Venue Type</label>
+                                 <div className="flex flex-col space-y-1.5">
+                                     {[ { label: 'All Types', value: null }, { label: 'Gyms Only', value: 'gym' }, { label: 'Clubs Only', value: 'club' } ].map(type => (
+                                         <Link 
+                                             key={type.label}
+                                             href={createFilterURL('type', type.value)}
+                                             className={`flex items-center space-x-2 px-2.5 py-1.5 rounded-lg text-sm transition-colors duration-150 ${
+                                                 currentType === type.value
+                                                 ? 'bg-yellow-100/90 text-yellow-900 font-semibold ring-1 ring-yellow-300/60'
+                                                 : 'text-gray-600 hover:bg-gray-100/80'
+                                             }`}
+                                         >
+                                             <span className={`w-3 h-3 rounded-full border-2 flex-shrink-0 ${ currentType === type.value ? 'bg-yellow-500 border-yellow-600' : 'border-gray-300 bg-white'}`}></span>
+                                             <span>{type.label}</span>
+                                         </Link>
+                                     ))}
+                                 </div>
+                             </div>
+                             <Link href="/search" className="mt-5 text-xs text-gray-500 hover:text-yellow-600 text-center block w-full">
+                                 Reset Filters
+                             </Link>
+                         </div>
+                     </aside>
+
+                    <main className="md:col-span-3">
+                        {error ? (
+                            <ErrorMessage message={error} />
+                        ) : results.length === 0 ? (
+                            <NoResultsMessage />
+                        ) : (
+                            // Use SearchResultsGrid client component
+                            <SearchResultsGrid results={results} />
+                        )}
+
+                        {!error && results.length > 0 && (
+                             // Use PaginationControls client component
+                             <PaginationControls 
+                                currentPage={currentPage} 
+                                totalPages={totalPages} 
+                                searchParams={searchParams} 
+                            />
+                        )}
+                    </main>
+                </div> 
             </div>
         </div>
     );

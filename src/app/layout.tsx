@@ -1,13 +1,12 @@
-// import type { Metadata } from "next";
-// import { Inter, } from "next/font/google";
+import type { Metadata } from "next";
+import { Inter, Bebas_Neue } from "next/font/google";
 import "./globals.css";
 import ClientSideHeader from "@/components/ui/ClientSideHeader";
 import Footer from "@/components/Footer";
 import Providers from "./providers";
-import { Bebas_Neue, Poppins } from "next/font/google";
 import { Suspense } from 'react';
 
-// Configure fonts
+// Font configurations
 const bebasNeue = Bebas_Neue({
   subsets: ['latin'],
   weight: '400',
@@ -15,14 +14,15 @@ const bebasNeue = Bebas_Neue({
   display: 'swap',
 });
 
-const poppins = Poppins({
+// Configure Inter font (restoring previous config)
+const inter = Inter({
   subsets: ['latin'],
-  weight: ['400', '500', '700', '900'],
-  variable: '--font-poppins',
+  variable: '--font-inter', // Set variable for Inter
   display: 'swap',
 });
 
-export const metadata = {
+// Metadata object with type annotation
+export const metadata: Metadata = {
   title: 'FITNASS - Train Like A Beast',
   description: 'Find the toughest coaches, gyms, and clubs. Book sessions and dominate your goals.',
 };
@@ -33,11 +33,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${bebasNeue.variable} ${poppins.variable}`}>
-      <body className="min-h-screen bg-jet-black font-poppins text-base-foreground">
+    <html lang="en" suppressHydrationWarning className={`${bebasNeue.variable} ${inter.variable}`}>
+      <body className="min-h-screen bg-gray-50 font-inter text-gray-700 antialiased">
         <Providers>
           <div className="flex flex-col min-h-screen">
-            <Suspense fallback={<div className="h-16 bg-jet-black border-b border-neutral-800/60">{/* Simple Placeholder */}</div>}>
+            {/* Consider a more styled Suspense fallback later if needed */}
+            <Suspense fallback={<div className="h-16 bg-white border-b border-gray-200"></div>}>
               <ClientSideHeader />
             </Suspense>
             <main className="flex-grow">

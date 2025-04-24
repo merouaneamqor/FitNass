@@ -8,6 +8,7 @@ import TestimonialsSection from '@/components/home/TestimonialsSection';
 import MobileAppSection from '@/components/home/MobileAppSection';
 import StatsSection from '@/components/home/StatsSection';
 import CTASection from '@/components/home/CTASection';
+import DataVisualizationSection from '@/components/home/DataVisualizationSection';
 
 // Example featured gyms data
 const featuredGyms = [
@@ -129,14 +130,15 @@ export default function Home() {
   const allVenues = [...featuredGyms, ...featuredClubs];
 
   return (
-    <div className="min-h-screen bg-white overflow-hidden">
+    <div className="min-h-screen bg-gray-50 overflow-hidden">
       <HeroSection />
-      <PopularCitiesSection cities={popularCities} />
+      <StatsSection />
       <FeaturesSection />
+      <DataVisualizationSection />
+      <PopularCitiesSection cities={popularCities} />
       <FeaturedVenuesSection venues={allVenues} />
       <TestimonialsSection testimonials={testimonials} />
       <MobileAppSection />
-      <StatsSection />
       <CTASection />
     </div>
   );

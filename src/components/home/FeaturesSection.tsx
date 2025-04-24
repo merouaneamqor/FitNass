@@ -1,6 +1,6 @@
 'use client';
 
-import { FiSearch, FiCalendar, FiUsers } from 'react-icons/fi';
+import { FiCpu, FiBarChart2, FiTrendingUp } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 
 type Feature = {
@@ -14,39 +14,39 @@ type FeaturesSectionProps = {
 };
 
 export default function FeaturesSection({ features }: FeaturesSectionProps) {
-  // Default features with updated styling classes
+  // Updated features with accent colors
   const defaultFeatures = [
     {
-      icon: <FiSearch className="h-8 w-8 text-blood-red" />, // Red icon
-      title: "Pinpoint Your Perfect Venue",
-      description: "Advanced search and filters to find gyms or clubs matching your exact needs – equipment, classes, location, and vibe."
+      icon: <FiCpu className="h-8 w-8 text-red-600" />,
+      title: "AI-Powered Matching",
+      description: "Our intelligent algorithm analyzes your fitness goals, training history, and preferences to recommend the perfect venues and coaches that match your unique needs."
     },
     {
-      icon: <FiCalendar className="h-8 w-8 text-blood-red" />, // Red icon
-      title: "Instant Booking & Scheduling",
-      description: "Check real-time availability for courts, classes, or trainers. Book your spot instantly, no phone calls needed."
+      icon: <FiBarChart2 className="h-8 w-8 text-red-600" />,
+      title: "Smart Performance Analytics",
+      description: "Track your progress with advanced metrics and visualizations. Our AI system identifies patterns in your training data to suggest optimization strategies for faster results."
     },
     {
-      icon: <FiUsers className="h-8 w-8 text-blood-red" />, // Red icon
-      title: "Verified Reviews & Community",
-      description: "Access genuine feedback and ratings from the FitNass community. Connect with other athletes and find training partners."
+      icon: <FiTrendingUp className="h-8 w-8 text-red-600" />,
+      title: "Predictive Training Insights",
+      description: "Receive personalized recommendations based on real-time data analysis from thousands of similar athletes. The platform continuously learns from performance patterns to enhance your journey."
     }
   ];
 
   const displayFeatures = features || defaultFeatures;
 
   return (
-    // Gunmetal Gray background
-    <section className="py-16 md:py-24 bg-gunmetal-gray">
+    // White background for a clean look
+    <section className="py-16 md:py-24 bg-white">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-12 md:mb-16">
-          {/* Bebas Neue heading, white text */}
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bebas text-white uppercase tracking-wider mb-4">
-            Engineered for Performance
+          {/* Darker heading */}
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bebas text-gray-900 uppercase tracking-wider mb-4">
+            Data-Driven <span className="text-yellow-500">Fitness Optimization</span>
           </h2>
-          {/* Poppins text */}
-          <p className="text-base md:text-lg text-muted-foreground font-medium max-w-2xl mx-auto">
-            FitNass cuts through the noise. Find, book, and train – faster and smarter.
+          {/* Adjusted paragraph text color */}
+          <p className="text-base md:text-lg text-gray-700 font-medium max-w-2xl mx-auto">
+            FitNass leverages machine learning to transform your fitness journey through intelligent data analysis and personalized insights.
           </p>
         </div>
 
@@ -57,19 +57,19 @@ export default function FeaturesSection({ features }: FeaturesSectionProps) {
               key={index}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
+              viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              // Jet Black card, subtle border, maybe red/yellow accent on hover (optional)
-              className="flex flex-col items-center text-center p-6 md:p-8 rounded-md bg-jet-black border border-neutral-700/70 shadow-md transition-all duration-300 hover:border-blood-red"
+              // White card background, subtle border, increased roundedness, softer shadow, hover effect
+              className="flex flex-col items-center text-center p-6 md:p-8 rounded-xl bg-white border border-gray-200 shadow-sm transition-all duration-300 hover:shadow-lg hover:border-yellow-400"
             >
-              {/* Icon with dark background */}
-              <div className="h-16 w-16 bg-gunmetal-gray rounded-full flex items-center justify-center mb-6 border border-neutral-600">
+              {/* Lighter icon background */}
+              <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mb-6 border border-gray-200">
                 {feature.icon}
               </div>
-              {/* Bebas Neue title, white text */}
-              <h3 className="text-2xl md:text-3xl font-bebas text-white uppercase tracking-wide mb-3">{feature.title}</h3>
-              {/* Poppins description */}
-              <p className="text-neutral-400 text-sm font-poppins">
+              {/* Corrected text size to lg, removed uppercase */}
+              <h3 className="text-lg font-semibold text-gray-900 mb-2 text-center">{feature.title}</h3>
+              {/* Adjusted description text color */}
+              <p className="text-gray-600 text-sm text-center">
                 {feature.description}
               </p>
             </motion.div>
