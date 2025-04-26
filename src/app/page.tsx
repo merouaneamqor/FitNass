@@ -67,7 +67,7 @@ const featuredClubs = [
     _count: { reviews: 95 },
     description: 'Professional tennis courts with certified coaches for all levels.',
     facilities: ['Tennis Courts', 'Professional Coaching', 'Equipment Rental'],
-    images: ['https://images.unsplash.com/photo-1622279457486-28f95c8c7fe3?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'],
+    images: [],
     priceRange: '€€',
     latitude: 0,
     longitude: 0
@@ -138,7 +138,8 @@ export default function Home() {
       <PopularCitiesSection cities={popularCities} />
       <FeaturedVenuesSection venues={allVenues} />
       <TestimonialsSection testimonials={testimonials} />
-      <MobileAppSection />
+      {/* Comment out MobileAppSection until the image is added or path fixed */}
+      {/* <MobileAppSection /> */}
       <CTASection />
     </div>
   );
