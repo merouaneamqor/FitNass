@@ -76,8 +76,14 @@ export const fetchClassesByLocation = async ({
           }
         },
         trainer: {
-          // Select fields needed for the Trainer type (adjust if Trainer type requires more)
-          select: { id: true, name: true } 
+          // Select fields needed for the Trainer type
+          select: { 
+              id: true, name: true, bio: true, specialties: true, 
+              certifications: true, city: true, rating: true, images: true, 
+              phone: true, email: true, website: true, hourlyRate: true, 
+              status: true, userId: true 
+              // Skip relations like user or classes for this context unless needed
+          } 
         },
         // Add schedule later if needed
       },
@@ -98,20 +104,29 @@ export const fetchClassesByLocation = async ({
       duration: cls.duration as number,
       images: cls.images as string[],
       // Type assertions might be needed if Prisma returns slightly different types (e.g., Decimal)
-      gym: cls.gym ? { 
-          ...cls.gym, 
-          rating: cls.gym.rating as number, // Assert number type if Prisma returns Decimal
-          latitude: cls.gym.latitude as number, // Assert number type
-          longitude: cls.gym.longitude as number // Assert number type
+      gym: cls.gym ? {
+        ...cls.gym,
+        rating: cls.gym.rating as number, // Assert number type if Prisma returns Decimal
+        latitude: cls.gym.latitude as number, // Assert number type
+        longitude: cls.gym.longitude as number // Assert number type
       } : null,
-      club: cls.club ? { 
-          ...cls.club,
-          rating: cls.club.rating as number | null, // Assert number | null type
-          latitude: cls.club.latitude as number | null, // Assert number | null type
-          longitude: cls.club.longitude as number | null // Assert number | null type
+      club: cls.club ? {
+        ...cls.club,
+        rating: cls.club.rating as number | null, // Assert number | null type
+        latitude: cls.club.latitude as number | null, // Assert number | null type
+        longitude: cls.club.longitude as number | null // Assert number | null type
       } : null,
-      trainer: cls.trainer ? { ...cls.trainer } : null,
-      capacity: cls.capacity as number | null, // Include capacity mapping
+      trainer: cls.trainer ? {
+        ...cls.trainer,
+        // Add assertions if Prisma types differ (e.g., Decimal for rating/hourlyRate)
+        rating: cls.trainer.rating as number | null,
+        hourlyRate: cls.trainer.hourlyRate as number | null
+      } : null,
+      capacity: cls.capacity as number | null,
+      schedule: undefined,
+      gymId: null,
+      clubId: null,
+      trainerId: null
     }));
 
   } catch (error: unknown) {
