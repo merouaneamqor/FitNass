@@ -15,13 +15,13 @@ type PopularCitiesSectionProps = {
 
 export default function PopularCitiesSection({ cities }: PopularCitiesSectionProps) {
   return (
-    <section className="py-16 md:py-24 bg-jet-black text-white border-t border-b border-neutral-800">
+    <section className="py-16 md:py-24 bg-gray-100 dark:bg-jet-black text-gray-900 dark:text-white border-t border-b border-gray-200 dark:border-neutral-800 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-12 md:mb-16">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bebas uppercase tracking-wider mb-4">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bebas uppercase tracking-wider mb-4 transition-colors">
             Explore Top Fitness Cities
           </h2>
-          <p className="text-base md:text-lg text-muted-foreground font-medium max-w-2xl mx-auto">
+          <p className="text-base md:text-lg text-gray-600 dark:text-muted-foreground font-medium max-w-2xl mx-auto transition-colors">
             Find elite gyms and clubs in Morocco&apos;s major hubs.
           </p>
         </div>
@@ -31,13 +31,13 @@ export default function PopularCitiesSection({ cities }: PopularCitiesSectionPro
             <Link
               href={`/search?city=${encodeURIComponent(city.name)}`}
               key={city.name}
-              className="group relative aspect-[5/4] rounded-md overflow-hidden shadow-md border border-neutral-800 hover:border-blood-red transition-all duration-300"
+              className="group relative aspect-[5/4] rounded-md overflow-hidden shadow-md border border-gray-300 dark:border-neutral-800 hover:border-yellow-500 dark:hover:border-blood-red transition-all duration-300"
             >
               <Image
                 src={city.image}
                 alt={city.name}
                 fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out opacity-70 group-hover:opacity-90"
+                className="object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out opacity-80 dark:opacity-70 group-hover:opacity-100 dark:group-hover:opacity-90"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
               <div className="absolute inset-0 flex items-center justify-center p-4">

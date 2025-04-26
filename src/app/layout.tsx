@@ -5,6 +5,7 @@ import ClientSideHeader from "@/components/ui/ClientSideHeader";
 import Footer from "@/components/Footer";
 import Providers from "./providers";
 import { Suspense } from 'react';
+import { ThemeProvider } from '@/context/ThemeContext';
 
 // Font configurations
 const bebasNeue = Bebas_Neue({
@@ -34,18 +35,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${bebasNeue.variable} ${inter.variable}`}>
-      <body className="min-h-screen bg-gray-50 font-inter text-gray-700 antialiased">
+      <body>
         <Providers>
-          <div className="flex flex-col min-h-screen">
-            {/* Consider a more styled Suspense fallback later if needed */}
-            <Suspense fallback={<div className="h-16 bg-white border-b border-gray-200"></div>}>
-              <ClientSideHeader />
-            </Suspense>
-            <main className="flex-grow">
-              {children}
-            </main>
-            <Footer />
-          </div>
+          <ThemeProvider>
+            <div className="flex flex-col min-h-screen bg-neutral-50 text-gray-700 dark:bg-gray-950 dark:text-neutral-200 transition-colors duration-200">
+              <Suspense fallback={<div className="h-16 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700"></div>}>
+                <ClientSideHeader />
+              </Suspense>
+              <main className="flex-grow">
+                {children}
+              </main>
+              <Footer />
+            </div>
+          </ThemeProvider>
         </Providers>
       </body>
     </html>

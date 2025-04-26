@@ -4,6 +4,8 @@ export interface Gym {
   description: string;
   city: string;
   address: string;
+  slug?: string | null;
+  citySlug?: string | null;
   rating: number;
   priceRange: string;
   facilities: string[];

@@ -1,0 +1,10 @@
+# Allow all web crawlers access to the site
+User-agent: *
+Allow: /
+
+# Disallow specific paths if needed (e.g., admin, API routes)
+# Disallow: /admin/
+# Disallow: /api/
+
+# Sitemap location (update when sitemap is generated)
+Sitemap: /sitemap.xml 

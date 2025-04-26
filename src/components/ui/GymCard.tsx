@@ -114,7 +114,7 @@ export const GymCard: React.FC<GymCardProps> = ({ gym, onCardClick, featured = f
         </div>
         <div className="mt-5">
           <Link
-            href={`/gyms/${gym.id}`}
+            href={`/gyms/${gym.citySlug || 'unknown-city'}/${gym.slug || gym.id}`}
             className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm"
             onClick={(e) => e.stopPropagation()}
           >

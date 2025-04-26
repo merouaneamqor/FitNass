@@ -4,39 +4,16 @@ import Image from 'next/image';
 import { FiSearch, FiMapPin, FiStar, FiAlertCircle, FiChevronLeft, FiChevronRight, FiFilter, FiX, FiCpu } from 'react-icons/fi';
 import { GiSoccerField } from "react-icons/gi";
 import prisma from '@/lib/db';
+import { Prisma } from '@prisma/client'; // Import Prisma namespace
 import { motion } from 'framer-motion'; // Import motion
 // import { Prisma } from '@prisma/client';
+import { SearchResult, SearchParams, GymSearchResult, ClubSearchResult, TrainerSearchResult, ClassSearchResult } from '@/types/search';
+import { slugify } from '@/lib/utils'; // Import slugify
 
 // Import NEW client components
 import AnimatedBackground from '@/components/ui/AnimatedBackground';
 import SearchResultsGrid from '@/components/search/SearchResultsGrid';
 import PaginationControls from '@/components/search/PaginationControls';
-
-// --- TYPES ---
-// Combine Gym & Club for search results, ensuring necessary fields exist
-// Using Prisma generated types might be better if structures diverge significantly
-type SearchResult = {
-    id: string;
-    name: string;
-    description: string | null;
-    address: string | null;
-    city: string | null;
-    images: string[];
-    rating: number | null;
-    facilities: string[];
-    type: 'club' | 'gym';
-    _count?: {
-        reviews?: number;
-        sportFields?: number; // Specific to clubs
-    }
-};
-
-type SearchParams = {
-    q?: string;
-    city?: string;
-    type?: 'gym' | 'club' | string;
-    page?: string;
-};
 
 const ITEMS_PER_PAGE = 12; // Define how many results per page
 
@@ -44,92 +21,208 @@ const ITEMS_PER_PAGE = 12; // Define how many results per page
 async function fetchSearchResults(searchParams: SearchParams) {
     const query = searchParams.q || '';
     const city = searchParams.city || '';
-    const typeFilter = searchParams.type;
+    const typeFilter = searchParams.type || 'all'; // Default to 'all'
     const page = parseInt(searchParams.page || '1');
     const skip = (page - 1) * ITEMS_PER_PAGE;
 
     console.log(`Server Fetch: query="${query}", city="${city}", type="${typeFilter}", page=${page}`);
 
-    // --- Build Common Where Clause Components ---
-    const cityWhereClause = city ? { city: { contains: city, mode: 'insensitive' as const } } : {};
+    // --- Build Where Clauses --- 
     const queryWhereClause = query ? {
         OR: [
             { name: { contains: query, mode: 'insensitive' as const } },
-            { address: { contains: query, mode: 'insensitive' as const } },
-            // Add other relevant fields if desired
-            // { description: { contains: query, mode: 'insensitive' as const } },
+            { description: { contains: query, mode: 'insensitive' as const } },
+            { address: { contains: query, mode: 'insensitive' as const } }, // Gym/Club
+            { bio: { contains: query, mode: 'insensitive' as const } }, // Trainer
+            { specialties: { has: query } }, // Trainer
+            { type: { contains: query, mode: 'insensitive' as const } }, // Class type field
         ]
     } : {};
 
-    // Combine base filters
-    const baseWhere = { ...cityWhereClause, ...queryWhereClause }; // AND condition
+    const gymWhere: any = { status: 'ACTIVE' };
+    const clubWhere: any = { status: 'ACTIVE' };
+    const trainerWhere: any = { status: 'ACTIVE' };
+    const classWhere: any = { status: 'ACTIVE' };
 
-    // --- Prepare Promises for Gyms and Clubs ---
-    const fetchGyms = typeFilter !== 'club'; // Fetch gyms if type is 'all' or 'gym'
-    const fetchClubs = typeFilter !== 'gym'; // Fetch clubs if type is 'all' or 'club'
+    if (city) {
+        gymWhere.city = { contains: city, mode: 'insensitive' };
+        clubWhere.city = { contains: city, mode: 'insensitive' };
+        trainerWhere.city = { contains: city, mode: 'insensitive' };
+        // For classes, city must match the related Gym or Club
+        classWhere.OR = [
+            { gym: { city: { contains: city, mode: 'insensitive' }, status: 'ACTIVE' } },
+            { club: { city: { contains: city, mode: 'insensitive' }, status: 'ACTIVE' } }
+        ];
+    }
 
-    const gymWhere = { ...baseWhere, status: 'ACTIVE' as const }; // Assuming default status
-    const clubWhere = { ...baseWhere, status: 'ACTIVE' as const }; // Assuming default status
+    if (query) {
+        // Combine query with existing where clauses using AND
+        gymWhere.AND = [...(gymWhere.AND || []), queryWhereClause];
+        clubWhere.AND = [...(clubWhere.AND || []), queryWhereClause];
+        trainerWhere.AND = [...(trainerWhere.AND || []), queryWhereClause];
+        classWhere.AND = [...(classWhere.AND || []), queryWhereClause];
+    }
 
-    const gymQueryOptions = {
-        where: gymWhere,
-        select: {
-            id: true, name: true, description: true, address: true, city: true,
-            images: true, rating: true, facilities: true,
-             _count: { select: { reviews: true } }
-        },
-        skip: fetchGyms ? skip : 0, // Apply pagination only if fetching this type specifically or 'all'
-        take: fetchGyms ? ITEMS_PER_PAGE : 0, // Fetch 0 if not needed
-        orderBy: { name: 'asc' as const }
-    };
+    // --- Prepare Promises & Selects --- 
+    const fetchGyms = typeFilter === 'all' || typeFilter === 'gym';
+    const fetchClubs = typeFilter === 'all' || typeFilter === 'club';
+    const fetchTrainers = typeFilter === 'all' || typeFilter === 'trainer';
+    const fetchClasses = typeFilter === 'all' || typeFilter === 'class';
 
-    const clubQueryOptions = {
-        where: clubWhere,
-        select: {
-            id: true, name: true, description: true, address: true, city: true,
-            images: true, rating: true, facilities: true,
-            _count: { select: { reviews: true, sportFields: true } }
-        },
-        skip: fetchClubs ? skip : 0,
-        take: fetchClubs ? ITEMS_PER_PAGE : 0,
-        orderBy: { name: 'asc' as const }
-    };
+    // --- Pagination Logic --- 
+    const applyPagination = typeFilter !== 'all';
+    const currentSkip = applyPagination ? skip : 0;
+    const currentTake = applyPagination ? ITEMS_PER_PAGE : undefined; // Fetch all for 'all' type initially
 
     try {
-        // Fetch data and counts concurrently
-        const [gyms, clubs, totalGyms, totalClubs] = await Promise.all([
-            fetchGyms ? prisma.gym.findMany(gymQueryOptions) : Promise.resolve([]),
-            fetchClubs ? prisma.club.findMany(clubQueryOptions) : Promise.resolve([]),
-            fetchGyms ? prisma.gym.count({ where: gymWhere }) : Promise.resolve(0),
-            fetchClubs ? prisma.club.count({ where: clubWhere }) : Promise.resolve(0)
+        // Fetch data promises with inline select clauses
+        const gymPromise = fetchGyms ? prisma.gym.findMany({
+            where: gymWhere,
+            select: { id: true, name: true, description: true, address: true, city: true, images: true, rating: true, facilities: true, priceRange: true, slug: true, citySlug: true, _count: { select: { reviews: true } } }, // Inline Select
+            skip: currentSkip, take: currentTake, orderBy: { rating: 'desc' }
+        }) : Promise.resolve([]);
+        
+        const clubPromise = fetchClubs ? prisma.club.findMany({
+            where: clubWhere,
+            select: { id: true, name: true, description: true, address: true, city: true, images: true, rating: true, facilities: true, _count: { select: { reviews: true, sportFields: true } } }, // Inline Select
+            skip: currentSkip, take: currentTake, orderBy: { rating: 'desc' }
+        }) : Promise.resolve([]);
+        
+        const trainerPromise = fetchTrainers ? prisma.trainer.findMany({
+            where: trainerWhere,
+            select: { id: true, name: true, bio: true, specialties: true, city: true, images: true, rating: true, hourlyRate: true }, // Inline Select
+            skip: currentSkip, take: currentTake, orderBy: { rating: 'desc' }
+        }) : Promise.resolve([]);
+        
+        const classPromise = fetchClasses ? prisma.fitnessClass.findMany({
+            where: classWhere,
+            select: { id: true, name: true, description: true, type: true, images: true, startTime: true, duration: true, price: true, currency: true, gym: { select: { id: true, name: true, city: true, address: true } }, club: { select: { id: true, name: true, city: true, address: true } } }, // Inline Select
+            skip: currentSkip, take: currentTake, orderBy: { startTime: 'asc' }
+        }) : Promise.resolve([]);
+        
+        // Fetch count promises
+        const totalGymsPromise = fetchGyms ? prisma.gym.count({ where: gymWhere }) : Promise.resolve(0);
+        const totalClubsPromise = fetchClubs ? prisma.club.count({ where: clubWhere }) : Promise.resolve(0);
+        const totalTrainersPromise = fetchTrainers ? prisma.trainer.count({ where: trainerWhere }) : Promise.resolve(0);
+        const totalClassesPromise = fetchClasses ? prisma.fitnessClass.count({ where: classWhere }) : Promise.resolve(0);
+
+        // Execute all promises
+        const [gyms, clubs, trainers, classes, totalGyms, totalClubs, totalTrainers, totalClasses] = await Promise.all([
+            gymPromise, clubPromise, trainerPromise, classPromise,
+            totalGymsPromise, totalClubsPromise, totalTrainersPromise, totalClassesPromise
         ]);
 
-        // Combine results and add type
+        // --- Map Results --- 
         const combinedResults: SearchResult[] = [
-            ...gyms.map(gym => ({ ...gym, type: 'gym' as const })),
-            ...clubs.map(club => ({ ...club, type: 'club' as const }))
+            ...gyms.map((gym): GymSearchResult => {
+                const citySlug = gym.citySlug || slugify(gym.city);
+                const gymSlug = gym.slug;
+                const compositeSlug = `${citySlug}-${gymSlug || slugify(gym.name)}`; 
+                return {
+                    id: gym.id, 
+                    name: gym.name, 
+                    description: gym.description, 
+                    address: gym.address, 
+                    city: gym.city, 
+                    images: gym.images as string[], 
+                    rating: gym.rating as number | null, 
+                    facilities: (gym.facilities as string[] | undefined) ?? [], 
+                    type: 'gym', 
+                    priceRange: gym.priceRange, 
+                    _count: { reviews: gym._count?.reviews },
+                    slug: gymSlug, 
+                    citySlug: citySlug, 
+                    compositeSlug: compositeSlug 
+                };
+            }),
+            ...clubs.map((club): ClubSearchResult => {
+                const citySlug = slugify(club.city); // Assuming Club doesn't have citySlug yet
+                const compositeSlug = `${citySlug}-${slugify(club.name)}`;
+                return {
+                    id: club.id, 
+                    name: club.name, 
+                    description: club.description, 
+                    address: club.address, 
+                    city: club.city, 
+                    images: club.images as string[], 
+                    rating: club.rating as number | null, 
+                    facilities: (club.facilities as string[] | undefined) ?? [],
+                    type: 'club', 
+                    _count: { reviews: club._count?.reviews, sportFields: club._count?.sportFields },
+                    citySlug: citySlug,
+                    compositeSlug: compositeSlug
+                };
+            }),
+             ...trainers.map((trainer): TrainerSearchResult => {
+                 const citySlug = slugify(trainer.city || '');
+                 const compositeSlug = `${citySlug}-${slugify(trainer.name)}`;
+                 return {
+                    id: trainer.id, 
+                    name: trainer.name, 
+                    description: trainer.bio ?? null,
+                    address: null, 
+                    city: trainer.city, 
+                    images: trainer.images as string[], 
+                    rating: trainer.rating as number | null, 
+                    type: 'trainer', 
+                    specialties: trainer.specialties as string[], 
+                    hourlyRate: trainer.hourlyRate as number | null, 
+                    citySlug: citySlug, 
+                    compositeSlug: compositeSlug 
+                 };
+             }),
+             ...classes.map((cls): ClassSearchResult => {
+                 const citySlug = slugify(cls.gym?.city || cls.club?.city || '');
+                 const compositeSlug = `${citySlug}-${slugify(cls.name)}`;
+                 return {
+                    id: cls.id, 
+                    name: cls.name, 
+                    description: cls.description, 
+                    address: cls.gym?.address || cls.club?.address || null, 
+                    city: cls.gym?.city || cls.club?.city || null, 
+                    images: cls.images as string[], 
+                    rating: null, 
+                    type: 'class', 
+                    classType: cls.type, 
+                    startTime: cls.startTime as Date | null, 
+                    duration: cls.duration as number | null, 
+                    price: cls.price as number | null, 
+                    locationName: cls.gym?.name || cls.club?.name || undefined, 
+                    locationCity: cls.gym?.city || cls.club?.city || undefined, 
+                    gymId: cls.gym?.id || null, 
+                    clubId: cls.club?.id || null, 
+                    citySlug: citySlug, 
+                    compositeSlug: compositeSlug 
+                 };
+             })
         ];
 
-        // Sort combined results if needed (e.g., by name) - Prisma handles order within type
-        // combinedResults.sort((a, b) => a.name.localeCompare(b.name));
-
-        // Determine total count based on filter
+        // --- Sort & Paginate for 'all' --- 
+        let finalPaginatedResults: SearchResult[] = [];
         let totalResults = 0;
-        if (typeFilter === 'gym') {
-            totalResults = totalGyms;
-        } else if (typeFilter === 'club') {
-            totalResults = totalClubs;
-        } else { // 'all' or undefined
-            // This count isn't perfect for pagination across types, simple sum for now
-            totalResults = totalGyms + totalClubs;
+
+        if (typeFilter === 'gym') totalResults = totalGyms;
+        else if (typeFilter === 'club') totalResults = totalClubs;
+        else if (typeFilter === 'trainer') totalResults = totalTrainers;
+        else if (typeFilter === 'class') totalResults = totalClasses;
+        else totalResults = totalGyms + totalClubs + totalTrainers + totalClasses;
+        
+        if (typeFilter === 'all') {
+            // Optional: Sort combined results before slicing for pagination
+            // combinedResults.sort((a, b) => a.name.localeCompare(b.name)); 
+            const startIndex = skip;
+            const endIndex = startIndex + ITEMS_PER_PAGE;
+            finalPaginatedResults = combinedResults.slice(startIndex, endIndex);
+        } else {
+             finalPaginatedResults = combinedResults; // Results were already paginated by Prisma
         }
 
         const totalPages = Math.ceil(totalResults / ITEMS_PER_PAGE);
 
-        console.log(`Server Fetch: Found ${combinedResults.length} results for page ${page}. Total matching: ${totalResults}`);
+        console.log(`Server Fetch: Returning ${finalPaginatedResults.length} results for page ${page}. Total matching: ${totalResults}`);
 
         return {
-            results: combinedResults,
+            results: finalPaginatedResults,
             currentPage: page,
             totalPages: totalPages,
             totalResults: totalResults,
@@ -177,30 +270,36 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
     const { results, currentPage, totalPages, totalResults, error } = await fetchSearchResults(searchParams);
     const currentQuery = searchParams.q || '';
     const currentCity = searchParams.city || '';
-    const currentType = searchParams.type || null;
+    const currentType = searchParams.type || 'all'; // Default to 'all'
 
     const createFilterURL = (param: keyof SearchParams, value: string | null) => {
         const params = new URLSearchParams();
         Object.entries(searchParams).forEach(([key, val]) => {
+             // Use current values, but remove page and the param being changed
              if (val && key !== 'page' && key !== param) { 
                  params.set(key, String(val));
              }
         });
-        if (value) { 
+        // Add the new/updated param if it has a value
+        if (value && value !== 'all') { // Don't add type=all explicitly
             params.set(param, value);
         } 
-        return `/search?${params.toString()}`;
+        // If setting type to 'all', ensure type param is removed
+        if (param === 'type' && value === 'all') {
+           params.delete('type');
+        }
+        const queryString = params.toString();
+        return queryString ? `/search?${queryString}` : '/search';
     };
 
     return (
         <div className="min-h-screen relative overflow-hidden">
-             {/* Use AnimatedBackground client component */}
              <AnimatedBackground />
-
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-                <div className="mb-8 md:mb-12">
+                 {/* ... Header ... */}
+                 <div className="mb-8 md:mb-12">
                     <h1 className="text-3xl md:text-4xl font-bebas uppercase tracking-wider text-gray-900">
-                        Search Venues
+                        Search Results
                     </h1>
                     <div className="flex items-center text-gray-600 mt-2 text-sm">
                          <FiCpu className="h-4 w-4 mr-1.5 text-yellow-600"/>
@@ -212,75 +311,66 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     <aside className="md:col-span-1">
-                        {/* Filter sidebar content remains the same - it doesn't use motion */}
                         <div className="bg-white/80 backdrop-blur-lg p-5 rounded-xl border border-gray-200/60 shadow-lg shadow-black/5 sticky top-20">
-                             <h2 className="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200/80 pb-2 flex items-center">
+                             {/* ... Filters Header ... */}
+                              <h2 className="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200/80 pb-2 flex items-center">
                                  <FiFilter className="h-4 w-4 mr-2"/> Filters
                              </h2>
-                             {/* Read-only Keyword Filter */}
+                             {/* ... Keyword & City inputs (readOnly) ... */}
                              <div className="mb-5">
                                  <label htmlFor="search-term" className="block text-sm font-medium text-gray-700 mb-1.5">Keywords</label>
-                                 <input 
-                                     type="text" id="search-term" readOnly value={currentQuery} 
-                                     placeholder="Any keywords..."
-                                     className="w-full px-3 py-2 rounded-lg bg-gray-100/80 text-sm text-gray-600 border border-gray-200/70 cursor-not-allowed"
-                                 />
+                                 <input type="text" id="search-term" readOnly value={currentQuery} placeholder="Any keywords..." className="w-full px-3 py-2 rounded-lg bg-gray-100/80 text-sm text-gray-600 border border-gray-200/70 cursor-not-allowed"/>
                              </div>
-                             {/* Read-only City Filter */}
                              <div className="mb-5">
                                  <label htmlFor="city-term" className="block text-sm font-medium text-gray-700 mb-1.5">City</label>
-                                 <input 
-                                     type="text" id="city-term" readOnly value={currentCity} 
-                                     placeholder="Any city"
-                                     className="w-full px-3 py-2 rounded-lg bg-gray-100/80 text-sm text-gray-600 border border-gray-200/70 cursor-not-allowed"
-                                 />
+                                 <input type="text" id="city-term" readOnly value={currentCity} placeholder="Any city" className="w-full px-3 py-2 rounded-lg bg-gray-100/80 text-sm text-gray-600 border border-gray-200/70 cursor-not-allowed"/>
                              </div>
+                             
                              {/* Type Filter Links */}
                              <div className="mb-5">
-                                 <label className="block text-sm font-medium text-gray-700 mb-2">Venue Type</label>
+                                 <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
                                  <div className="flex flex-col space-y-1.5">
-                                     {[ { label: 'All Types', value: null }, { label: 'Gyms Only', value: 'gym' }, { label: 'Clubs Only', value: 'club' } ].map(type => (
+                                     {[ 
+                                         { label: 'All Types', value: 'all' },
+                                         { label: 'Gyms', value: 'gym' }, 
+                                         { label: 'Clubs', value: 'club' },
+                                         { label: 'Trainers', value: 'trainer' },
+                                         { label: 'Classes', value: 'class' }
+                                     ].map(type => (
                                          <Link 
-                                             key={type.label}
+                                             key={type.value}
                                              href={createFilterURL('type', type.value)}
                                              className={`flex items-center space-x-2 px-2.5 py-1.5 rounded-lg text-sm transition-colors duration-150 ${
                                                  currentType === type.value
                                                  ? 'bg-yellow-100/90 text-yellow-900 font-semibold ring-1 ring-yellow-300/60'
                                                  : 'text-gray-600 hover:bg-gray-100/80'
                                              }`}
+                                             scroll={false} // Prevent scroll jump on filter change
                                          >
-                                             <span className={`w-3 h-3 rounded-full border-2 flex-shrink-0 ${ currentType === type.value ? 'bg-yellow-500 border-yellow-600' : 'border-gray-300 bg-white'}`}></span>
-                                             <span>{type.label}</span>
+                                             {type.label}
                                          </Link>
                                      ))}
                                  </div>
                              </div>
-                             <Link href="/search" className="mt-5 text-xs text-gray-500 hover:text-yellow-600 text-center block w-full">
-                                 Reset Filters
-                             </Link>
-                         </div>
-                     </aside>
+                             {/* Add other filters here later */}
+                        </div>
+                    </aside>
 
                     <main className="md:col-span-3">
-                        {error ? (
-                            <ErrorMessage message={error} />
-                        ) : results.length === 0 ? (
-                            <NoResultsMessage />
-                        ) : (
-                            // Use SearchResultsGrid client component
-                            <SearchResultsGrid results={results} />
-                        )}
-
+                        {error && <ErrorMessage message={error} />}
+                        {!error && results.length === 0 && <NoResultsMessage />}
                         {!error && results.length > 0 && (
-                             // Use PaginationControls client component
-                             <PaginationControls 
-                                currentPage={currentPage} 
-                                totalPages={totalPages} 
-                                searchParams={searchParams} 
-                            />
+                            <>
+                                <SearchResultsGrid results={results} />
+                                <PaginationControls 
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    searchParams={searchParams} 
+                                />
+                            </>
                         )}
                     </main>
-                </div> 
+                </div>
             </div>
         </div>
     );
