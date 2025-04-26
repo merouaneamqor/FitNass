@@ -24,9 +24,15 @@ export const fetchCityOverviewData = async (city: string): Promise<CityOverviewD
         city: { equals: city, mode: 'insensitive' },
         status: 'ACTIVE',
       },
-      select: { // Select fields needed for GymCard
+      select: { // Select fields needed for Gym type + GymCard
         id: true, name: true, description: true, address: true, city: true,
-        images: true, rating: true, facilities: true, _count: { select: { reviews: true } }
+        images: true, rating: true, facilities: true,
+        priceRange: true, // <-- Select priceRange
+        latitude: true,   // <-- Select latitude
+        longitude: true,  // <-- Select longitude
+        slug: true,       // <-- Select slug (optional but good practice)
+        citySlug: true,   // <-- Select citySlug (optional but good practice)
+        _count: { select: { reviews: true } }
       },
       orderBy: { rating: 'desc' },
       take: MAX_FEATURED_ITEMS,
@@ -38,9 +44,14 @@ export const fetchCityOverviewData = async (city: string): Promise<CityOverviewD
         city: { equals: city, mode: 'insensitive' },
         status: 'ACTIVE',
       },
-      select: { // Select fields needed for TrainerCard
+      select: { // Select fields needed for Trainer type + TrainerCard
         id: true, name: true, bio: true, specialties: true, certifications: true,
         city: true, rating: true, images: true, hourlyRate: true,
+        phone: true,      // <-- Select phone
+        email: true,      // <-- Select email
+        website: true,    // <-- Select website
+        status: true,     // <-- Select status (if exists in model)
+        userId: true      // <-- Select userId (if exists in model)
       },
       orderBy: { rating: 'desc' },
       take: MAX_FEATURED_ITEMS,
@@ -72,19 +83,19 @@ export const fetchCityOverviewData = async (city: string): Promise<CityOverviewD
     const availableClassTypes = distinctClassTypesResult.map(c => c.type.toLowerCase()).sort();
 
     // Map results to ensure correct types (similar to other actions)
-    const mappedGyms = featuredGyms.map((gym): Gym => ({ 
-        ...gym, 
-        images: gym.images as string[], 
-        facilities: gym.facilities as string[], 
-        rating: gym.rating as number | null,
+    const mappedGyms = featuredGyms.map((gym): Gym => ({
+      ...gym, // Spread all selected fields
+      images: gym.images as string[],
+      facilities: gym.facilities as string[],
+      rating: (gym.rating as number | null) ?? 0,
     }));
-    const mappedTrainers = featuredTrainers.map((trainer): Trainer => ({ 
-        ...trainer, 
-        rating: trainer.rating as number | null,
-        hourlyRate: trainer.hourlyRate as number | null,
-        images: trainer.images as string[],
-        specialties: trainer.specialties as string[],
-        certifications: trainer.certifications as string[],
+    const mappedTrainers = featuredTrainers.map((trainer): Trainer => ({
+      ...trainer, // Spread all selected fields
+      rating: trainer.rating as number | null,
+      hourlyRate: trainer.hourlyRate as number | null,
+      images: trainer.images as string[],
+      specialties: trainer.specialties as string[],
+      certifications: trainer.certifications as string[],
     }));
 
     return {
