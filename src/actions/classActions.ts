@@ -56,17 +56,30 @@ export const fetchClassesByLocation = async ({
         price: true,
         currency: true,
         images: true,
+        capacity: true, // Include capacity if needed for ClassCard or filtering
         // Include simplified Gym/Club/Trainer info if needed for cards
         gym: {
-          select: { id: true, name: true, city: true }
+          select: { // Select all fields needed for the Gym type
+            id: true, name: true, description: true, city: true, address: true,
+            slug: true, citySlug: true, rating: true, priceRange: true, 
+            facilities: true, images: true, latitude: true, longitude: true, 
+            _count: { select: { reviews: true } }
+          }
         },
         club: {
-          select: { id: true, name: true, city: true }
+          select: { // Select all fields needed for the Club type
+            id: true, name: true, description: true, address: true, city: true, 
+            state: true, zipCode: true, latitude: true, longitude: true, phone: true,
+            website: true, email: true, rating: true, images: true, facilities: true,
+            openingHours: true, status: true, viewCount: true, createdAt: true, updatedAt: true,
+            _count: { select: { reviews: true, sportFields: true } }
+          }
         },
         trainer: {
-          select: { id: true, name: true }
+          // Select fields needed for the Trainer type (adjust if Trainer type requires more)
+          select: { id: true, name: true } 
         },
-        // Add capacity, schedule later if needed
+        // Add schedule later if needed
       },
       orderBy: {
         // Order by start time or name, depending on desired sort
@@ -84,9 +97,21 @@ export const fetchClassesByLocation = async ({
       endTime: cls.endTime as Date | null,
       duration: cls.duration as number,
       images: cls.images as string[],
-      gym: cls.gym ? { ...cls.gym } : null, // Ensure nested types match
-      club: cls.club ? { ...cls.club } : null,
+      // Type assertions might be needed if Prisma returns slightly different types (e.g., Decimal)
+      gym: cls.gym ? { 
+          ...cls.gym, 
+          rating: cls.gym.rating as number, // Assert number type if Prisma returns Decimal
+          latitude: cls.gym.latitude as number, // Assert number type
+          longitude: cls.gym.longitude as number // Assert number type
+      } : null,
+      club: cls.club ? { 
+          ...cls.club,
+          rating: cls.club.rating as number | null, // Assert number | null type
+          latitude: cls.club.latitude as number | null, // Assert number | null type
+          longitude: cls.club.longitude as number | null // Assert number | null type
+      } : null,
       trainer: cls.trainer ? { ...cls.trainer } : null,
+      capacity: cls.capacity as number | null, // Include capacity mapping
     }));
 
   } catch (error: unknown) {
