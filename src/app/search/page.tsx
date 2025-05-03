@@ -266,7 +266,6 @@ function NoResultsMessage() {
 
 // --- SEARCH PAGE COMPONENT (Server Component) ---
 export default async function SearchPage({ searchParams }: { searchParams: SearchParams }) {
-
     const { results, currentPage, totalPages, totalResults, error } = await fetchSearchResults(searchParams);
     const currentQuery = searchParams.q || '';
     const currentCity = searchParams.city || '';
@@ -296,13 +295,13 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
         <div className="min-h-screen relative overflow-hidden">
              <AnimatedBackground />
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-                 {/* ... Header ... */}
+                 {/* Header without any SearchBar, now handled by ClientSideHeader */}
                  <div className="mb-8 md:mb-12">
-                    <h1 className="text-3xl md:text-4xl font-bebas uppercase tracking-wider text-gray-900">
+                    <h1 className="text-3xl md:text-4xl font-bebas uppercase tracking-wider text-gray-900 dark:text-neutral-100">
                         Search Results
                     </h1>
-                    <div className="flex items-center text-gray-600 mt-2 text-sm">
-                         <FiCpu className="h-4 w-4 mr-1.5 text-yellow-600"/>
+                    <div className="flex items-center text-gray-600 dark:text-gray-400 mt-2 text-sm">
+                         <FiCpu className="h-4 w-4 mr-1.5 text-yellow-600 dark:text-red-500"/>
                         <span>
                              {totalResults > 0 ? `AI found ${totalResults} potential matches.` : 'Discover gyms or clubs near you.'}
                         </span>

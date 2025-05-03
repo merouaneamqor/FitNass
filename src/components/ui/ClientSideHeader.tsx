@@ -11,6 +11,7 @@ import {
   FiShield, FiSettings, FiGrid, FiPlusCircle
 } from 'react-icons/fi';
 import ThemeToggleButton from './ThemeToggleButton'; // Import the button
+import NavbarSearchBar from './NavbarSearchBar'; // Import NavbarSearchBar
 
 // Helper function to convert auth role to our app roles
 const mapRoleToUserRole = (role: string | undefined): 'user' | 'admin' | 'owner' | null => {
@@ -32,6 +33,13 @@ export default function ClientSideHeader() {
 
   const isLoggedIn = status === 'authenticated';
   const userRole = mapRoleToUserRole(session?.user?.role);
+  const isSearchPage = pathname === '/search';
+  
+  // Get current search parameters for NavbarSearchBar
+  const currentSearchQuery = searchParams.get('q') || '';
+  const currentSport = searchParams.get('sport') || 'padel';
+  const currentDate = searchParams.get('date') || '';
+  const currentTime = searchParams.get('time') || '';
 
   const handleLogout = async () => {
     await signOut({ redirect: false });
@@ -52,7 +60,7 @@ export default function ClientSideHeader() {
 
   return (
     // More aggressive header with stronger border and shadow in dark mode
-    <header className="bg-white/95 border-b border-gray-200/80 dark:bg-gray-950/95 dark:border-red-900/60 dark:border-b-2 sticky top-0 z-50 backdrop-blur-sm shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:shadow-[0_2px_8px_rgba(200,0,0,0.15)]">
+    <header data-header="client-side-header" className="bg-white/95 border-b border-gray-200/80 dark:bg-gray-950/95 dark:border-red-900/60 dark:border-b-2 sticky top-0 z-50 backdrop-blur-sm shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:shadow-[0_2px_8px_rgba(200,0,0,0.15)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
@@ -88,8 +96,18 @@ export default function ClientSideHeader() {
             </nav>
           </div>
 
-          {/* Right side: Auth Buttons, User Menu, Theme Toggle */}
+          {/* Right side: Search Bar (on search page), Auth Buttons, User Menu, Theme Toggle */}
           <div className="hidden md:flex items-center space-x-3">
+            {/* Add NavbarSearchBar when on search page */}
+            {isSearchPage && (
+              <NavbarSearchBar
+                initialQuery={currentSearchQuery}
+                initialSport={currentSport}
+                initialDate={currentDate}
+                initialTime={currentTime}
+              />
+            )}
+            
             {/* Add Theme Toggle Button before auth buttons/menu */}
             <ThemeToggleButton /> 
 
@@ -157,6 +175,19 @@ export default function ClientSideHeader() {
       {/* More aggressive Mobile Menu Panel in dark mode */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-white/95 dark:bg-neutral-900/98 backdrop-blur-sm border-t border-gray-200/80 dark:border-red-900/30 shadow-[0_8px_16px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_20px_rgba(180,0,0,0.18)] absolute top-full left-0 right-0 z-20">
+          {/* Add NavbarSearchBar to mobile menu when on search page */}
+          {isSearchPage && (
+            <div className="px-4 pt-4 pb-2">
+              <NavbarSearchBar
+                initialQuery={currentSearchQuery}
+                initialSport={currentSport}
+                initialDate={currentDate}
+                initialTime={currentTime}
+                className="flex-wrap"
+              />
+            </div>
+          )}
+          
           <div className="px-3 pt-3 pb-4 space-y-1.5 sm:px-4">
             {/* Mobile Nav links with red accents in dark mode */}
             <Link href="/" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2.5 rounded-md text-base font-medium text-gray-700 dark:text-neutral-200 hover:bg-gray-50 dark:hover:bg-red-950/30 hover:text-yellow-600 dark:hover:text-red-400 transition-all duration-200">Home</Link>

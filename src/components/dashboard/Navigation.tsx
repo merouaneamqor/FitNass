@@ -47,21 +47,21 @@ export const DashboardSidebar = ({ isOpen, onClose }: SidebarProps) => {
       
       {/* Sidebar */}
       <div 
-        className={`fixed inset-y-0 left-0 z-30 w-64 bg-white transform shadow-lg transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto lg:z-auto ${
+        className={`fixed inset-y-0 left-0 z-30 w-64 bg-white dark:bg-neutral-900 border-r border-gray-200 dark:border-red-900/30 transform shadow-lg transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto lg:z-auto ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="h-full flex flex-col">
           {/* Header */}
-          <div className="px-4 py-5 flex items-center justify-between border-b border-gray-200">
+          <div className="px-4 py-5 flex items-center justify-between border-b border-gray-200 dark:border-neutral-800/80">
             <div className="flex items-center space-x-2">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-400 dark:from-red-600 dark:to-red-500 flex items-center justify-center">
                 <FiBarChart2 className="text-xl text-white" />
               </div>
-              <h1 className="text-xl font-bold text-gray-900">FitNASS</h1>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-red-50">FitNASS</h1>
             </div>
             <button 
-              className="text-gray-500 hover:text-gray-700 lg:hidden"
+              className="text-gray-500 dark:text-red-400 hover:text-gray-700 dark:hover:text-red-300 lg:hidden"
               onClick={onClose}
             >
               <FiX />
@@ -77,8 +77,8 @@ export const DashboardSidebar = ({ isOpen, onClose }: SidebarProps) => {
                     href={item.path}
                     className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
                       isActive(item.path)
-                        ? 'bg-blue-50 text-blue-700 font-medium'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        ? 'bg-yellow-50 dark:bg-red-950/30 text-yellow-600 dark:text-red-500 font-medium'
+                        : 'text-gray-700 dark:text-neutral-200 hover:bg-gray-50 dark:hover:bg-red-950/20 hover:text-yellow-600 dark:hover:text-red-400'
                     }`}
                     onClick={onClose}
                   >
@@ -91,10 +91,10 @@ export const DashboardSidebar = ({ isOpen, onClose }: SidebarProps) => {
           </nav>
           
           {/* Footer */}
-          <div className="p-4 border-t border-gray-200">
+          <div className="p-4 border-t border-gray-200 dark:border-neutral-800/80">
             <Link 
               href="/"
-              className="flex items-center space-x-3 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100 transition-colors"
+              className="flex items-center space-x-3 px-3 py-2 rounded-md text-gray-700 dark:text-neutral-200 hover:bg-gray-50 dark:hover:bg-red-950/20 hover:text-red-600 dark:hover:text-red-400 transition-colors"
             >
               <FiLogOut className="text-lg" />
               <span>Log Out</span>
@@ -108,19 +108,19 @@ export const DashboardSidebar = ({ isOpen, onClose }: SidebarProps) => {
 
 export const TopBar = ({ onMenuClick }: { onMenuClick: () => void }) => {
   return (
-    <header className="sticky top-0 z-10 bg-white border-b border-gray-200">
+    <header className="sticky top-0 z-10 bg-white dark:bg-gray-950/95 border-b border-gray-200/80 dark:border-red-900/60 shadow-sm dark:shadow-[0_2px_8px_rgba(200,0,0,0.15)]">
       <div className="flex items-center justify-between px-4 py-3 lg:hidden">
         <button 
-          className="text-gray-500 hover:text-gray-700 focus:outline-none"
+          className="text-gray-500 dark:text-red-400 hover:text-gray-700 dark:hover:text-red-300 focus:outline-none"
           onClick={onMenuClick}
         >
           <FiMenu className="h-6 w-6" />
         </button>
         <div className="flex items-center space-x-2">
-          <div className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
+          <div className="h-8 w-8 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-400 dark:from-red-600 dark:to-red-500 flex items-center justify-center">
             <FiBarChart2 className="text-lg text-white" />
           </div>
-          <h1 className="text-lg font-bold text-gray-900">FitNASS</h1>
+          <h1 className="text-lg font-bold text-gray-900 dark:text-red-50">FitNASS</h1>
         </div>
         <div className="w-6"></div> {/* For balance */}
       </div>
