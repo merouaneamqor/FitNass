@@ -10,7 +10,7 @@ import {
   FiChevronDown, FiLogOut,
   FiShield, FiSettings, FiGrid, FiPlusCircle
 } from 'react-icons/fi';
-import ThemeToggleButton from './ThemeToggleButton'; // Import the button
+import { ThemeToggleButton } from './ThemeToggleButton'; // Updated to named import
 import NavbarSearchBar from './NavbarSearchBar'; // Import NavbarSearchBar
 
 // Helper function to convert auth role to our app roles
