@@ -73,8 +73,6 @@ export default function ClientSideHeader() {
                 height={34} 
                 className="transition-transform duration-300 group-hover:scale-105 dark:drop-shadow-[0_0_8px_rgba(255,0,0,0.5)]" 
               />
-              {/* More aggressive text logo for dark mode */}
-              <span className="hidden sm:inline font-bebas text-2xl text-gray-900 dark:text-red-50 uppercase tracking-wider group-hover:text-yellow-600 dark:group-hover:text-red-400 transition-colors ml-2.5 dark:drop-shadow-[0_0_2px_rgba(255,0,0,0.3)]">FITNASS</span>
             </Link>
             {/* Desktop Navigation */}
             <nav className="hidden md:ml-8 md:flex md:space-x-7">

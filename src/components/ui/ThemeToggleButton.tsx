@@ -16,9 +16,9 @@ export function ThemeToggleButton() {
         onClick={toggleTheme}
         className={`p-2 rounded-full ${
           theme === 'dark' 
-            ? 'bg-neutral-800 text-yellow-400 hover:bg-neutral-700' 
-            : 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200'
-        } transition-colors shadow-md`}
+            ? 'bg-gray-800 text-white hover:bg-gray-700' 
+            : 'bg-gray-100 text-black hover:bg-gray-200'
+        } transition-colors shadow-sm`}
         aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
       >
         {theme === 'dark' ? <FiSun className="w-5 h-5" /> : <FiMoon className="w-5 h-5" />}
