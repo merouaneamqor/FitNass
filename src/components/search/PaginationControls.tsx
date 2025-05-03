@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-import { motion } from 'framer-motion';
 
 // Re-define or import the type - ensure consistency
 type SearchParams = {
@@ -42,34 +41,34 @@ export default function PaginationControls({ currentPage, totalPages, searchPara
     return (
         <nav className="mt-12 flex justify-center items-center space-x-1 sm:space-x-2">
             {currentPage > 1 && (
-                <motion.div whileHover={{ scale: 1.1 }}>
+                <div>
                     <Link href={createPageURL(currentPage - 1)} className="p-2 rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors block">
                         <FiChevronLeft className="h-5 w-5" />
                     </Link>
-                </motion.div>
+                </div>
             )}
 
             {pageNumbers.map(page => (
-                 <motion.div key={page} whileHover={{ scale: 1.05 }}>
+                <div key={page}>
                     <Link
                         href={createPageURL(page)}
                         className={`px-3 sm:px-4 py-2 rounded-md text-sm transition-all duration-150 block ${
                             currentPage === page
-                                ? 'bg-yellow-400 text-black font-semibold shadow-sm shadow-yellow-500/30 scale-105' // Slightly emphasize current page
+                                ? 'bg-yellow-400 text-black font-semibold shadow-sm shadow-yellow-500/30' 
                                 : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
                         }`}
                     >
                         {page}
                     </Link>
-                 </motion.div>
+                </div>
             ))}
 
             {currentPage < totalPages && (
-                 <motion.div whileHover={{ scale: 1.1 }}>
+                <div>
                     <Link href={createPageURL(currentPage + 1)} className="p-2 rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors block">
                         <FiChevronRight className="h-5 w-5" />
                     </Link>
-                 </motion.div>
+                </div>
             )}
         </nav>
     );

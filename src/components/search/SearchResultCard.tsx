@@ -4,18 +4,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { FiStar, FiMapPin, FiDollarSign, FiAward, FiBriefcase, FiTag, FiClock, FiUsers, FiCalendar } from 'react-icons/fi';
 import { GiSoccerField } from "react-icons/gi";
-import { motion } from 'framer-motion';
 import { Routes } from '@/lib/routes';
 // Import the SearchResult union type and specific types
 import { SearchResult, GymSearchResult, ClubSearchResult, TrainerSearchResult, ClassSearchResult } from '@/types/search';
 import { formatDateTime } from '@/lib/utils'; // Assuming formatDateTime exists or we add it
-
-// Define animation variant here
-const fadeInUp = {
-  initial: { opacity: 0, y: 15 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -15 },
-};
 
 // --- Helper function to get detail URL based on type ---
 const getDetailUrl = (result: SearchResult): string => {
@@ -69,12 +61,7 @@ export default function SearchResultCard({ result }: { result: SearchResult }) {
 
     return (
         <Link href={detailUrl} className="block group">
-            <motion.div 
-                className="bg-white rounded-xl overflow-hidden flex flex-col shadow-md shadow-black/5 transition-shadow duration-300 h-full"
-                variants={fadeInUp} 
-                whileHover={{ scale: 1.02, y: -3, shadow: '0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.07)' }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
-            >
+            <div className="bg-white rounded-xl overflow-hidden flex flex-col shadow-md shadow-black/5 transition-shadow duration-300 h-full hover:shadow-lg">
                 {/* Image Section */}
                 <div className="relative h-48 sm:h-52 overflow-hidden">
                     <Image
@@ -188,7 +175,7 @@ export default function SearchResultCard({ result }: { result: SearchResult }) {
                         </div>
                     </div>
                 </div>
-            </motion.div>
+            </div>
         </Link>
     );
 } 
