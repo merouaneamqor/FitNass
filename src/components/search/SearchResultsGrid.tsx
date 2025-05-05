@@ -26,7 +26,7 @@ interface SearchResultsGridProps {
 // Search Results Grid Client Component
 export default function SearchResultsGrid({ results }: SearchResultsGridProps) {
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-5 sm:gap-6">
             {results.map(result => (
                 <SearchResultCard key={result.id} result={result} />
             ))}

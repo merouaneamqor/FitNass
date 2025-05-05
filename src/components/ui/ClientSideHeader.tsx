@@ -71,7 +71,7 @@ export default function ClientSideHeader() {
                 alt="Fitnass Logo" 
                 width={34} 
                 height={34} 
-                className="transition-transform duration-300 group-hover:scale-105 dark:drop-shadow-[0_0_8px_rgba(255,0,0,0.5)]" 
+                className="transition-transform duration-300 group-hover:scale-105 dark:drop-shadow-[0_0_8px_rgba(255,0,0,1)] dark:invert" 
               />
             </Link>
             {/* Desktop Navigation */}
