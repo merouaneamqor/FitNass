@@ -22,7 +22,7 @@ export async function generateMetadata(
   const country = decodeURIComponent(params.country);
   const title = `Personal Trainers in ${city}, ${country} | Fitnass`;
   const description = `Find certified personal trainers in ${city}, ${country}. Browse profiles, specialties, and ratings on Fitnass.`;
-  const canonicalUrl = Routes.locations.cityTrainers(params.country, params.city);
+  const canonicalUrl = Routes.city.trainers(params.city);
 
   return {
     title: title,
@@ -92,7 +92,7 @@ export default async function CityTrainersPage({ params }: CityTrainersPageProps
       }))
     };
   };
-  const jsonLdSchema = trainers.length > 0 ? generateTrainerSchema(trainers, `${process.env.NEXT_PUBLIC_BASE_URL || ''}${Routes.locations.cityTrainers(params.country, params.city)}`) : null;
+  const jsonLdSchema = trainers.length > 0 ? generateTrainerSchema(trainers, `${process.env.NEXT_PUBLIC_BASE_URL || ''}${Routes.city.trainers(params.city)}`) : null;
 
 
   return (

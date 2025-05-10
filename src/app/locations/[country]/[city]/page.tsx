@@ -23,7 +23,7 @@ export async function generateMetadata(
 
   const title = `Fitness in ${city}, ${country}: Gyms, Trainers, Classes | Fitnass`;
   const description = `Explore and find gyms, personal trainers, and fitness classes available in ${city}, ${country} on Fitnass. Your guide to local fitness options.`;
-  const canonicalUrl = Routes.locations.cityOverview(params.country, params.city);
+  const canonicalUrl = Routes.city.overview(params.city);
 
   return {
     title: title,
@@ -72,13 +72,13 @@ export default async function CityOverviewPage({ params }: CityOverviewPageProps
       <p className="text-lg text-gray-600 mb-6">Explore gyms, trainers, and classes available in {decodedCity}.</p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Link href={Routes.locations.cityGyms(country, city)} 
+        <Link href={Routes.city.gyms(city)} 
               className="block p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow border border-gray-200/60">
           <h2 className="text-xl font-semibold mb-2">Gyms</h2>
           <p className="text-gray-600">Find fitness centers and gyms.</p>
         </Link>
 
-        <Link href={Routes.locations.cityTrainers(country, city)}
+        <Link href={Routes.city.trainers(city)}
               className="block p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow border border-gray-200/60">
           <h2 className="text-xl font-semibold mb-2">Trainers</h2>
           <p className="text-gray-600">Discover personal trainers.</p>
@@ -89,7 +89,7 @@ export default async function CityOverviewPage({ params }: CityOverviewPageProps
             <ul className="space-y-1">
                 {availableClassTypes.map(classType => (
                     <li key={classType}>
-                       <Link href={Routes.locations.cityClassType(country, city, classType)}
+                       <Link href={`${Routes.city.classes(city)}?type=${classType}`}
                              className="text-blue-600 hover:underline capitalize">
                            {capitalize(classType)} Classes
                        </Link>

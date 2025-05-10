@@ -1,7 +1,7 @@
 'use client';
 
-import SearchResultCard from './SearchResultCard'; // Import the card component
-import { SearchResult } from '@/types/search'; // Import the shared type definition
+import SearchResultCard from './SearchResultCard';
+import { SearchResult } from '@/types/search';
 
 interface SearchResultsGridProps {
     results: SearchResult[];

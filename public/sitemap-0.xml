@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+<url><loc>https://www.fitnass.ma/api/subscriptions</loc><lastmod>2025-05-10T23:08:07.609Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/admin/gyms/new</loc><lastmod>2025-05-10T23:08:07.609Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/admin/gyms</loc><lastmod>2025-05-10T23:08:07.609Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/admin</loc><lastmod>2025-05-10T23:08:07.609Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/auth/signout</loc><lastmod>2025-05-10T23:08:07.609Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/admin/users</loc><lastmod>2025-05-10T23:08:07.609Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/auth/signup</loc><lastmod>2025-05-10T23:08:07.609Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/gyms</loc><lastmod>2025-05-10T23:08:07.609Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/dashboard/settings</loc><lastmod>2025-05-10T23:08:07.609Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/dashboard/schedule</loc><lastmod>2025-05-10T23:08:07.609Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/dashboard</loc><lastmod>2025-05-10T23:08:07.610Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/dashboard/promotions</loc><lastmod>2025-05-10T23:08:07.610Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/dashboard/clients</loc><lastmod>2025-05-10T23:08:07.610Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/dashboard/members</loc><lastmod>2025-05-10T23:08:07.610Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/profile/favorites</loc><lastmod>2025-05-10T23:08:07.610Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma</loc><lastmod>2025-05-10T23:08:07.610Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/promotions</loc><lastmod>2025-05-10T23:08:07.610Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/profile/reviews</loc><lastmod>2025-05-10T23:08:07.610Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/profile/settings</loc><lastmod>2025-05-10T23:08:07.610Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/profile/bookings</loc><lastmod>2025-05-10T23:08:07.610Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/profile/subscriptions</loc><lastmod>2025-05-10T23:08:07.610Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/profile/edit</loc><lastmod>2025-05-10T23:08:07.610Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/subscriptions</loc><lastmod>2025-05-10T23:08:07.610Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/auth/error</loc><lastmod>2025-05-10T23:08:07.610Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/auth/signin</loc><lastmod>2025-05-10T23:08:07.610Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/dashboard/analytics</loc><lastmod>2025-05-10T23:08:07.610Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/pricing</loc><lastmod>2025-05-10T23:08:07.610Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.fitnass.ma/dashboard/reviews</loc><lastmod>2025-05-10T23:08:07.610Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+</urlset>

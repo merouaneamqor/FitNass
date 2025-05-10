@@ -47,6 +47,9 @@ export const fetchTrainersByLocation = async (city: string): Promise<Trainer[]> 
       images: trainer.images as string[],
       specialties: trainer.specialties as string[],
       certifications: trainer.certifications as string[],
+      phone: null, // Add missing required properties with null values
+      email: null,
+      website: null
     }));
 
   } catch (error: unknown) {

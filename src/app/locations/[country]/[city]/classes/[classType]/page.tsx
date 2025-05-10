@@ -30,8 +30,8 @@ export async function generateMetadata(
   const title = `${formattedClassType} Classes in ${decodedCity}, ${decodedCountry} | Fitnass`;
   const description = `Find and book ${formattedClassType.toLowerCase()} classes in ${decodedCity}, ${decodedCountry}. Browse schedules, prices, and instructors for all ${formattedClassType.toLowerCase()} fitness classes.`;
   
-  // Since Routes.locations doesn't exist, we'll create our own canonical URL in the same format
-  const canonicalUrl = `/locations/${encodeURIComponent(country)}/${encodeURIComponent(city)}/classes/${encodeURIComponent(classType)}`;
+  // Use the Routes.city.classes URL with a query parameter for type
+  const canonicalUrl = `${Routes.city.classes(city)}?type=${encodeURIComponent(classType)}`;
 
   return {
     title,
@@ -73,10 +73,10 @@ export default async function ClassTypePage({ params }: ClassTypePageProps) {
     error = `Could not load ${decodedClassType} classes for ${decodedCity}. Please try again later.`;
   }
 
-  // Since Routes.locations doesn't exist, we'll create direct routes
-  const cityOverviewUrl = `/locations/${encodeURIComponent(country)}/${encodeURIComponent(city)}`;
-  const cityGymsUrl = `/locations/${encodeURIComponent(country)}/${encodeURIComponent(city)}/gyms`;
-  const cityTrainersUrl = `/locations/${encodeURIComponent(country)}/${encodeURIComponent(city)}/trainers`;
+  // Use the Routes object
+  const cityOverviewUrl = Routes.city.overview(city);
+  const cityGymsUrl = Routes.city.gyms(city);
+  const cityTrainersUrl = Routes.city.trainers(city);
 
   return (
     <div className="container mx-auto px-4 py-8">

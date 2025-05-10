@@ -15,39 +15,42 @@ interface BaseSearchResult {
   rating: number | null;
   type: 'gym' | 'club' | 'trainer' | 'class';
   slug?: string; // For simple items like categories or blog posts if searched
-  citySlug?: string; // Slug for the city
   compositeSlug?: string; // e.g., "casablanca-gold-s-gym"
 }
 
 // Extend base for specific types, adding unique fields
-export interface GymSearchResult extends BaseSearchResult, Omit<Partial<Gym>, 'id' | 'name' | 'description' | 'address' | 'city' | 'images' | 'rating'> {
+export interface GymSearchResult extends BaseSearchResult {
   type: 'gym';
-  // Gym specific fields like facilities, priceRange can be included here if needed directly
-  // Or rely on the Omit<Partial<Gym>> part
+  // Gym specific fields
   facilities?: string[];
   priceRange?: string;
+  citySlug?: string | null;
   _count?: { reviews?: number };
 }
 
-export interface ClubSearchResult extends BaseSearchResult, Omit<Partial<Club>, 'id' | 'name' | 'description' | 'address' | 'city' | 'images' | 'rating'> {
+export interface ClubSearchResult extends BaseSearchResult {
   type: 'club';
   facilities?: string[];
+  citySlug?: string | null;
   _count?: { reviews?: number; sportFields?: number };
 }
 
-export interface TrainerSearchResult extends BaseSearchResult, Omit<Partial<Trainer>, 'id' | 'name' | 'description' | 'address' | 'city' | 'images' | 'rating'> {
+export interface TrainerSearchResult extends BaseSearchResult {
   type: 'trainer';
   specialties?: string[];
   hourlyRate?: number | null;
+  citySlug?: string | null;
   // No address directly on trainer, but city might be present
 }
 
-export interface ClassSearchResult extends BaseSearchResult, Omit<Partial<FitnessClass>, 'id' | 'name' | 'description' | 'address' | 'city' | 'images' | 'rating'> {
+export interface ClassSearchResult extends BaseSearchResult {
   type: 'class';
   classType?: string; // Alias for FitnessClass.type
   startTime?: Date | null;
   duration?: number | null;
   price?: number | null;
+  citySlug?: string | null;
+  capacity?: number | null;
   // Location derived from gym/club
   locationName?: string; 
   locationCity?: string;

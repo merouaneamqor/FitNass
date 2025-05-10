@@ -35,7 +35,7 @@ export async function generateMetadata(
   // Optionally merge with parent metadata
   // const previousImages = (await parent).openGraph?.images || [];
 
-  const canonicalUrl = Routes.locations.cityGyms(params.country, params.city);
+  const canonicalUrl = Routes.city.gyms(params.city);
 
   return {
     title: title,
@@ -121,7 +121,7 @@ export default async function CityGymsPage({ params }: CityGymsPageProps) {
     };
   };
 
-  const jsonLdSchema = gyms.length > 0 ? generateLocalBusinessSchema(gyms, `${process.env.NEXT_PUBLIC_BASE_URL || ''}${Routes.locations.cityGyms(params.country, params.city)}`) : null;
+  const jsonLdSchema = gyms.length > 0 ? generateLocalBusinessSchema(gyms, `${process.env.NEXT_PUBLIC_BASE_URL || ''}${Routes.city.gyms(params.city)}`) : null;
 
   return (
     <>
