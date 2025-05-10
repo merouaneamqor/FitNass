@@ -1,23 +1,7 @@
 'use client';
 
 import SearchResultCard from './SearchResultCard'; // Import the card component
-
-// Re-define or import the type - ensure consistency
-type SearchResult = {
-    id: string;
-    name: string;
-    description: string | null;
-    address: string | null;
-    city: string | null;
-    images: string[];
-    rating: number | null;
-    facilities: string[];
-    type: 'club' | 'gym';
-    _count?: {
-        reviews?: number;
-        sportFields?: number;
-    }
-};
+import { SearchResult } from '@/types/search'; // Import the shared type definition
 
 interface SearchResultsGridProps {
     results: SearchResult[];
