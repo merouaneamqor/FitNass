@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { FiStar, FiMapPin, FiDollarSign, FiAward, FiBriefcase, FiTag, FiClock, FiUsers, FiCalendar } from 'react-icons/fi';
+import { FiStar, FiMapPin, FiDollarSign, FiBriefcase, FiClock, FiUsers, FiCalendar, FiCheck } from 'react-icons/fi';
 import { GiSoccerField } from "react-icons/gi";
 import { Routes } from '@/lib/routes';
 // Import the SearchResult union type and specific types
@@ -40,138 +40,166 @@ const getDefaultImage = (type: SearchResult['type']): string => {
   }
 }
 
+// --- Function to get icon by result type ---
+const getTypeIcon = (type: SearchResult['type']) => {
+  switch(type) {
+    case 'gym': return <FiStar className="h-4 w-4 text-red-600" />;
+    case 'club': return <GiSoccerField className="h-4 w-4 text-amber-600" />;
+    case 'trainer': return <FiUsers className="h-4 w-4 text-blue-600" />;
+    case 'class': return <FiCalendar className="h-4 w-4 text-purple-600" />;
+    default: return <FiCheck className="h-4 w-4 text-gray-600" />;
+  }
+};
+
 // --- Main Card Component ---
 export default function SearchResultCard({ result }: { result: SearchResult }) {
-    
     const detailUrl = getDetailUrl(result);
     const defaultImage = getDefaultImage(result.type);
     const imageUrl = Array.isArray(result.images) && result.images.length > 0 ? result.images[0] : defaultImage;
+    const typeIcon = getTypeIcon(result.type);
 
-    // Determine badge text and color based on type
-    let badgeText = result.type.toUpperCase();
-    let badgeBgColor = 'bg-gray-100';
-    let badgeTextColor = 'text-gray-700';
+    // Determine type label
+    let typeLabel = result.type.charAt(0).toUpperCase() + result.type.slice(1);
+    if (result.type === 'class') {
+      typeLabel = (result as ClassSearchResult).classType || 'Class';
+      typeLabel = typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1);
+    }
 
-    switch (result.type) {
-        case 'gym': badgeBgColor = 'bg-red-50'; badgeTextColor = 'text-red-700'; break;
-        case 'club': badgeBgColor = 'bg-yellow-50'; badgeTextColor = 'text-yellow-700'; break;
-        case 'trainer': badgeBgColor = 'bg-blue-50'; badgeTextColor = 'text-blue-700'; break;
-        case 'class': badgeBgColor = 'bg-purple-50'; badgeTextColor = 'text-purple-700'; badgeText = (result as ClassSearchResult).classType || 'CLASS'; break;
+    // Determine badge color based on type
+    let badgeColor = "";
+    switch(result.type) {
+      case 'gym': badgeColor = "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300"; break;
+      case 'club': badgeColor = "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"; break;
+      case 'trainer': badgeColor = "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"; break;
+      case 'class': badgeColor = "bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"; break;
+      default: badgeColor = "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     }
 
     return (
-        <Link href={detailUrl} className="block group">
-            <div className="bg-white rounded-xl overflow-hidden flex flex-col shadow-md shadow-black/5 transition-shadow duration-300 h-full hover:shadow-lg">
-                {/* Image Section */}
-                <div className="relative h-48 sm:h-52 overflow-hidden">
+        <Link href={detailUrl} className="block group h-full">
+            <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden flex flex-col h-full shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 dark:border-gray-700">
+                {/* Thumbnail image */}
+                <div className="relative aspect-video overflow-hidden">
                     <Image
                         src={imageUrl}
                         alt={result.name}
                         fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" // Adjusted sizes
-                        className="object-cover opacity-95 group-hover:scale-105 transition-transform duration-300 ease-in-out"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-cover object-center group-hover:scale-105 transition-transform duration-300 ease-in-out"
                     />
                     {/* Type Badge */}
-                    <span className={`absolute top-3 left-3 inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold tracking-wide ${badgeBgColor} ${badgeTextColor} z-10 capitalize`}>
-                        {/* Optional Icon per type? <FiTag className="h-3 w-3 mr-1" /> */}
-                        {badgeText}
+                    <span className="absolute top-3 left-3 inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium">
+                        <span className={`flex items-center gap-1.5 px-2 py-1 rounded-full ${badgeColor}`}>
+                            {typeIcon}
+                            {typeLabel}
+                        </span>
                     </span>
+                    
+                    {/* Duration badge for classes */}
+                    {result.type === 'class' && (result as ClassSearchResult).duration && (
+                        <div className="absolute bottom-2 right-2 bg-black/75 text-white text-xs px-2 py-1 rounded">
+                            {(result as ClassSearchResult).duration} min
+                        </div>
+                    )}
                 </div>
                 
                 {/* Content Section */}
-                <div className="p-5 flex flex-col flex-grow">
+                <div className="p-4 flex flex-col flex-grow">
                     {/* Title & Rating */}
-                    <div className="flex justify-between items-start mb-1">
-                        <h3 className="text-lg font-semibold text-gray-800 pr-2 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                    <div className="flex justify-between items-start mb-2">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white line-clamp-2 group-hover:text-blue-600 transition-colors">
                             {result.name}
                         </h3>
-                        {typeof result.rating === 'number' && result.rating > 0 && result.type !== 'class' && (
+                        {typeof result.rating === 'number' && result.rating > 0 && (
                             <div className="flex-shrink-0 flex items-center">
-                                <FiStar className="h-3.5 w-3.5 text-yellow-500 fill-current" />
-                                <span className="ml-1 font-bold text-xs text-gray-700">{result.rating.toFixed(1)}</span>
+                                <FiStar className="h-4 w-4 text-yellow-500 fill-current" />
+                                <span className="ml-1 font-bold text-xs text-gray-700 dark:text-gray-300">{result.rating.toFixed(1)}</span>
                             </div>
                         )}
                     </div>
-
-                    {/* Location / Address (If applicable) */}
-                    {(result.type === 'gym' || result.type === 'club') && result.address && (
-                        <div className="mb-2 flex items-center text-gray-500 text-xs">
-                            <FiMapPin className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
-                            <span className="line-clamp-1">{result.address}, {result.city}</span>
-                        </div>
-                    )}
-                     {/* Location for Classes */}
-                    {result.type === 'class' && (result as ClassSearchResult).locationName && (
-                        <div className="mb-2 flex items-center text-gray-500 text-xs">
-                            <FiMapPin className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
-                            <span className="line-clamp-1">{(result as ClassSearchResult).locationName}, {(result as ClassSearchResult).locationCity || result.city}</span>
-                        </div>
-                    )}
                     
-                     {/* Trainer Specialties / Class Time */} 
-                    {result.type === 'trainer' && (result as TrainerSearchResult).specialties && (result as TrainerSearchResult).specialties!.length > 0 && (
-                         <div className="mb-2 flex flex-wrap items-center text-xs gap-1.5 text-blue-700">
-                             <FiBriefcase className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" title="Specialties"/>
-                             {(result as TrainerSearchResult).specialties!.slice(0, 2).map(s => <span key={s} className="bg-blue-50 px-1.5 rounded">{s}</span>)}
-                             {(result as TrainerSearchResult).specialties!.length > 2 && <span className="text-gray-500">...</span>}
-                         </div>
-                    )}
-                    {/* Refactored check: Ensure startTime exists before rendering the time block */}
-                    {result.type === 'class' && (result as ClassSearchResult).startTime && (
-                         <div className="mb-2 flex items-center text-gray-500 text-xs gap-3">
-                            <span className="inline-flex items-center">
-                               <FiCalendar className="h-3.5 w-3.5 mr-1" />
-                               {formatDateTime((result as ClassSearchResult).startTime!)} {/* Safe due to the check above */}
+                    {/* Meta Information */}
+                    <div className="flex flex-wrap items-center text-xs text-gray-500 dark:text-gray-400 gap-x-3 gap-y-1 mb-2">
+                        {/* Location */}
+                        {result.city && (
+                            <span className="flex items-center">
+                                <FiMapPin className="h-3.5 w-3.5 mr-1" />
+                                {result.city}
                             </span>
-                            {(result as ClassSearchResult).duration && (
-                               <span className="inline-flex items-center">
-                                   <FiClock className="h-3.5 w-3.5 mr-1" />
-                                   {(result as ClassSearchResult).duration} min
-                               </span>
-                            )}
-                         </div>
-                    )}
-
-                    {/* Description / Bio */}
-                    <p className="text-gray-600 text-sm mb-3 flex-grow line-clamp-2">
+                        )}
+                        
+                        {/* Price for Trainer/Class */}
+                        {result.type === 'trainer' && (result as TrainerSearchResult).hourlyRate && (
+                            <span className="flex items-center text-green-600 dark:text-green-400">
+                                <FiDollarSign className="h-3.5 w-3.5 mr-0.5" />
+                                {(result as TrainerSearchResult).hourlyRate}/hr
+                            </span>
+                        )}
+                        {result.type === 'class' && (result as ClassSearchResult).price !== null && (
+                            <span className="flex items-center text-green-600 dark:text-green-400">
+                                <FiDollarSign className="h-3.5 w-3.5 mr-0.5" />
+                                {(result as ClassSearchResult).price! > 0 ? `${(result as ClassSearchResult).price}` : 'Free'}
+                            </span>
+                        )}
+                        
+                        {/* Fields for Clubs */}
+                        {result.type === 'club' && (result as ClubSearchResult)._count?.sportFields && (
+                            <span className="flex items-center">
+                                <GiSoccerField className="h-3.5 w-3.5 mr-1"/> 
+                                {(result as ClubSearchResult)._count!.sportFields} Fields
+                            </span>
+                        )}
+                        
+                        {/* Class Capacity */} 
+                        {result.type === 'class' && (result as ClassSearchResult).capacity && (
+                            <span className="flex items-center">
+                                <FiUsers className="h-3.5 w-3.5 mr-1" /> 
+                                {(result as ClassSearchResult).capacity} spots
+                            </span>
+                        )}
+                        
+                        {/* Class Date/Time */}
+                        {result.type === 'class' && (result as ClassSearchResult).startTime && (
+                            <span className="flex items-center">
+                                <FiCalendar className="h-3.5 w-3.5 mr-1" />
+                                {formatDateTime((result as ClassSearchResult).startTime!)}
+                            </span>
+                        )}
+                    </div>
+                    
+                    {/* Description */}
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 flex-grow line-clamp-2">
                         {result.description ? result.description : 'Details available on the page.'}
                     </p>
-
-                    {/* Bottom Section: Facilities / Reviews / Price / Capacity etc. */}
-                    <div className="mt-auto pt-3 border-t border-gray-100 flex justify-between items-center text-xs">
-                        <div className="flex items-center space-x-2 text-gray-500">
-                            {/* Gym/Club Facilities/Info */} 
-                             {(result.type === 'gym' || result.type === 'club') && (result as (GymSearchResult | ClubSearchResult)).facilities && (result as (GymSearchResult | ClubSearchResult)).facilities!.length > 0 && (
-                                <span title={(result as (GymSearchResult | ClubSearchResult)).facilities!.join(', ')} className="line-clamp-1">
-                                   {(result as (GymSearchResult | ClubSearchResult)).facilities!.slice(0,1).join(', ')}...
-                                </span>
-                             )}
-                             {result.type === 'club' && (result as ClubSearchResult)._count?.sportFields && (
-                                 <span className="inline-flex items-center"><GiSoccerField className="mr-1"/> {(result as ClubSearchResult)._count!.sportFields} Fields</span>
-                             )}
-                             {/* Class Capacity */} 
-                             {result.type === 'class' && (result as ClassSearchResult).capacity && (
-                                 <span className="inline-flex items-center"><FiUsers className="mr-1" /> {(result as ClassSearchResult).capacity} spots</span>
-                             )}
-                        </div>
-                        <div className="flex items-center">
-                           {/* Price for Trainer/Class */} 
-                           {result.type === 'trainer' && (result as TrainerSearchResult).hourlyRate && (
-                               <span className="font-semibold text-green-600 mr-2 inline-flex items-center">
-                                   <FiDollarSign className="h-3.5 w-3.5 mr-0.5" />
-                                   {(result as TrainerSearchResult).hourlyRate} / hr
-                               </span>
-                           )}
-                           {result.type === 'class' && (result as ClassSearchResult).price !== null && (
-                              <span className="font-semibold text-green-600 mr-2 inline-flex items-center">
-                                  <FiDollarSign className="h-3.5 w-3.5 mr-0.5" />
-                                  {(result as ClassSearchResult).price! > 0 ? `${(result as ClassSearchResult).price}` : 'Free'}
-                              </span>
-                           )}
-                            {/* Details Text */}
-                            <span className="font-semibold text-yellow-600">
-                                Details
-                            </span>
+                    
+                    {/* Tags/Specialties/Facilities */}
+                    <div className="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
+                        <div className="flex flex-wrap gap-1.5">
+                            {/* Trainer Specialties */}
+                            {result.type === 'trainer' && (result as TrainerSearchResult).specialties && (result as TrainerSearchResult).specialties!.length > 0 && 
+                                (result as TrainerSearchResult).specialties!.slice(0, 3).map(specialty => (
+                                    <span key={specialty} className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded-full">
+                                        {specialty}
+                                    </span>
+                                ))
+                            }
+                            
+                            {/* Gym/Club Facilities */}
+                            {(result.type === 'gym' || result.type === 'club') && (result as (GymSearchResult | ClubSearchResult)).facilities && (result as (GymSearchResult | ClubSearchResult)).facilities!.length > 0 && 
+                                (result as (GymSearchResult | ClubSearchResult)).facilities!.slice(0, 3).map(facility => (
+                                    <span key={facility} className="text-xs px-2 py-0.5 bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 rounded-full">
+                                        {facility}
+                                    </span>
+                                ))
+                            }
+                            
+                            {/* "More" indicator */}
+                            {result.type === 'trainer' && (result as TrainerSearchResult).specialties && (result as TrainerSearchResult).specialties!.length > 3 && (
+                                <span className="text-xs text-gray-500 dark:text-gray-400">+{(result as TrainerSearchResult).specialties!.length - 3} more</span>
+                            )}
+                            {(result.type === 'gym' || result.type === 'club') && (result as (GymSearchResult | ClubSearchResult)).facilities && (result as (GymSearchResult | ClubSearchResult)).facilities!.length > 3 && (
+                                <span className="text-xs text-gray-500 dark:text-gray-400">+{(result as (GymSearchResult | ClubSearchResult)).facilities!.length - 3} more</span>
+                            )}
                         </div>
                     </div>
                 </div>

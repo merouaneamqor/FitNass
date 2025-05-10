@@ -6,11 +6,27 @@ import { slugify } from '@/lib/utils';
 
 const ITEMS_PER_PAGE = 12;
 
-export async function searchAction(searchParams: URLSearchParams) {
-    const query = searchParams.get('q') || '';
-    const city = searchParams.get('city') || '';
-    const typeFilter = searchParams.get('type') || 'all';
-    const page = parseInt(searchParams.get('page') || '1');
+export async function searchAction(searchParams: URLSearchParams | Record<string, string>) {
+    // Handle both URLSearchParams and plain objects
+    let query: string;
+    let city: string;
+    let typeFilter: string;
+    let page: number;
+
+    if (searchParams instanceof URLSearchParams) {
+        // Handle URLSearchParams object
+        query = searchParams.get('q') || '';
+        city = searchParams.get('city') || '';
+        typeFilter = searchParams.get('type') || 'all';
+        page = parseInt(searchParams.get('page') || '1');
+    } else {
+        // Handle plain object
+        query = searchParams.q || '';
+        city = searchParams.city || '';
+        typeFilter = searchParams.type || 'all';
+        page = parseInt(searchParams.page || '1');
+    }
+
     const skip = (page - 1) * ITEMS_PER_PAGE;
 
     console.log(`Server Action: query="${query}", city="${city}", type="${typeFilter}", page=${page}`);
