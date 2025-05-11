@@ -1,8 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
-import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { usePathname } from 'next/navigation';
 
 // Define the type for search parameters
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -15,11 +14,11 @@ interface PaginationControlsProps {
 
 // Pagination Controls Client Component
 export default function PaginationControls({ currentPage, totalPages, searchParams }: PaginationControlsProps) {
+    // Always call hooks at the top level
+    const pathname = usePathname();
+    
     // Skip rendering if there's only one page or none
     if (totalPages <= 1) return null;
-    
-    const router = useRouter();
-    const pathname = usePathname();
 
     // Create URL with correct parameters
     const createPageURL = (pageNumber: number) => {
