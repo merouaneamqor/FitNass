@@ -31,55 +31,55 @@ model User {
   // SaaS Fields
   stripeCustomerId   String?        @unique // Store Stripe Customer ID
 
-  createdClubs       Club[]         @relation("ClubOwner")
-  createdGyms        Gym[]          @relation("GymOwner")
+  createdPlaces       Place[]        @relation("PlaceOwner")
   loginHistory       LoginHistory[]
   notifications      Notification[]
   reservations       Reservation[]
   reviews            Review[]
   subscriptions      Subscription[] // Relation to user's subscriptions
-  favoriteClubs      Club[]         @relation("UserFavoriteClubs", fields: [favoriteClubIds], references: [id])
-  favorites          Gym[]          @relation("UserFavorites", fields: [favoriteGymIds], references: [id])
+  favoritePlaces     Place[]        @relation("UserFavoritePlaces", fields: [favoritePlaceIds], references: [id])
   trainerProfile     Trainer?       @relation // Add relation back to Trainer (if using userId)
 
-  favoriteClubIds    String[]       @db.ObjectId
-  favoriteGymIds     String[]       @db.ObjectId
-  ownerClubIds       String[]       @db.ObjectId
-  ownerGymIds        String[]       @db.ObjectId
+  favoritePlaceIds   String[]       @db.ObjectId
+  ownerPlaceIds      String[]       @db.ObjectId
 }
 
-model Gym {
-  id           String     @id @default(auto()) @map("_id") @db.ObjectId
-  name         String     @unique(map: "Gym_name_unique")
-  description  String
-  address      String
-  city         String
-  state        String
-  zipCode      String
-  latitude     Float
-  longitude    Float
-  phone        String?
-  website      String?
-  email        String?
-  rating       Float      @default(0)
-  priceRange   String
-  facilities   String[]
-  images       String[]
-  slug         String?
-  citySlug     String?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  ownerId      String     @db.ObjectId
-  isVerified   Boolean    @default(false)
-  status       GymStatus  @default(ACTIVE)
-  viewCount    Int        @default(0)
-  owner        User       @relation("GymOwner", fields: [ownerId], references: [id])
-  promotions   Promotion[]
-  reviews      Review[]
-  favoritedBy  User[]     @relation("UserFavorites", fields: [favoritedByIds], references: [id])
-  classes      FitnessClass[] // Add relation back to FitnessClass
+model Place {
+  id            String       @id @default(auto()) @map("_id") @db.ObjectId
+  name          String       
+  description   String
+  address       String
+  city          String
+  state         String
+  zipCode       String
+  latitude      Float
+  longitude     Float
+  phone         String?
+  website       String?
+  email         String?
+  rating        Float        @default(0)
+  priceRange    String?
+  images        String[]
+  facilities    String[]
+  openingHours  Json?
+  type          PlaceType    // Type of place (GYM, CLUB, etc.)
+  slug          String?
+  citySlug      String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  ownerId       String       @db.ObjectId
+  isVerified    Boolean      @default(false)
+  status        PlaceStatus  @default(ACTIVE)
+  viewCount     Int          @default(0)
+  
+  owner         User         @relation("PlaceOwner", fields: [ownerId], references: [id])
+  promotions    Promotion[]
+  reviews       Review[]
+  sportFields   SportField[]
+  classes       FitnessClass[]
+  favoritedBy   User[]       @relation("UserFavoritePlaces", fields: [favoritedByIds], references: [id])
 
-  favoritedByIds String[] @db.ObjectId
+  favoritedByIds String[]    @db.ObjectId
 }
 
 model Review {
@@ -89,12 +89,11 @@ model Review {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   userId      String       @db.ObjectId
-  gymId       String?      @db.ObjectId
+  placeId     String?      @db.ObjectId
   isHelpful   Int          @default(0)
   status      ReviewStatus @default(PUBLISHED)
-  clubId      String?      @db.ObjectId
-  club        Club?        @relation("ClubReviews", fields: [clubId], references: [id])
-  gym         Gym?         @relation(fields: [gymId], references: [id])
+  
+  place       Place?       @relation(fields: [placeId], references: [id])
   user        User         @relation(fields: [userId], references: [id])
 }
 
@@ -107,10 +106,11 @@ model Promotion {
   discount        String?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
-  gymId           String          @db.ObjectId
+  placeId         String          @db.ObjectId
   redemptionCount Int             @default(0)
   status          PromotionStatus @default(ACTIVE)
-  gym             Gym             @relation(fields: [gymId], references: [id])
+  
+  place           Place           @relation(fields: [placeId], references: [id])
 }
 
 model LoginHistory {
@@ -135,38 +135,6 @@ model Notification {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model Club {
-  id            String       @id @default(auto()) @map("_id") @db.ObjectId
-  name          String
-  description   String
-  address       String
-  city          String
-  state         String
-  zipCode       String
-  latitude      Float
-  longitude     Float
-  phone         String?
-  website       String?
-  email         String?
-  rating        Float        @default(0)
-  images        String[]
-  facilities    String[]
-  openingHours  Json?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  ownerId       String       @db.ObjectId
-  isVerified    Boolean      @default(false)
-  status        ClubStatus   @default(ACTIVE)
-  viewCount     Int          @default(0)
-  owner         User         @relation("ClubOwner", fields: [ownerId], references: [id])
-  reviews       Review[]     @relation("ClubReviews")
-  sportFields   SportField[]
-  favoritedBy   User[]       @relation("UserFavoriteClubs", fields: [favoritedByIds], references: [id])
-  classes       FitnessClass[] // Add relation back to FitnessClass
-
-  favoritedByIds String[]    @db.ObjectId
-}
-
 model SportField {
   id           String         @id @default(auto()) @map("_id") @db.ObjectId
   name         String
@@ -176,17 +144,18 @@ model SportField {
   indoor       Boolean        @default(false)
   size         String?
   maxCapacity  Int?
-  pricePerHour Float // Changed from Decimal
+  pricePerHour Float
   currency     String         @default("MAD")
   availability Json?
   amenities    String[]
   images       String[]
-  clubId       String         @db.ObjectId
+  placeId      String         @db.ObjectId
   status       FieldStatus    @default(AVAILABLE)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
+  
   reservations Reservation[]
-  club         Club           @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  place        Place          @relation(fields: [placeId], references: [id], onDelete: Cascade)
 }
 
 model Reservation {
@@ -285,36 +254,32 @@ model Trainer {
 
 model FitnessClass {
   id             String     @id @default(auto()) @map("_id") @db.ObjectId
-  name           String     // e.g., "Morning Vinyasa Yoga"
+  name           String
   description    String
-  type           String     // e.g., "Yoga", "HIIT", "Spinning", "Zumba" (Used for filtering)
-  difficulty     String?    // e.g., "Beginner", "Intermediate", "Advanced"
-  duration       Int        // Duration in minutes
-  schedule       Json?      // Could store complex recurrence rules (e.g., iCal RRULE) or simple date/time list
-  startTime      DateTime?  // For single-occurrence classes
-  endTime        DateTime?  // For single-occurrence classes
+  type           String
+  difficulty     String?
+  duration       Int
+  schedule       Json?
+  startTime      DateTime?
+  endTime        DateTime?
   capacity       Int?
   price          Float?
   currency       String?    @default("MAD")
-  gymId          String?    @db.ObjectId // Link to Gym offering the class
-  gym            Gym?       @relation(fields: [gymId], references: [id])
-  clubId         String?    @db.ObjectId // Link to Club offering the class
-  club           Club?      @relation(fields: [clubId], references: [id])
-  trainerId      String?    @db.ObjectId // Optional: Link to the specific trainer teaching
-  trainer        Trainer?   @relation("ClassTrainer", fields: [trainerId], references: [id])
+  placeId        String?    @db.ObjectId
+  trainerId      String?    @db.ObjectId
   images         String[]
-  status         ClassStatus @default(ACTIVE) // Active, Cancelled, Full
+  status         ClassStatus @default(ACTIVE)
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
-
-  // Add relations to Bookings/Reservations if needed later
+  
+  place          Place?     @relation(fields: [placeId], references: [id])
+  trainer        Trainer?   @relation("ClassTrainer", fields: [trainerId], references: [id])
 }
 
 enum Role {
   USER
   ADMIN
-  GYM_OWNER
-  CLUB_OWNER
+  PLACE_OWNER
 }
 
 enum UserStatus {
@@ -325,7 +290,15 @@ enum UserStatus {
   BANNED
 }
 
-enum GymStatus {
+enum PlaceType {
+  GYM
+  CLUB
+  STUDIO
+  CENTER
+  OTHER
+}
+
+enum PlaceStatus {
   ACTIVE
   INACTIVE
   PENDING_APPROVAL
@@ -363,13 +336,6 @@ enum FieldStatus {
   UNDER_MAINTENANCE
   CLOSED
   UNAVAILABLE
-}
-
-enum ClubStatus {
-  ACTIVE
-  INACTIVE
-  PENDING_APPROVAL
-  CLOSED
 }
 
 enum ReservationStatus {

@@ -1,21 +1,22 @@
 'use client';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FiSearch, FiMapPin, FiStar, FiAlertCircle, FiChevronLeft, FiChevronRight, FiFilter, FiX, FiCpu, FiGrid, FiList, FiUsers, FiCalendar } from 'react-icons/fi';
+import { FiSearch, FiMapPin, FiStar, FiAlertCircle, FiChevronLeft, FiChevronRight, FiFilter, FiX, FiCpu, FiGrid, FiList, FiUsers, FiCalendar, FiHome } from 'react-icons/fi';
 import { GiSoccerField } from "react-icons/gi";
-import { motion } from 'framer-motion'; // Import motion
-import { useSearchParams } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
 // Import components
 import AnimatedBackground from '@/components/ui/AnimatedBackground';
 import SearchResultsGrid from '@/components/search/SearchResultsGrid';
 import PaginationControls from '@/components/search/PaginationControls';
-import { SearchResult, SearchParams } from '@/types/search';
+import { SearchResult } from '@/types/search';
 
 // Create a client-side search page component
 export default function ClientSearchPage() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const [searchResults, setSearchResults] = useState<{
         results: SearchResult[],
         currentPage: number,
@@ -30,6 +31,7 @@ export default function ClientSearchPage() {
         error: null
     });
     const [loading, setLoading] = useState(true);
+    const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
     
     const currentQuery = searchParams?.get('q') || '';
     const currentCity = searchParams?.get('city') || '';
@@ -77,29 +79,10 @@ export default function ClientSearchPage() {
         return queryString ? `/search?${queryString}` : '/search';
     };
 
-    // Helper to generate type badges with appropriate colors
-    const getTypeBadge = (type: string) => {
-        switch(type) {
-            case 'gym':
-                return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-            case 'club':
-                return 'bg-blue-100 text-blue-800 border-blue-200';
-            case 'trainer':
-                return 'bg-purple-100 text-purple-800 border-purple-200';
-            case 'class':
-                return 'bg-orange-100 text-orange-800 border-orange-200';
-            default:
-                return 'bg-gray-100 text-gray-800 border-gray-200';
-        }
-    };
-
-    // Icons for type filters
-    const typeIcons = {
-        'all': <FiGrid className="h-4 w-4 mr-2" />,
-        'gym': <FiStar className="h-4 w-4 mr-2" />,
-        'club': <GiSoccerField className="h-4 w-4 mr-2" />,
-        'trainer': <FiUsers className="h-4 w-4 mr-2" />,
-        'class': <FiCalendar className="h-4 w-4 mr-2" />
+    const handleFilterChange = (param: string, value: string | null) => {
+        const newUrl = createFilterURL(param, value);
+        router.push(newUrl);
+        setIsFilterDrawerOpen(false);
     };
 
     // Error Message Component
@@ -109,7 +92,7 @@ export default function ClientSearchPage() {
                 <FiAlertCircle className="h-12 w-12 text-red-500 mb-4" />
                 <p className="text-red-700 font-semibold mb-2 text-lg">Search Failed</p>
                 <p className="text-gray-600">{message}</p>
-                <Link href="/" className="mt-6 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors shadow-md">
+                <Link href="/" className="mt-6 px-6 py-3 bg-black hover:bg-gray-800 text-white rounded-lg transition-colors shadow-md">
                     Return Home
                 </Link>
             </div>
@@ -123,201 +106,180 @@ export default function ClientSearchPage() {
                 <FiAlertCircle className="h-14 w-14 mx-auto text-gray-400 mb-5" />
                 <p className="text-gray-700 font-semibold text-xl mb-2">No venues found matching your criteria.</p>
                 <p className="text-gray-500 mb-6">Try adjusting your search query or city.</p>
-                <Link href="/" className="inline-block px-5 py-2.5 bg-yellow-500 dark:bg-red-600 hover:bg-yellow-600 dark:hover:bg-red-700 text-white rounded-lg transition-colors duration-200 shadow-md">
+                <Link href="/" className="inline-block px-6 py-3 bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-black rounded-lg transition-colors duration-200 shadow-md">
                     Return to Homepage
                 </Link>
             </div>
         );
     }
 
-    // Loading state
-    if (loading) {
-        return (
-            <div className="min-h-screen relative flex items-center justify-center">
-                <AnimatedBackground />
-                <div className="relative z-10 text-center">
-                    <div className="w-16 h-16 border-4 border-yellow-500 dark:border-red-600 border-t-transparent dark:border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-lg text-gray-700 dark:text-gray-300">Loading search results...</p>
-                </div>
-            </div>
-        );
-    }
+    // Sidebar navigation items
+    const sidebarItems = [
+        { icon: <FiHome className="h-5 w-5" />, label: 'Home', href: '/', value: null },
+        { icon: <FiStar className="h-5 w-5" />, label: 'Gyms', value: 'gym', href: null },
+        { icon: <GiSoccerField className="h-5 w-5" />, label: 'Clubs', value: 'club', href: null },
+        { icon: <FiUsers className="h-5 w-5" />, label: 'Trainers', value: 'trainer', href: null },
+        { icon: <FiCalendar className="h-5 w-5" />, label: 'Classes', value: 'class', href: null },
+    ];
 
     return (
-        <div className="min-h-screen relative overflow-hidden">
-            <AnimatedBackground />
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-                {/* Enhanced Header with Animation */}
-                <motion.div 
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="mb-8 md:mb-12"
-                >
-                    <h1 className="text-3xl md:text-5xl font-bebas uppercase tracking-wider text-gray-900 dark:text-neutral-100 mb-2">
-                        Search Results
-                    </h1>
-                    <div className="flex items-center text-gray-600 dark:text-gray-300 text-sm sm:text-base">
-                        <FiCpu className="h-5 w-5 mr-2 text-yellow-600 dark:text-red-500"/>
-                        <span>
-                            {totalResults > 0 
-                                ? `Found ${totalResults} match${totalResults === 1 ? '' : 'es'} for your search.` 
-                                : 'Discover gyms, clubs, trainers and classes near you.'}
-                        </span>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+            <div className="flex">
+                {/* YouTube-like sidebar - Hidden on mobile */}
+                <aside className="hidden md:flex flex-col w-60 fixed left-0 top-0 bottom-0 p-4 bg-white dark:bg-gray-800 shadow-md z-30 overflow-y-auto">
+                    <div className="px-3 py-3 mb-4">
+                        <Link href="/" className="flex items-center">
+                            <h1 className="text-xl font-bold text-gray-900 dark:text-white">FitNass</h1>
+                        </Link>
                     </div>
                     
-                    {/* Active filters display */}
-                    {(currentQuery || currentCity || currentType !== 'all') && (
-                        <div className="mt-4 flex flex-wrap items-center gap-2">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">Active filters:</span>
-                            {currentQuery && (
-                                <span className="px-3 py-1 bg-yellow-100 dark:bg-red-900/30 text-yellow-800 dark:text-red-200 rounded-full text-sm flex items-center border border-yellow-200 dark:border-red-800/40">
-                                    <FiSearch className="h-3 w-3 mr-1.5" />
-                                    {currentQuery}
-                                </span>
-                            )}
-                            {currentCity && (
-                                <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-full text-sm flex items-center border border-blue-200 dark:border-blue-800/40">
-                                    <FiMapPin className="h-3 w-3 mr-1.5" />
-                                    {currentCity}
-                                </span>
-                            )}
-                            {currentType !== 'all' && (
-                                <span className={`px-3 py-1 rounded-full text-sm flex items-center border ${getTypeBadge(currentType)}`}>
-                                    {typeIcons[currentType as keyof typeof typeIcons]}
-                                    {currentType.charAt(0).toUpperCase() + currentType.slice(1)}
-                                </span>
-                            )}
-                        </div>
-                    )}
-                </motion.div>
+                    <nav>
+                        <ul className="space-y-1">
+                            {sidebarItems.map((item) => (
+                                <li key={item.label}>
+                                    {item.value ? (
+                                        <button
+                                            onClick={() => handleFilterChange('type', item.value === 'all' ? null : item.value)}
+                                            className={`flex items-center w-full px-3 py-2.5 rounded-lg text-base transition-colors ${
+                                                currentType === item.value 
+                                                    ? 'bg-gray-100 dark:bg-gray-700 font-medium' 
+                                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                            }`}
+                                        >
+                                            <span className="mr-3">{item.icon}</span>
+                                            <span>{item.label}</span>
+                                        </button>
+                                    ) : (
+                                        <Link 
+                                            href={item.href || '/'}
+                                            className="flex items-center px-3 py-2.5 rounded-lg text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                        >
+                                            <span className="mr-3">{item.icon}</span>
+                                            <span>{item.label}</span>
+                                        </Link>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    </nav>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                    {/* Enhanced Sidebar with Animations */}
-                    <motion.aside 
-                        className="md:col-span-1"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.5, delay: 0.1 }}
-                    >
-                        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg p-6 rounded-xl border border-gray-200/60 dark:border-gray-700/40 shadow-xl shadow-black/5 sticky top-20">
-                            {/* Filters Header */}
-                            <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 border-b border-gray-200/80 dark:border-gray-700/80 pb-2 flex items-center">
-                                <FiFilter className="h-4 w-4 mr-2"/> Filters
-                            </h2>
-                            
-                            {/* Keyword & City inputs with improved styling */}
-                            <div className="mb-5">
-                                <label htmlFor="search-term" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Keywords</label>
+                    {/* Advanced filters */}
+                    <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                        <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 px-3">
+                            Filters
+                        </h2>
+                        
+                        <div className="space-y-4 px-3">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                    Keywords
+                                </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <FiSearch className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                                        <FiSearch className="h-5 w-5 text-gray-400" />
                                     </div>
                                     <input 
                                         type="text" 
-                                        id="search-term" 
                                         readOnly 
                                         value={currentQuery} 
                                         placeholder="Any keywords..." 
-                                        className="w-full pl-10 pr-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700/60 text-sm text-gray-600 dark:text-gray-200 border border-gray-200/70 dark:border-gray-600/40 shadow-inner cursor-not-allowed"
+                                        className="w-full pl-10 pr-3 py-2 rounded-lg bg-gray-50 text-base text-gray-600 border border-gray-200 shadow-inner cursor-not-allowed"
                                     />
                                 </div>
                             </div>
                             
-                            <div className="mb-5">
-                                <label htmlFor="city-term" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">City</label>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                    City
+                                </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <FiMapPin className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                                        <FiMapPin className="h-5 w-5 text-gray-400" />
                                     </div>
                                     <input 
                                         type="text" 
-                                        id="city-term" 
                                         readOnly 
                                         value={currentCity} 
                                         placeholder="Any city" 
-                                        className="w-full pl-10 pr-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700/60 text-sm text-gray-600 dark:text-gray-200 border border-gray-200/70 dark:border-gray-600/40 shadow-inner cursor-not-allowed"
+                                        className="w-full pl-10 pr-3 py-2 rounded-lg bg-gray-50 text-base text-gray-600 border border-gray-200 shadow-inner cursor-not-allowed"
                                     />
                                 </div>
                             </div>
                             
-                            {/* Enhanced Type Filter */}
-                            <div className="mb-5">
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Filter by Type</label>
-                                <div className="grid gap-2">
-                                    {[ 
-                                        { label: 'All Types', value: 'all', icon: typeIcons.all },
-                                        { label: 'Gyms', value: 'gym', icon: typeIcons.gym }, 
-                                        { label: 'Clubs', value: 'club', icon: typeIcons.club },
-                                        { label: 'Trainers', value: 'trainer', icon: typeIcons.trainer },
-                                        { label: 'Classes', value: 'class', icon: typeIcons.class }
-                                    ].map(type => (
-                                        <Link 
-                                            key={type.value}
-                                            href={createFilterURL('type', type.value)}
-                                            className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
-                                                currentType === type.value
-                                                ? 'bg-yellow-100 dark:bg-red-900/40 text-yellow-900 dark:text-red-200 font-medium border border-yellow-200 dark:border-red-800/30 shadow-sm'
-                                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-700/40 border border-transparent'
-                                            }`}
-                                            scroll={false}
-                                        >
-                                            <span className="flex items-center">
-                                                {type.icon}
-                                                {type.label}
-                                            </span>
-                                            {currentType === type.value && (
-                                                <span className="bg-yellow-200 dark:bg-red-800/40 text-yellow-800 dark:text-red-300 text-xs px-2 py-0.5 rounded-full">
-                                                    Active
-                                                </span>
-                                            )}
-                                        </Link>
-                                    ))}
-                                </div>
-                            </div>
-                            
-                            {/* View options toggle */}
-                            <div className="mb-5 pt-4 border-t border-gray-200/80 dark:border-gray-700/80">
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">View Options</label>
-                                <div className="flex space-x-2">
-                                    <button className="flex-1 flex items-center justify-center bg-yellow-100 dark:bg-red-900/30 text-yellow-800 dark:text-red-200 border border-yellow-200 dark:border-red-800/40 rounded-lg px-3 py-2 text-sm font-medium shadow-sm">
-                                        <FiGrid className="h-4 w-4 mr-1.5" />
-                                        Grid
-                                    </button>
-                                    <button className="flex-1 flex items-center justify-center bg-gray-100 dark:bg-gray-700/40 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600/40 rounded-lg px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-gray-700/60 transition-colors">
-                                        <FiList className="h-4 w-4 mr-1.5" />
-                                        List
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            {/* Reset filters button */}
-                            <div className="mt-6">
-                                <Link
-                                    href="/search"
-                                    className="w-full flex items-center justify-center px-4 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg text-sm font-medium transition-colors"
-                                >
-                                    <FiX className="h-4 w-4 mr-1.5" />
-                                    Reset All Filters
-                                </Link>
+                            <button
+                                onClick={() => router.push('/search')}
+                                className="w-full flex items-center justify-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg text-base font-medium transition-colors"
+                            >
+                                <FiX className="h-5 w-5 mr-2" />
+                                Reset All Filters
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+
+                {/* Main content - Use padding to make room for sidebar on desktop */}
+                <main className="flex-1 md:ml-60 p-4">
+                    <div className="max-w-6xl mx-auto">
+                        {/* Header with search info */}
+                        <div className="mb-6">
+                            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                                {currentQuery ? `Search: "${currentQuery}"` : 'Search Results'}
+                            </h1>
+                            <div className="flex items-center text-gray-600 dark:text-gray-300 text-sm sm:text-base">
+                                <FiCpu className="h-5 w-5 mr-2 text-black dark:text-white"/>
+                                <span>
+                                    {totalResults > 0 
+                                        ? `Found ${totalResults} match${totalResults === 1 ? '' : 'es'} for your search.` 
+                                        : 'Discover gyms, clubs, trainers and classes near you.'}
+                                </span>
                             </div>
                         </div>
-                    </motion.aside>
 
-                    {/* Main content with animations */}
-                    <motion.main 
-                        className="md:col-span-3"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.2 }}
-                    >
+                        {/* Filter tabs for mobile view */}
+                        <div className="overflow-x-auto mb-6 -mx-4 px-4 md:hidden">
+                            <div className="flex space-x-2 min-w-max">
+                                {sidebarItems.map((item) => (
+                                    item.value ? (
+                                        <button
+                                            key={item.label}
+                                            onClick={() => handleFilterChange('type', item.value === 'all' ? null : item.value)}
+                                            className={`flex items-center px-3 py-2 text-sm rounded-full
+                                                ${currentType === item.value
+                                                    ? 'bg-gray-900 text-white dark:bg-white dark:text-black'
+                                                    : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'}
+                                            `}
+                                        >
+                                            <span className="mr-1.5">{item.icon}</span>
+                                            {item.label}
+                                        </button>
+                                    ) : (
+                                        <Link
+                                            key={item.label}
+                                            href={item.href || '/'}
+                                            className="flex items-center px-3 py-2 text-sm rounded-full bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+                                        >
+                                            <span className="mr-1.5">{item.icon}</span>
+                                            {item.label}
+                                        </Link>
+                                    )
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Main content area */}
                         {error && <ErrorMessage message={error} />}
                         
-                        {!error && (
-                            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg p-6 rounded-xl border border-gray-200/60 dark:border-gray-700/40 shadow-xl shadow-black/5">
+                        {loading && (
+                            <div className="flex justify-center items-center py-12">
+                                <div className="w-14 h-14 border-4 border-black dark:border-white border-t-transparent dark:border-t-transparent rounded-full animate-spin"></div>
+                            </div>
+                        )}
+                        
+                        {!error && !loading && (
+                            <div>
                                 {/* Results summary header */}
                                 {results.length > 0 && (
-                                    <div className="flex justify-between items-center mb-6 pb-3 border-b border-gray-200/80 dark:border-gray-700/80">
+                                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 pb-3 border-b border-gray-200/80 dark:border-gray-700/80">
                                         <div>
                                             <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
                                                 {totalResults} Result{totalResults !== 1 ? 's' : ''}
@@ -356,8 +318,82 @@ export default function ClientSearchPage() {
                                 )}
                             </div>
                         )}
-                    </motion.main>
+                    </div>
+                </main>
+            </div>
+
+            {/* Mobile Filter Drawer - Slides up from bottom */}
+            <div 
+                className={`fixed inset-0 bg-black/60 z-50 transition-opacity duration-300 md:hidden ${
+                    isFilterDrawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                }`}
+                onClick={() => setIsFilterDrawerOpen(false)}
+            >
+                <div
+                    className={`absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 rounded-t-2xl p-6 transition-transform duration-300 transform ${
+                        isFilterDrawerOpen ? 'translate-y-0' : 'translate-y-full'
+                    }`}
+                    onClick={e => e.stopPropagation()}
+                    style={{ maxHeight: '85vh', overflowY: 'auto' }}
+                >
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
+                            <FiFilter className="h-5 w-5 mr-2"/> Filters
+                        </h2>
+                        <button 
+                            onClick={() => setIsFilterDrawerOpen(false)}
+                            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                        >
+                            <FiX className="h-6 w-6" />
+                        </button>
+                    </div>
+                    
+                    <div className="mb-2 w-16 h-1 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto"></div>
+                    
+                    {/* Mobile filters */}
+                    <div className="space-y-6">
+                        <div>
+                            <h3 className="font-medium text-gray-900 dark:text-white mb-3">Category</h3>
+                            <div className="space-y-2">
+                                {sidebarItems.filter(item => item.value).map((item) => (
+                                    <button
+                                        key={item.label}
+                                        onClick={() => handleFilterChange('type', item.value === 'all' ? null : item.value)}
+                                        className={`flex items-center w-full px-4 py-3 rounded-lg text-base transition-colors ${
+                                            currentType === item.value 
+                                                ? 'bg-gray-100 dark:bg-gray-700 font-medium' 
+                                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                        }`}
+                                    >
+                                        <span className="mr-3">{item.icon}</span>
+                                        <span>{item.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <button
+                                onClick={() => router.push('/search')}
+                                className="w-full flex items-center justify-center px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg text-base font-medium transition-colors"
+                            >
+                                <FiX className="h-5 w-5 mr-2" />
+                                Reset All Filters
+                            </button>
+                        </div>
+                    </div>
                 </div>
+            </div>
+            
+            {/* Mobile Filter Button - Fixed at the bottom */}
+            <div className="fixed inset-x-0 bottom-0 md:hidden">
+                <button
+                    onClick={() => setIsFilterDrawerOpen(true)}
+                    className="flex items-center justify-center w-full py-4 bg-black text-white dark:bg-white dark:text-black font-medium text-lg shadow-lg"
+                >
+                    <FiFilter className="h-5 w-5 mr-2" />
+                    Filters
+                </button>
             </div>
         </div>
     );

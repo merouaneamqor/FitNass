@@ -1,0 +1,7 @@
+Please create placeholder images manually:
+
+1. Create an image at public/images/placeholders/default-fitnass.jpg
+2. Create an image at public/images/default-trainer.png
+3. Create an image at public/images/default-class.png
+
+Or use the URL https://placehold.co/300x200/E9E9E9/999999?text=FitNass directly in your browser and save the images to these locations. 

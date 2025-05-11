@@ -26,7 +26,23 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'randomuser.me',
       },
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
     ],
+  },
+  // Cloudinary configuration
+  env: {
+    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: 'dztx2aoet', // User's cloud name
   },
 };
 

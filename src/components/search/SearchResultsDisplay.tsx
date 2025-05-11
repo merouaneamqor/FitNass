@@ -10,7 +10,7 @@ import AnimatedBackground from '@/components/ui/AnimatedBackground';
 import SearchResultsGrid from '@/components/search/SearchResultsGrid';
 import PaginationControls from '@/components/search/PaginationControls';
 import { SearchResult } from '@/types/search';
-import { searchAction } from '@/app/actions/search';
+import { search, SearchParams } from '@/app/actions/search';
 
 interface SearchResultsData {
   results: SearchResult[];
@@ -45,16 +45,36 @@ export function SearchResultsDisplay({ initialResults, searchParams }: SearchRes
     if (typeof window !== 'undefined' && window.history.state?.idx > 0) {
       console.log('URL changed, fetching new results');
       
-      // Convert URLSearchParams to plain object
-      const params: Record<string, string> = {};
-      urlSearchParams.forEach((value, key) => {
-        params[key] = value;
-      });
+      // Create a SearchParams object for the search function
+      const searchQuery: SearchParams = {
+        query: urlSearchParams.get('q') || '',
+        city: urlSearchParams.get('city') || undefined,
+        types: getTypesFromParam(urlSearchParams.get('type') || 'all'),
+        limit: 20
+      };
       
       // Fetch new results based on URL parameters
       startTransition(async () => {
-        const results = await searchAction(params);
-        setSearchResults(results);
+        try {
+          const searchResults = await search(searchQuery);
+          
+          // Format results in the expected structure
+          const formattedResults = {
+            results: searchResults,
+            currentPage: Number(urlSearchParams.get('page') || '1'),
+            totalPages: Math.ceil(searchResults.length / 20),
+            totalResults: searchResults.length,
+            error: null
+          };
+          
+          setSearchResults(formattedResults);
+        } catch (error) {
+          console.error('Error performing search:', error);
+          setSearchResults({
+            ...searchResults,
+            error: 'Failed to perform search. Please try again.'
+          });
+        }
       });
     }
   }, [urlSearchParams, pathname]);
@@ -80,9 +100,9 @@ export function SearchResultsDisplay({ initialResults, searchParams }: SearchRes
     const newParams: Record<string, string> = {};
     
     // Copy existing parameters except for page and the one being changed
-    Object.entries(searchParams).forEach(([key, value]) => {
-      if (key !== 'page' && key !== param && value) {
-        newParams[key] = value;
+    Object.entries(searchParams).forEach(([key, val]) => {
+      if (key !== 'page' && key !== param && val) {
+        newParams[key] = val;
       }
     });
     
@@ -99,15 +119,56 @@ export function SearchResultsDisplay({ initialResults, searchParams }: SearchRes
     // Update the URL
     router.push(newPath);
     
-    // Fetch new results using the server action
+    // Fetch new results using the search function
     startTransition(async () => {
-      // Pass the newParams object to be consistent with how the server action expects parameters
-      const results = await searchAction(newParams);
-      setSearchResults(results);
+      try {
+        // Create a SearchParams object for the search function
+        const searchQuery: SearchParams = {
+          query: newParams.q || '',
+          city: newParams.city,
+          types: getTypesFromParam(newParams.type || 'all'),
+          limit: 20
+        };
+        
+        const searchResults = await search(searchQuery);
+        
+        // Format results in the expected structure
+        const formattedResults = {
+          results: searchResults,
+          currentPage: 1,
+          totalPages: Math.ceil(searchResults.length / 20),
+          totalResults: searchResults.length,
+          error: null
+        };
+        
+        setSearchResults(formattedResults);
+      } catch (error) {
+        console.error('Error performing search:', error);
+        setSearchResults({
+          ...searchResults,
+          error: 'Failed to perform search. Please try again.'
+        });
+      }
     });
 
     // Close filter drawer after selection on mobile
     setIsFilterDrawerOpen(false);
+  };
+
+  // Helper function to convert type parameter to types array
+  const getTypesFromParam = (typeParam: string): string[] => {
+    switch (typeParam) {
+      case 'gym':
+        return ['PLACE']; // Search only places of type GYM
+      case 'club':
+        return ['PLACE']; // Search only places of type CLUB
+      case 'trainer':
+        return ['TRAINER'];
+      case 'class':
+        return ['CLASS'];
+      default:
+        return ['PLACE', 'TRAINER', 'CLASS']; // Default to all types
+    }
   };
 
   // Icons for type filters

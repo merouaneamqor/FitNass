@@ -29,32 +29,22 @@ function mapRoleToString(role: string): "user" | "admin" | "gym-owner" {
 }
 
 // Map Prisma User model to UserProfile type
-const mapUserToProfile = async (user: Prisma.UserGetPayload<{ include: { favorites: true } }>): Promise<UserProfile> => {
+const mapUserToProfile = async (user: Prisma.UserGetPayload<{ include: { favoritePlaces: true } }>): Promise<UserProfile> => {
   try {
-    // Get user reviews with gym data
-    const reviews = await prismaExec(
-      () => prisma.review.findMany({
-        where: { userId: user.id },
-        include: { gym: true },
-      }),
-      'Error fetching user reviews'
-    );
+    // Get user's reviews (optimized to fetch minimal data)
+    const reviews = await prisma.review.findMany({
+      where: { userId: user.id },
+      include: {
+        place: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
 
-    // Get user favorite gyms
-    const favoriteGyms = await prismaExec(
-      () => prisma.gym.findMany({
-        where: {
-          favoritedBy: {
-            some: {
-              id: user.id
-            }
-          }
-        }
-      }),
-      'Error fetching user favorite gyms'
-    );
-
-    // Map to UserProfile format
+    // Map the full user data to our UserProfile format
     return {
       id: user.id,
       name: user.name || '',
@@ -65,17 +55,19 @@ const mapUserToProfile = async (user: Prisma.UserGetPayload<{ include: { favorit
       image: user.image || '',
       bio: user.bio || '',
       memberSince: user.createdAt.toISOString(),
-      favoriteGyms: favoriteGyms.map(gym => gym.id),
+      favoritePlaces: user.favoritePlaces.map(place => ({
+        id: place.id,
+        type: place.type,
+      })),
       reviews: reviews.map(review => ({
         id: review.id,
-        gymId: review.gymId || '',
-        gymName: review.gym?.name || 'Unknown',
+        placeId: review.placeId || '',
+        placeName: review.place?.name || 'Unknown',
         rating: review.rating,
         comment: review.comment,
         createdAt: review.createdAt.toISOString(),
       })),
       // For now, we're returning empty arrays for subscriptions and bookings
-      // These would be populated from additional database tables in a full implementation
       subscriptions: [],
       bookings: []
     };
@@ -92,7 +84,7 @@ const mapUserToProfile = async (user: Prisma.UserGetPayload<{ include: { favorit
       image: user.image || '',
       bio: user.bio || '',
       memberSince: user.createdAt.toISOString(),
-      favoriteGyms: [],
+      favoritePlaces: [],
       reviews: [],
       subscriptions: [],
       bookings: []
@@ -106,7 +98,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
     const user = await prismaExec(() => 
       prisma.user.findUnique({
         where: { id: userId },
-        include: { favorites: true }
+        include: { favoritePlaces: true }
       }),
       'Error fetching user profile'
     );
@@ -127,7 +119,7 @@ export const getUserProfileByEmail = async (email: string): Promise<UserProfile 
     const user = await prismaExec(
       () => prisma.user.findUnique({
         where: { email },
-        include: { favorites: true }
+        include: { favoritePlaces: true }
       }),
       'Error fetching user profile by email'
     );
@@ -167,7 +159,7 @@ export const updateUserProfile = async (id: string, data: Partial<UserProfile>):
       () => prisma.user.update({
         where: { id },
         data: userUpdate,
-        include: { favorites: true }
+        include: { favoritePlaces: true }
       }),
       'Error updating user profile'
     );
@@ -179,39 +171,39 @@ export const updateUserProfile = async (id: string, data: Partial<UserProfile>):
   }
 };
 
-// Add a gym to user's favorites
-export const addFavoriteGym = async (userId: string, gymId: string): Promise<UserProfile | null> => {
+// Add a place to user's favorites
+export const addFavoritePlace = async (userId: string, placeId: string): Promise<UserProfile | null> => {
   try {
-    // First check if the gym exists
-    const gym = await prismaExec(
-      () => prisma.gym.findUnique({
-        where: { id: gymId }
+    // First check if the place exists
+    const place = await prismaExec(
+      () => prisma.place.findUnique({
+        where: { id: placeId }
       }),
-      'Error finding gym'
+      'Error finding place'
     );
 
-    if (!gym) {
-      throw new Error('Gym not found');
+    if (!place) {
+      throw new Error('Place not found');
     }
 
-    // Add the gym to user's favorites
+    // Add the place to user's favorites
     await prismaExec(
       () => prisma.user.update({
         where: { id: userId },
         data: {
-          favorites: {
-            connect: { id: gymId }
+          favoritePlaces: {
+            connect: { id: placeId }
           }
         },
       }),
-      'Error adding gym to favorites'
+      'Error adding place to favorites'
     );
 
     // Get the updated user profile
     const user = await prismaExec(
       () => prisma.user.findUnique({
         where: { id: userId },
-        include: { favorites: true }
+        include: { favoritePlaces: true }
       }),
       'Error fetching updated user profile'
     );
@@ -222,32 +214,32 @@ export const addFavoriteGym = async (userId: string, gymId: string): Promise<Use
 
     return mapUserToProfile(user);
   } catch (error) {
-    console.error('Error adding favorite gym:', error);
+    console.error('Error adding favorite place:', error);
     throw error;
   }
 };
 
-// Remove a gym from user's favorites
-export const removeFavoriteGym = async (userId: string, gymId: string): Promise<UserProfile | null> => {
+// Remove a place from user's favorites
+export const removeFavoritePlace = async (userId: string, placeId: string): Promise<UserProfile | null> => {
   try {
-    // Remove the gym from user's favorites
+    // Remove the place from user's favorites
     await prismaExec(
       () => prisma.user.update({
         where: { id: userId },
         data: {
-          favorites: {
-            disconnect: { id: gymId }
+          favoritePlaces: {
+            disconnect: { id: placeId }
           }
         },
       }),
-      'Error removing gym from favorites'
+      'Error removing place from favorites'
     );
 
     // Get the updated user profile
     const user = await prismaExec(
       () => prisma.user.findUnique({
         where: { id: userId },
-        include: { favorites: true }
+        include: { favoritePlaces: true }
       }),
       'Error fetching updated user profile'
     );
@@ -258,7 +250,16 @@ export const removeFavoriteGym = async (userId: string, gymId: string): Promise<
 
     return mapUserToProfile(user);
   } catch (error) {
-    console.error('Error removing favorite gym:', error);
+    console.error('Error removing favorite place:', error);
     throw error;
   }
+};
+
+// Maintain backwards compatibility with old functions
+export const addFavoriteGym = async (userId: string, gymId: string): Promise<UserProfile | null> => {
+  return addFavoritePlace(userId, gymId);
+};
+
+export const removeFavoriteGym = async (userId: string, gymId: string): Promise<UserProfile | null> => {
+  return removeFavoritePlace(userId, gymId);
 }; 
