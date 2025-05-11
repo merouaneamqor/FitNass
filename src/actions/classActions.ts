@@ -2,6 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { FitnessClass } from '@/types/fitnessClass';
+import { Place, PlaceType, PlaceStatus } from '@/types/place';
 
 interface FetchClassesParams {
   city: string;
@@ -21,20 +22,10 @@ export const fetchClassesByLocation = async ({
   try {
     const whereClause: any = {
       status: 'ACTIVE', // Only fetch active classes
-      OR: [ // Classes can belong to a Gym OR a Club in the specified city
-        {
-          gym: {
-            city: { equals: city, mode: 'insensitive' },
-            status: 'ACTIVE', // Ensure the gym itself is active
-          },
-        },
-        {
-          club: {
-            city: { equals: city, mode: 'insensitive' },
-            status: 'ACTIVE', // Ensure the club itself is active
-          },
-        },
-      ],
+      place: {
+        city: { equals: city, mode: 'insensitive' },
+        status: 'ACTIVE', // Ensure the place itself is active
+      },
     };
 
     // Add class type filter if provided
@@ -57,21 +48,34 @@ export const fetchClassesByLocation = async ({
         currency: true,
         images: true,
         capacity: true, // Include capacity if needed for ClassCard or filtering
-        // Include simplified Gym/Club/Trainer info if needed for cards
-        gym: {
-          select: { // Select all fields needed for the Gym type
-            id: true, name: true, description: true, city: true, address: true,
-            slug: true, citySlug: true, rating: true, priceRange: true, 
-            facilities: true, images: true, latitude: true, longitude: true, 
-            _count: { select: { reviews: true } }
-          }
-        },
-        club: {
-          select: { // Select all fields needed for the Club type
-            id: true, name: true, description: true, address: true, city: true, 
-            state: true, zipCode: true, latitude: true, longitude: true, phone: true,
-            website: true, email: true, rating: true, images: true, facilities: true,
-            openingHours: true, status: true, viewCount: true, createdAt: true, updatedAt: true,
+        // Include place info for cards
+        place: {
+          select: {
+            id: true, 
+            name: true, 
+            description: true, 
+            address: true,
+            city: true, 
+            state: true,
+            zipCode: true,
+            latitude: true, 
+            longitude: true,
+            phone: true,
+            website: true,
+            email: true,
+            rating: true, 
+            priceRange: true, 
+            facilities: true, 
+            images: true,
+            openingHours: true,
+            type: true,
+            slug: true, 
+            citySlug: true,
+            isVerified: true,
+            status: true,
+            viewCount: true,
+            createdAt: true,
+            updatedAt: true,
             _count: { select: { reviews: true, sportFields: true } }
           }
         },
@@ -82,17 +86,12 @@ export const fetchClassesByLocation = async ({
               certifications: true, city: true, rating: true, images: true, 
               phone: true, email: true, website: true, hourlyRate: true, 
               status: true, userId: true 
-              // Skip relations like user or classes for this context unless needed
           } 
         },
-        // Add schedule later if needed
       },
       orderBy: {
-        // Order by start time or name, depending on desired sort
-        startTime: 'asc', 
-        // name: 'asc',
+        startTime: 'asc',
       },
-      // Add pagination if needed
     });
 
     // Map Prisma result to FitnessClass type
@@ -103,29 +102,24 @@ export const fetchClassesByLocation = async ({
       endTime: cls.endTime as Date | null,
       duration: cls.duration as number,
       images: cls.images as string[],
-      // Type assertions might be needed if Prisma returns slightly different types (e.g., Decimal)
-      gym: cls.gym ? {
-        ...cls.gym,
-        rating: cls.gym.rating as number, // Assert number type if Prisma returns Decimal
-        latitude: cls.gym.latitude as number, // Assert number type
-        longitude: cls.gym.longitude as number // Assert number type
-      } : null,
-      club: cls.club ? {
-        ...cls.club,
-        rating: cls.club.rating as number | null, // Assert number | null type
-        latitude: cls.club.latitude as number | null, // Assert number | null type
-        longitude: cls.club.longitude as number | null // Assert number | null type
+      place: cls.place ? {
+        ...cls.place,
+        rating: cls.place.rating as number,
+        latitude: cls.place.latitude as number,
+        longitude: cls.place.longitude as number,
+        type: cls.place.type as PlaceType,
+        status: cls.place.status as PlaceStatus,
+        viewCount: cls.place.viewCount as number,
+        isVerified: cls.place.isVerified as boolean,
       } : null,
       trainer: cls.trainer ? {
         ...cls.trainer,
-        // Add assertions if Prisma types differ (e.g., Decimal for rating/hourlyRate)
         rating: cls.trainer.rating as number | null,
         hourlyRate: cls.trainer.hourlyRate as number | null
       } : null,
       capacity: cls.capacity as number | null,
       schedule: undefined,
-      gymId: null,
-      clubId: null,
+      placeId: null,
       trainerId: null
     }));
 

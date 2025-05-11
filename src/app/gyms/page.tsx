@@ -1,12 +1,12 @@
 import { fetchGyms } from '@/actions/gymActions';
-import { Gym } from '@/types/gym';
+import { Place } from '@/types/place';
 
 // Import from the barrel file
 import GymClient from '@/components/gyms';
 
 export default async function GymsPage() {
   // Fetch gyms data directly in the server component
-  let gyms: Gym[] = [];
+  let gyms: Place[] = [];
   let error: string | null = null;
   
   try {

@@ -20,6 +20,7 @@ type WhereClause = {
   }>;
   status?: ClubStatus;
   city?: { contains: string; mode: 'insensitive' };
+  type: "CLUB"; // Always filter for CLUB type places
 };
 
 export async function GET(request: NextRequest) {
@@ -35,7 +36,9 @@ export async function GET(request: NextRequest) {
     console.log(`API: Club search query: "${query}", city: "${city}", page: ${page}, limit: ${limit}, status: ${statusParam}`);
 
     // Build where clause directly for Prisma
-    const whereClause: WhereClause = {};
+    const whereClause: WhereClause = {
+      type: "CLUB" // Always filter for places of type CLUB
+    };
 
     if (query) {
       whereClause.OR = [
@@ -72,7 +75,7 @@ export async function GET(request: NextRequest) {
     console.log("Prisma Where Clause:", JSON.stringify(whereClause, null, 2));
 
     // Execute Prisma query directly
-    const clubs = await prisma.club.findMany({
+    const clubs = await prisma.place.findMany({
       where: whereClause,
       select: {
         id: true,
@@ -108,7 +111,7 @@ export async function GET(request: NextRequest) {
     console.log(`API: Found ${clubs.length} clubs.`);
 
     // Get total count for pagination (optional)
-    const totalClubs = await prisma.club.count({ where: whereClause });
+    const totalClubs = await prisma.place.count({ where: whereClause });
     console.log(`API: Total matching clubs: ${totalClubs}`);
 
     return NextResponse.json(clubs);

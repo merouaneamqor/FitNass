@@ -7,10 +7,11 @@ import prisma from '@/lib/db';
 async function getGymData(citySlug: string, gymSlug: string) {
   try {
     // First try to find by slugs
-    const gym = await prisma.gym.findFirst({
+    const gym = await prisma.place.findFirst({
       where: { 
         citySlug,
-        slug: gymSlug
+        slug: gymSlug,
+        type: 'GYM'
       },
       select: {
         id: true,
@@ -18,19 +19,24 @@ async function getGymData(citySlug: string, gymSlug: string) {
         city: true,
         slug: true,
         citySlug: true,
+        type: true
       }
     });
 
     // If not found by slugs, try to find by ID (for backward compatibility)
     if (!gym) {
-      const gymById = await prisma.gym.findUnique({
-        where: { id: gymSlug },
+      const gymById = await prisma.place.findUnique({
+        where: { 
+          id: gymSlug,
+          type: 'GYM'
+        },
         select: {
           id: true,
           name: true,
           city: true,
           slug: true,
           citySlug: true,
+          type: true
         }
       });
       

@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   try {
     const session = await getServerSession();
     
-    if (!session || session.user.role !== 'GYM_OWNER') {
+    if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -30,9 +30,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     const validatedData = promotionSchema.parse(body);
 
-    const gym = await prisma.gym.findFirst({
+    const gym = await prisma.place.findFirst({
       where: {
         ownerId: session.user.id,
+        type: 'GYM',
       },
     });
 
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
     const promotion = await prisma.promotion.create({
       data: {
         ...validatedData,
-        gymId: gym.id,
+        placeId: gym.id,
       },
     });
 
@@ -71,16 +72,17 @@ export async function GET() {
   try {
     const session = await getServerSession();
     
-    if (!session || session.user.role !== 'GYM_OWNER') {
+    if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    const gym = await prisma.gym.findFirst({
+    const gym = await prisma.place.findFirst({
       where: {
         ownerId: session.user.id,
+        type: 'GYM',
       },
     });
 
@@ -93,7 +95,7 @@ export async function GET() {
 
     const promotions = await prisma.promotion.findMany({
       where: {
-        gymId: gym.id,
+        placeId: gym.id,
       },
       orderBy: {
         createdAt: 'desc',
@@ -114,7 +116,7 @@ export async function PUT(request: Request) {
   try {
     const session = await getServerSession();
     
-    if (!session || session.user.role !== 'GYM_OWNER') {
+    if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -130,7 +132,7 @@ export async function PUT(request: Request) {
         id: id,
       },
       include: {
-        gym: true,
+        place: true,
       },
     });
 
@@ -141,7 +143,7 @@ export async function PUT(request: Request) {
       );
     }
 
-    if (promotion.gym.ownerId !== session.user.id) {
+    if (promotion.place.ownerId !== session.user.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 403 }
@@ -176,7 +178,7 @@ export async function DELETE(request: Request) {
   try {
     const session = await getServerSession();
     
-    if (!session || session.user.role !== 'GYM_OWNER') {
+    if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -198,7 +200,7 @@ export async function DELETE(request: Request) {
         id: id,
       },
       include: {
-        gym: true,
+        place: true,
       },
     });
 
@@ -209,7 +211,7 @@ export async function DELETE(request: Request) {
       );
     }
 
-    if (promotion.gym.ownerId !== session.user.id) {
+    if (promotion.place.ownerId !== session.user.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 403 }

@@ -20,10 +20,13 @@ export async function GET(
     const { id } = params;
     
     try {
-      // Fetch gym with owner information
+      // Fetch place (gym) with owner information
       const gym = await prismaExec(
-        () => prisma.gym.findUnique({
-          where: { id },
+        () => prisma.place.findUnique({
+          where: { 
+            id,
+            type: 'GYM'
+          },
           include: {
             owner: {
               select: {
@@ -65,8 +68,11 @@ export async function GET(
       console.error('Database error fetching gym:', dbError);
       
       // Fallback query without problematic fields/relations
-      const simpleGym = await prisma.gym.findUnique({
-        where: { id },
+      const simpleGym = await prisma.place.findUnique({
+        where: { 
+          id,
+          type: 'GYM'
+        },
         select: {
           id: true,
           name: true,
@@ -114,8 +120,11 @@ export async function PUT(
     
     // Check if gym exists
     const existingGym = await prismaExec(
-      () => prisma.gym.findUnique({
-        where: { id }
+      () => prisma.place.findUnique({
+        where: { 
+          id,
+          type: 'GYM'
+        }
       }),
       'Error checking if gym exists'
     );
@@ -125,7 +134,9 @@ export async function PUT(
     }
     
     // Prepare update data
-    const updateData: Prisma.GymUpdateInput = {};
+    const updateData: Prisma.PlaceUpdateInput = {
+      type: 'GYM' // Ensure we maintain the gym type
+    };
     
     // Only include fields that are provided in the request
     if (data.name !== undefined) updateData.name = data.name;
@@ -142,7 +153,7 @@ export async function PUT(
     if (data.priceRange !== undefined) updateData.priceRange = data.priceRange;
     if (data.facilities !== undefined) updateData.facilities = data.facilities;
     if (data.images !== undefined) updateData.images = data.images;
-    // Removed status field as it might not exist in the DB yet
+    if (data.status !== undefined) updateData.status = data.status;
     
     // Handle owner change if provided
     if (data.ownerId) {
@@ -154,7 +165,7 @@ export async function PUT(
     try {
       // Update gym
       const updatedGym = await prismaExec(
-        () => prisma.gym.update({
+        () => prisma.place.update({
           where: { id },
           data: updateData,
           include: {
@@ -175,7 +186,7 @@ export async function PUT(
       console.error('Database error updating gym:', dbError);
       
       // Try a simplified update operation without problematic fields
-      const simpleUpdateData = {
+      const simpleUpdateData: Prisma.PlaceUpdateInput = {
         name: data.name,
         description: data.description,
         address: data.address,
@@ -187,6 +198,7 @@ export async function PUT(
         priceRange: data.priceRange,
         facilities: data.facilities,
         images: data.images,
+        type: 'GYM' as const, // Ensure the type is correctly set
       };
       
       // Remove undefined values
@@ -196,7 +208,7 @@ export async function PUT(
         }
       });
       
-      const simpleGym = await prisma.gym.update({
+      const simpleGym = await prisma.place.update({
         where: { id },
         data: simpleUpdateData
       });
@@ -226,8 +238,11 @@ export async function DELETE(
     
     // Check if gym exists
     const existingGym = await prismaExec(
-      () => prisma.gym.findUnique({
-        where: { id }
+      () => prisma.place.findUnique({
+        where: { 
+          id,
+          type: 'GYM'
+        }
       }),
       'Error checking if gym exists'
     );
@@ -240,42 +255,23 @@ export async function DELETE(
       // First delete all associated reviews
       await prismaExec(
         () => prisma.review.deleteMany({
-          where: { gymId: id }
+          where: { placeId: id }
         }),
         'Error deleting associated reviews'
       );
       
-      // Then delete all associated promotions
-      await prismaExec(
-        () => prisma.promotion.deleteMany({
-          where: { gymId: id }
-        }),
-        'Error deleting associated promotions'
-      );
-      
-      // Finally delete the gym
-      await prismaExec(
-        () => prisma.gym.delete({
+      // Delete the place entity itself
+      const deletedGym = await prismaExec(
+        () => prisma.place.delete({
           where: { id }
         }),
         'Error deleting gym'
       );
       
-      return NextResponse.json({ message: 'Gym deleted successfully' });
+      return NextResponse.json({ success: true, deletedGym });
     } catch (dbError) {
       console.error('Database error deleting gym:', dbError);
-      
-      // Try a direct delete without the cascade
-      try {
-        await prisma.gym.delete({
-          where: { id }
-        });
-        
-        return NextResponse.json({ message: 'Gym deleted successfully' });
-      } catch (finalError) {
-        console.error('Final error deleting gym:', finalError);
-        throw new Error('Failed to delete gym after multiple attempts');
-      }
+      return NextResponse.json({ error: 'Failed to delete gym due to database error' }, { status: 500 });
     }
   } catch (error) {
     console.error('Error deleting gym:', error);

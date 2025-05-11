@@ -16,16 +16,17 @@ export async function GET() {
   try {
     const session = await getServerSession();
     
-    if (!session || session.user.role !== 'GYM_OWNER') {
+    if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    const gym = await prisma.gym.findFirst({
+    const gym = await prisma.place.findFirst({
       where: {
         ownerId: session.user.id,
+        type: 'GYM',
       },
     });
 
@@ -38,7 +39,7 @@ export async function GET() {
 
     const reviews = await prisma.review.findMany({
       where: {
-        gymId: gym.id,
+        placeId: gym.id,
       },
       include: {
         user: {
@@ -82,12 +83,13 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { gymId, ...reviewData } = body;
+    const { placeId, ...reviewData } = body;
     const validatedData = reviewSchema.parse(reviewData);
 
-    const gym = await prisma.gym.findUnique({
+    const gym = await prisma.place.findUnique({
       where: {
-        id: gymId,
+        id: placeId,
+        type: 'GYM',
       },
     });
 
@@ -101,7 +103,7 @@ export async function POST(request: Request) {
     // Check if user has already reviewed this gym
     const existingReview = await prisma.review.findFirst({
       where: {
-        gymId,
+        placeId,
         userId: session.user.id,
       },
     });
@@ -116,7 +118,7 @@ export async function POST(request: Request) {
     const review = await prisma.review.create({
       data: {
         ...validatedData,
-        gymId,
+        placeId,
         userId: session.user.id,
       },
       include: {
@@ -132,15 +134,15 @@ export async function POST(request: Request) {
     // Update gym's average rating
     const allReviews = await prisma.review.findMany({
       where: {
-        gymId,
+        placeId,
       },
     });
 
     const newAverageRating = allReviews.reduce((acc, review) => acc + review.rating, 0) / allReviews.length;
 
-    await prisma.gym.update({
+    await prisma.place.update({
       where: {
-        id: gymId,
+        id: placeId,
       },
       data: {
         rating: Number(newAverageRating.toFixed(1)),
@@ -217,15 +219,15 @@ export async function PUT(request: Request) {
     // Update gym's average rating
     const allReviews = await prisma.review.findMany({
       where: {
-        gymId: review.gymId,
+        placeId: review.placeId,
       },
     });
 
     const newAverageRating = allReviews.reduce((acc, review) => acc + review.rating, 0) / allReviews.length;
 
-    await prisma.gym.update({
+    await prisma.place.update({
       where: {
-        id: review.gymId ?? undefined,
+        id: review.placeId ?? undefined,
       },
       data: {
         rating: Number(newAverageRating.toFixed(1)),
@@ -283,39 +285,40 @@ export async function DELETE(request: Request) {
       );
     }
 
-    if (review.userId !== session.user.id && session.user.role !== 'GYM_OWNER') {
+    if (review.userId !== session.user.id && session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 403 }
       );
     }
 
-    const gymId = review.gymId;
     await prisma.review.delete({
       where: {
         id,
       },
     });
 
-    // Update gym's average rating
-    const allReviews = await prisma.review.findMany({
-      where: {
-        gymId,
-      },
-    });
+    // If the review has a placeId, update the place's rating
+    if (review.placeId) {
+      const allReviews = await prisma.review.findMany({
+        where: {
+          placeId: review.placeId,
+        },
+      });
 
-    const newAverageRating = allReviews.length > 0
-      ? Number((allReviews.reduce((acc, review) => acc + review.rating, 0) / allReviews.length).toFixed(1))
-      : 0;
+      const newAverageRating = allReviews.length === 0 
+        ? 0 
+        : allReviews.reduce((acc, review) => acc + review.rating, 0) / allReviews.length;
 
-    await prisma.gym.update({
-      where: {
-        id: gymId ?? undefined,
-      },
-      data: {
-        rating: Number(newAverageRating.toFixed(1)),
-      },
-    });
+      await prisma.place.update({
+        where: {
+          id: review.placeId,
+        },
+        data: {
+          rating: Number(newAverageRating.toFixed(1)),
+        },
+      });
+    }
 
     return NextResponse.json({ message: 'Review deleted successfully' });
   } catch (error) {

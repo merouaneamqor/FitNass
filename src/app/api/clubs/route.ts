@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
   const skip = (page - 1) * limit;
 
   try {
-    const clubs = await prisma.club.findMany({
+    const clubs = await prisma.place.findMany({
       where: {
         OR: [
           { name: { contains: search, mode: "insensitive" } },
@@ -38,6 +38,7 @@ export async function GET(req: NextRequest) {
           { city: { contains: search, mode: "insensitive" } },
         ],
         status: "ACTIVE",
+        type: "CLUB"
       },
       select: {
         id: true,
@@ -64,7 +65,7 @@ export async function GET(req: NextRequest) {
       take: limit,
     });
 
-    const totalCount = await prisma.club.count({
+    const totalCount = await prisma.place.count({
       where: {
         OR: [
           { name: { contains: search, mode: "insensitive" } },
@@ -72,6 +73,7 @@ export async function GET(req: NextRequest) {
           { city: { contains: search, mode: "insensitive" } },
         ],
         status: "ACTIVE",
+        type: "CLUB"
       },
     });
 
@@ -111,7 +113,7 @@ export async function POST(req: NextRequest) {
       select: { role: true },
     });
 
-    if (!user || (user.role !== "ADMIN" && user.role !== "CLUB_OWNER")) {
+    if (!user || (user.role !== "ADMIN" && user.role !== "PLACE_OWNER")) {
       return NextResponse.json(
         { error: "Insufficient permissions to create a club" },
         { status: 403 }
@@ -131,20 +133,21 @@ export async function POST(req: NextRequest) {
     }
 
     // Create the club
-    const club = await prisma.club.create({
+    const club = await prisma.place.create({
       data: {
         ...result.data,
+        type: "CLUB",
         images: result.data.images || [],
         facilities: result.data.facilities || [],
         ownerId: session.user.id,
       },
     });
 
-    // If user is not already a CLUB_OWNER, update their role
-    if (user.role !== "CLUB_OWNER" && user.role !== "ADMIN") {
+    // If user is not already a PLACE_OWNER, update their role
+    if (user.role !== "PLACE_OWNER" && user.role !== "ADMIN") {
       await prisma.user.update({
         where: { id: session.user.id },
-        data: { role: "CLUB_OWNER" },
+        data: { role: "PLACE_OWNER" },
       });
     }
 

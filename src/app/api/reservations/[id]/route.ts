@@ -34,7 +34,7 @@ export async function GET(
       include: {
         sportField: {
           include: {
-            club: {
+            place: {
               select: {
                 id: true,
                 name: true,
@@ -44,6 +44,7 @@ export async function GET(
                 zipCode: true,
                 phone: true,
                 email: true,
+                type: true,
               },
             },
           },
@@ -74,14 +75,14 @@ export async function GET(
 
     const isAdmin = user?.role === "ADMIN";
     const isOwner = reservation.userId === session.user.id;
-    const isClubOwner = user?.role === "CLUB_OWNER" && 
-                        reservation.sportField.club.id === 
-                        (await prisma.club.findFirst({ 
+    const isPlaceOwner = user?.role === "PLACE_OWNER" && 
+                        reservation.sportField.place.id === 
+                        (await prisma.place.findFirst({ 
                           where: { ownerId: session.user.id },
                           select: { id: true }
                         }))?.id;
 
-    if (!isAdmin && !isOwner && !isClubOwner) {
+    if (!isAdmin && !isOwner && !isPlaceOwner) {
       return NextResponse.json(
         { error: "You don't have permission to view this reservation" },
         { status: 403 }
@@ -120,7 +121,7 @@ export async function PATCH(
       include: {
         sportField: {
           include: {
-            club: true,
+            place: true,
           },
         },
       },
@@ -141,10 +142,10 @@ export async function PATCH(
 
     const isAdmin = user?.role === "ADMIN";
     const isOwner = reservation.userId === session.user.id;
-    const isClubOwner = user?.role === "CLUB_OWNER" && 
-                        reservation.sportField.club.ownerId === session.user.id;
+    const isPlaceOwner = user?.role === "PLACE_OWNER" && 
+                        reservation.sportField.place.ownerId === session.user.id;
 
-    if (!isAdmin && !isOwner && !isClubOwner) {
+    if (!isAdmin && !isOwner && !isPlaceOwner) {
       return NextResponse.json(
         { error: "You don't have permission to update this reservation" },
         { status: 403 }
@@ -201,7 +202,7 @@ export async function DELETE(
       include: {
         sportField: {
           include: {
-            club: true,
+            place: true,
           },
         },
       },
@@ -222,10 +223,10 @@ export async function DELETE(
 
     const isAdmin = user?.role === "ADMIN";
     const isOwner = reservation.userId === session.user.id;
-    const isClubOwner = user?.role === "CLUB_OWNER" && 
-                        reservation.sportField.club.ownerId === session.user.id;
+    const isPlaceOwner = user?.role === "PLACE_OWNER" && 
+                        reservation.sportField.place.ownerId === session.user.id;
 
-    if (!isAdmin && !isOwner && !isClubOwner) {
+    if (!isAdmin && !isOwner && !isPlaceOwner) {
       return NextResponse.json(
         { error: "You don't have permission to cancel this reservation" },
         { status: 403 }

@@ -1,11 +1,11 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-import { Gym } from '@/types/gym';
+import { Place } from '@/types/place';
 import { Trainer } from '@/types/trainer';
 
 interface CityOverviewData {
-  featuredGyms: Gym[];
+  featuredGyms: Place[];
   featuredTrainers: Trainer[];
   availableClassTypes: string[];
 }
@@ -19,20 +19,20 @@ export const fetchCityOverviewData = async (city: string): Promise<CityOverviewD
 
   try {
     // Fetch top N gyms by rating (or other criteria)
-    const featuredGymsPromise = prisma.gym.findMany({
+    const featuredGymsPromise = prisma.place.findMany({
       where: {
         city: { equals: city, mode: 'insensitive' },
         status: 'ACTIVE',
+        type: 'GYM',
       },
-      select: { // Select fields needed for Gym type + GymCard
+      select: {
         id: true, name: true, description: true, address: true, city: true,
-        images: true, rating: true, facilities: true,
-        priceRange: true, // <-- Select priceRange
-        latitude: true,   // <-- Select latitude
-        longitude: true,  // <-- Select longitude
-        slug: true,       // <-- Select slug (optional but good practice)
-        citySlug: true,   // <-- Select citySlug (optional but good practice)
-        _count: { select: { reviews: true } }
+        state: true, zipCode: true, phone: true, website: true, email: true,
+        images: true, rating: true, facilities: true, priceRange: true,
+        latitude: true, longitude: true, type: true, slug: true, citySlug: true, 
+        isVerified: true, status: true, viewCount: true, createdAt: true, updatedAt: true,
+        _count: { select: { reviews: true, sportFields: true } },
+        openingHours: true,
       },
       orderBy: { rating: 'desc' },
       take: MAX_FEATURED_ITEMS,
@@ -47,24 +47,20 @@ export const fetchCityOverviewData = async (city: string): Promise<CityOverviewD
       select: { // Select fields needed for Trainer type + TrainerCard
         id: true, name: true, bio: true, specialties: true, certifications: true,
         city: true, rating: true, images: true, hourlyRate: true,
-        phone: true,      // <-- Select phone
-        email: true,      // <-- Select email
-        website: true,    // <-- Select website
-        status: true,     // <-- Select status (if exists in model)
-        userId: true      // <-- Select userId (if exists in model)
+        phone: true, email: true, website: true, status: true, userId: true
       },
       orderBy: { rating: 'desc' },
       take: MAX_FEATURED_ITEMS,
     });
 
-    // Fetch distinct class types available in the city (from active classes in active gyms/clubs)
+    // Fetch distinct class types available in the city (from active classes in active places)
     const availableClassTypesPromise = prisma.fitnessClass.findMany({
        where: {
          status: 'ACTIVE',
-         OR: [
-           { gym: { city: { equals: city, mode: 'insensitive' }, status: 'ACTIVE' } },
-           { club: { city: { equals: city, mode: 'insensitive' }, status: 'ACTIVE' } },
-         ],
+         place: { 
+           city: { equals: city, mode: 'insensitive' }, 
+           status: 'ACTIVE' 
+         }
        },
        select: {
          type: true,
@@ -82,13 +78,17 @@ export const fetchCityOverviewData = async (city: string): Promise<CityOverviewD
     // Map distinct class types to a simple string array and lowercase for consistency
     const availableClassTypes = distinctClassTypesResult.map(c => c.type.toLowerCase()).sort();
 
-    // Map results to ensure correct types (similar to other actions)
-    const mappedGyms = featuredGyms.map((gym): Gym => ({
-      ...gym, // Spread all selected fields
-      images: gym.images as string[],
-      facilities: gym.facilities as string[],
-      rating: (gym.rating as number | null) ?? 0,
+    // Map results to ensure correct types
+    const mappedGyms = featuredGyms.map((place): Place => ({
+      ...place, // Spread all selected fields
+      images: place.images as string[],
+      facilities: place.facilities as string[],
+      rating: place.rating as number,
+      latitude: place.latitude as number,
+      longitude: place.longitude as number,
+      openingHours: place.openingHours,
     }));
+    
     const mappedTrainers = featuredTrainers.map((trainer): Trainer => ({
       ...trainer, // Spread all selected fields
       rating: trainer.rating as number | null,

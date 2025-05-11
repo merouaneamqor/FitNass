@@ -4,8 +4,8 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { z } from "zod";
 
-// Schema for club update validation
-const clubUpdateSchema = z.object({
+// Schema for place update validation
+const placeUpdateSchema = z.object({
   name: z.string().min(1, "Name is required").optional(),
   description: z.string().min(1, "Description is required").optional(),
   address: z.string().min(1, "Address is required").optional(),
@@ -30,14 +30,20 @@ export async function GET(
 ) {
   try {
     // Increment view count
-    await prisma.club.update({
-      where: { id: params.id },
+    await prisma.place.update({
+      where: { 
+        id: params.id,
+        type: 'CLUB'
+      },
       data: { viewCount: { increment: 1 } },
     });
 
     // Get club details
-    const club = await prisma.club.findUnique({
-      where: { id: params.id },
+    const club = await prisma.place.findUnique({
+      where: { 
+        id: params.id,
+        type: 'CLUB'
+      },
       include: {
         sportFields: {
           where: {
@@ -111,8 +117,11 @@ export async function PATCH(
     }
 
     // Get the club to check ownership
-    const club = await prisma.club.findUnique({
-      where: { id: params.id },
+    const club = await prisma.place.findUnique({
+      where: { 
+        id: params.id,
+        type: 'CLUB'
+      },
       select: { ownerId: true },
     });
 
@@ -142,7 +151,7 @@ export async function PATCH(
     const body = await req.json();
     
     // Validate request body
-    const result = clubUpdateSchema.safeParse(body);
+    const result = placeUpdateSchema.safeParse(body);
     
     if (!result.success) {
       return NextResponse.json(
@@ -151,10 +160,13 @@ export async function PATCH(
       );
     }
 
-    // Update the club
-    const updatedClub = await prisma.club.update({
+    // Update the club, ensure we maintain the club type
+    const updatedClub = await prisma.place.update({
       where: { id: params.id },
-      data: result.data,
+      data: {
+        ...result.data,
+        type: 'CLUB' // Ensure we maintain the club type
+      },
     });
 
     return NextResponse.json(updatedClub);
@@ -184,8 +196,11 @@ export async function DELETE(
     }
 
     // Get the club to check ownership
-    const club = await prisma.club.findUnique({
-      where: { id: params.id },
+    const club = await prisma.place.findUnique({
+      where: { 
+        id: params.id,
+        type: 'CLUB'
+      },
       select: { ownerId: true },
     });
 
@@ -213,7 +228,7 @@ export async function DELETE(
     }
 
     // Delete the club (this will cascade to sportFields per the schema)
-    await prisma.club.delete({
+    await prisma.place.delete({
       where: { id: params.id },
     });
 

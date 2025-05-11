@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db'; // Import prisma directly
 
 // Define types (keep these)
-export type GymStatus =
+export type PlaceStatus =
   | "ACTIVE"
   | "INACTIVE"
   | "PENDING_APPROVAL"
@@ -15,8 +15,9 @@ type WhereClause = {
     address?: { contains: string; mode: 'insensitive' };
     description?: { contains: string; mode: 'insensitive' };
   }>;
-  status?: GymStatus;
+  status?: PlaceStatus;
   city?: { contains: string; mode: 'insensitive' };
+  type: "GYM"; // Always filter for GYM type places
 };
 
 // Set route as dynamic to avoid static rendering failures
@@ -35,7 +36,9 @@ export async function GET(request: NextRequest) {
     console.log(`API: Gym search query: "${query}", city: "${city}", page: ${page}, limit: ${limit}, status: ${statusParam}`);
 
     // Build where clause directly for Prisma
-    const whereClause: WhereClause = {};
+    const whereClause: WhereClause = {
+      type: "GYM" // Always filter for places of type GYM
+    };
 
     if (query) {
       whereClause.OR = [
@@ -59,10 +62,10 @@ export async function GET(request: NextRequest) {
     // Add status filter only if explicitly provided
     if (statusParam) {
        // Basic validation for status
-       const validStatuses: GymStatus[] = ["ACTIVE", "INACTIVE", "PENDING_APPROVAL", "CLOSED"];
+       const validStatuses: PlaceStatus[] = ["ACTIVE", "INACTIVE", "PENDING_APPROVAL", "CLOSED"];
        const upperStatus = statusParam.toUpperCase();
-       if (validStatuses.includes(upperStatus as GymStatus)) {
-           whereClause.status = upperStatus as GymStatus;
+       if (validStatuses.includes(upperStatus as PlaceStatus)) {
+           whereClause.status = upperStatus as PlaceStatus;
        } else {
            console.warn(`Invalid status parameter received: ${statusParam}`);
            // Optionally return an error or ignore invalid status
@@ -77,7 +80,7 @@ export async function GET(request: NextRequest) {
     console.log("Prisma Where Clause:", JSON.stringify(whereClause, null, 2));
 
     // Execute Prisma query directly
-    const gyms = await prisma.gym.findMany({
+    const gyms = await prisma.place.findMany({
       where: whereClause,
       select: {
         id: true,
@@ -96,6 +99,7 @@ export async function GET(request: NextRequest) {
         facilities: true,
         images: true,
         status: true, // Include status in selection
+        type: true, // Include type in selection
         _count: {
           select: {
             reviews: true,
@@ -114,7 +118,7 @@ export async function GET(request: NextRequest) {
     console.log(`API: Found ${gyms.length} gyms.`);
 
     // Get total count for pagination (optional but good practice)
-    const totalGyms = await prisma.gym.count({ where: whereClause });
+    const totalGyms = await prisma.place.count({ where: whereClause });
     console.log(`API: Total matching gyms: ${totalGyms}`);
 
     // Return results (and optionally pagination info)

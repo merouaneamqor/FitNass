@@ -11,10 +11,11 @@ import { slugify } from '@/lib/utils';
 async function getGymData(citySlug: string, gymSlug: string) {
   try {
     // First try to find by slugs
-    const gym = await prisma.gym.findFirst({
+    const gym = await prisma.place.findFirst({
       where: { 
         citySlug,
-        slug: gymSlug
+        slug: gymSlug,
+        type: 'GYM'
       },
       select: {
         id: true,
@@ -35,6 +36,7 @@ async function getGymData(citySlug: string, gymSlug: string) {
         longitude: true,
         slug: true,
         citySlug: true,
+        type: true,
         owner: {
           select: { name: true }
         },
@@ -62,8 +64,11 @@ async function getGymData(citySlug: string, gymSlug: string) {
     // If not found by slugs, try to find by ID (for backward compatibility)
     // This is a fallback for old URLs or if gymSlug is actually an ID
     if (!gym) {
-      const gymById = await prisma.gym.findUnique({
-        where: { id: gymSlug },
+      const gymById = await prisma.place.findUnique({
+        where: { 
+          id: gymSlug,
+          type: 'GYM'
+        },
         select: {
           id: true,
           name: true,
@@ -83,6 +88,7 @@ async function getGymData(citySlug: string, gymSlug: string) {
           longitude: true,
           slug: true,
           citySlug: true,
+          type: true,
           owner: {
             select: { name: true }
           },

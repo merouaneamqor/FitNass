@@ -10,8 +10,11 @@ export async function GET(
     
     try {
       // Use a simple query first to avoid field issues
-      const simpleGym = await prisma.gym.findUnique({
-        where: { id },
+      const simpleGym = await prisma.place.findUnique({
+        where: { 
+          id,
+          type: 'GYM'
+        },
         select: {
           id: true,
           name: true,
@@ -29,7 +32,8 @@ export async function GET(
           email: true,
           createdAt: true,
           updatedAt: true,
-          ownerId: true
+          ownerId: true,
+          type: true
         }
       });
       
@@ -49,7 +53,7 @@ export async function GET(
         
         // Get reviews
         const reviews = await prisma.review.findMany({
-          where: { gymId: id },
+          where: { placeId: id },
           select: {
             id: true,
             rating: true,
@@ -70,7 +74,7 @@ export async function GET(
         
         // Get review count
         const reviewCount = await prisma.review.count({
-          where: { gymId: id }
+          where: { placeId: id }
         });
         
         // Combine all data
@@ -94,8 +98,11 @@ export async function GET(
       
       // Last resort fallback with minimal fields
       try {
-        const minimalGym = await prisma.gym.findUnique({
-          where: { id },
+        const minimalGym = await prisma.place.findUnique({
+          where: { 
+            id,
+            type: 'GYM'
+          },
           select: {
             id: true,
             name: true,
@@ -104,7 +111,8 @@ export async function GET(
             rating: true,
             priceRange: true,
             facilities: true,
-            images: true
+            images: true,
+            type: true
           }
         });
         

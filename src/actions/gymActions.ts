@@ -1,37 +1,54 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-import { Gym } from '@/types/gym';
+import { Place } from '@/types/place';
 
-export const fetchGyms = async (): Promise<Gym[]> => {
+export const fetchGyms = async (): Promise<Place[]> => {
   try {
-    const gyms = await prisma.gym.findMany({
+    const places = await prisma.place.findMany({
+      where: {
+        type: 'GYM',
+      },
       select: {
         id: true,
         name: true,
         description: true,
         address: true,
         city: true,
-        slug: true,
-        citySlug: true,
+        state: true,
+        zipCode: true,
         latitude: true,
         longitude: true,
-        priceRange: true,
-        facilities: true,
-        images: true,
+        phone: true,
+        website: true,
+        email: true,
         rating: true,
+        priceRange: true,
+        images: true,
+        facilities: true,
+        openingHours: true,
+        type: true,
+        slug: true,
+        citySlug: true,
+        isVerified: true,
+        status: true,
+        viewCount: true,
         createdAt: true,
+        updatedAt: true,
         _count: {
-          select: { reviews: true }
+          select: { reviews: true, sportFields: true }
         }
       },
       orderBy: { createdAt: 'desc' }
     });
     
-    return gyms.map((gym): Gym => ({
-      ...gym,
-      images: gym.images as string[],
-      facilities: gym.facilities as string[],
+    return places.map((place): Place => ({
+      ...place,
+      images: place.images as string[],
+      facilities: place.facilities as string[],
+      latitude: place.latitude as number,
+      longitude: place.longitude as number,
+      rating: place.rating as number,
     }));
   } catch (error: unknown) {
     console.error('Database Error:', error);
@@ -39,20 +56,20 @@ export const fetchGyms = async (): Promise<Gym[]> => {
   }
 };
 
-// New action to fetch gyms by city
-export const fetchGymsByLocation = async (city: string): Promise<Gym[]> => {
+// Action to fetch gyms by city
+export const fetchGymsByLocation = async (city: string): Promise<Place[]> => {
   if (!city) {
     throw new Error('City parameter is required.');
   }
 
   try {
-    const gyms = await prisma.gym.findMany({
+    const places = await prisma.place.findMany({
       where: {
         city: {
-          // Use equals for exact match, or contains/mode: 'insensitive' for partial match
           equals: city,
-          mode: 'insensitive', // Assuming case-insensitive matching is desired
+          mode: 'insensitive',
         },
+        type: 'GYM',
       },
       select: {
         id: true,
@@ -60,24 +77,40 @@ export const fetchGymsByLocation = async (city: string): Promise<Gym[]> => {
         description: true,
         address: true,
         city: true,
+        state: true,
+        zipCode: true,
         latitude: true,
         longitude: true,
-        priceRange: true,
-        facilities: true,
-        images: true,
+        phone: true,
+        website: true,
+        email: true,
         rating: true,
+        priceRange: true,
+        images: true,
+        facilities: true,
+        openingHours: true,
+        type: true,
+        slug: true,
+        citySlug: true,
+        isVerified: true,
+        status: true,
+        viewCount: true,
         createdAt: true,
+        updatedAt: true,
         _count: {
-          select: { reviews: true },
-        },
+          select: { reviews: true, sportFields: true }
+        }
       },
-      orderBy: { rating: 'desc' }, // Order by rating for relevance within the city
+      orderBy: { rating: 'desc' },
     });
 
-    return gyms.map((gym): Gym => ({
-      ...gym,
-      images: gym.images as string[],
-      facilities: gym.facilities as string[],
+    return places.map((place): Place => ({
+      ...place,
+      images: place.images as string[],
+      facilities: place.facilities as string[],
+      latitude: place.latitude as number,
+      longitude: place.longitude as number,
+      rating: place.rating as number,
     }));
   } catch (error: unknown) {
     console.error('Database Error fetching gyms by location:', error);

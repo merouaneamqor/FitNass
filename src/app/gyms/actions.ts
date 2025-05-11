@@ -26,9 +26,9 @@ export async function toggleFavoriteGym(formData: FormData): Promise<void> {
   try {
     const userWithFavorite = await prisma.user.findUnique({
       where: { id: userId },
-      select: { favorites: { where: { id: gymId }, select: { id: true } } }
+      select: { favoritePlaces: { where: { id: gymId, type: 'GYM' }, select: { id: true } } }
     });
-    isCurrentlyFavorited = (userWithFavorite?.favorites?.length ?? 0) > 0;
+    isCurrentlyFavorited = (userWithFavorite?.favoritePlaces?.length ?? 0) > 0;
   } catch (error) {
     console.error('Failed to check current favorite status:', error);
     throw new Error('Could not determine current favorite status.');
@@ -39,7 +39,7 @@ export async function toggleFavoriteGym(formData: FormData): Promise<void> {
     await prisma.user.update({
       where: { id: userId },
       data: {
-        favorites: {
+        favoritePlaces: {
           [isCurrentlyFavorited ? 'disconnect' : 'connect']: { id: gymId },
         },
       },

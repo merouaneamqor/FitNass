@@ -1,5 +1,4 @@
-import { Gym } from './gym';
-import { Club } from './club';
+import { Place } from './place';
 import { Trainer } from './trainer';
 
 export interface FitnessClass {
@@ -15,10 +14,8 @@ export interface FitnessClass {
   capacity: number | null;
   price: number | null; // Prisma Float
   currency: string | null;
-  gymId: string | null;
-  gym?: Gym | null; // Optional embedded Gym data
-  clubId: string | null;
-  club?: Club | null; // Optional embedded Club data
+  placeId: string | null;
+  place?: Place | null; // Optional embedded Place data
   trainerId: string | null;
   trainer?: Trainer | null; // Optional embedded Trainer data
   images: string[];

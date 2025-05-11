@@ -18,7 +18,7 @@ export async function PUT(request: Request) {
   try {
     const session = await getServerSession();
     
-    if (!session || session.user.role !== 'GYM_OWNER') {
+    if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -29,9 +29,10 @@ export async function PUT(request: Request) {
     const validatedData = updateGymSchema.parse(body);
 
     // First find the gym
-    const gym = await prisma.gym.findFirst({
+    const gym = await prisma.place.findFirst({
       where: {
         ownerId: session.user.id,
+        type: 'GYM',
       },
     });
 
@@ -43,7 +44,7 @@ export async function PUT(request: Request) {
     }
 
     // Then update it
-    const updatedGym = await prisma.gym.update({
+    const updatedGym = await prisma.place.update({
       where: {
         id: gym.id,
       },
@@ -76,16 +77,17 @@ export async function GET() {
   try {
     const session = await getServerSession();
     
-    if (!session || session.user.role !== 'GYM_OWNER') {
+    if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    const gym = await prisma.gym.findFirst({
+    const gym = await prisma.place.findFirst({
       where: {
         ownerId: session.user.id,
+        type: 'GYM',
       },
       select: {
         name: true,

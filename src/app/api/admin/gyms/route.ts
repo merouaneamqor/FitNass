@@ -15,7 +15,10 @@ export async function GET() {
     try {
       // Fetch all gyms with owner information
       const gyms = await prismaExec(
-        () => prisma.gym.findMany({
+        () => prisma.place.findMany({
+          where: {
+            type: 'GYM'
+          },
           include: {
             owner: {
               select: {
@@ -37,7 +40,10 @@ export async function GET() {
       console.error('Database error:', dbError);
       
       // Fallback query without problematic fields/relations
-      const simpleGyms = await prisma.gym.findMany({
+      const simpleGyms = await prisma.place.findMany({
+        where: {
+          type: 'GYM'
+        },
         select: {
           id: true,
           name: true,
@@ -47,6 +53,7 @@ export async function GET() {
           rating: true,
           createdAt: true,
           updatedAt: true,
+          type: true,
         },
         orderBy: {
           createdAt: 'desc'
@@ -80,7 +87,7 @@ export async function POST(request: Request) {
     try {
       // Create new gym
       const newGym = await prismaExec(
-        () => prisma.gym.create({
+        () => prisma.place.create({
           data: {
             name: data.name,
             description: data.description || '',
@@ -96,6 +103,8 @@ export async function POST(request: Request) {
             priceRange: data.priceRange || '$',
             facilities: data.facilities || [],
             images: data.images || [],
+            type: 'GYM',
+            status: 'ACTIVE',
             owner: {
               connect: { id: data.ownerId }
             }
@@ -109,7 +118,7 @@ export async function POST(request: Request) {
       console.error('Database error creating gym:', dbError);
       
       // Try a simplified create operation without problematic fields
-      const simpleGym = await prisma.gym.create({
+      const simpleGym = await prisma.place.create({
         data: {
           name: data.name,
           description: data.description || '',
@@ -122,6 +131,8 @@ export async function POST(request: Request) {
           priceRange: data.priceRange || '$',
           facilities: data.facilities || [],
           images: data.images || [],
+          type: 'GYM',
+          status: 'ACTIVE',
           owner: {
             connect: { id: data.ownerId }
           }

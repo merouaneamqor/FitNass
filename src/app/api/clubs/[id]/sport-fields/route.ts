@@ -58,7 +58,7 @@ export async function GET(
 
     // Build filter based on query parameters
     const filter: Prisma.SportFieldWhereInput = {
-      clubId: params.id,
+      placeId: params.id,
       status: "AVAILABLE",
     };
 
@@ -120,8 +120,11 @@ export async function POST(
     }
 
     // Get the club to check ownership
-    const club = await prisma.club.findUnique({
-      where: { id: params.id },
+    const club = await prisma.place.findUnique({
+      where: { 
+        id: params.id,
+        type: 'CLUB'
+      },
       select: { ownerId: true },
     });
 
@@ -167,7 +170,7 @@ export async function POST(
         pricePerHour: result.data.pricePerHour,
         amenities: result.data.amenities || [],
         images: result.data.images || [],
-        clubId: params.id,
+        placeId: params.id,
       },
     });
 

@@ -43,7 +43,11 @@ export async function GET() {
     }
     
     try {
-      gymCount = await prisma.gym.count();
+      gymCount = await prisma.place.count({
+        where: {
+          type: 'GYM'
+        }
+      });
     } catch (error) {
       console.error('Error counting gyms:', error);
     }

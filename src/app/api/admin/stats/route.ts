@@ -34,15 +34,20 @@ export async function GET() {
     
     try {
       // Get total gyms count
-      totalGyms = await prisma.gym.count();
+      totalGyms = await prisma.place.count({
+        where: {
+          type: 'GYM'
+        }
+      });
     } catch (error) {
       console.error('Error fetching total gyms:', error);
     }
     
     try {
       // Get pending approvals (gyms awaiting approval)
-      pendingApprovals = await prisma.gym.count({
+      pendingApprovals = await prisma.place.count({
         where: {
+          type: 'GYM',
           status: 'PENDING_APPROVAL'
         }
       });
@@ -116,13 +121,13 @@ async function getRecentActivity() {
     rating: number;
     createdAt: Date;
     user: { name: string | null };
-    gym: { name: string } | null;
+    place: { name: string } | null;
   }> = [];
   let recentPromotions: Array<{
     id: string;
     title: string;
     createdAt: Date;
-    gym: { name: string | null };
+    place: { name: string | null };
   }> = [];
   
   try {
@@ -145,7 +150,10 @@ async function getRecentActivity() {
   
   try {
     // Recent gym registrations
-    recentGyms = await prisma.gym.findMany({
+    recentGyms = await prisma.place.findMany({
+      where: {
+        type: 'GYM'
+      },
       select: {
         id: true,
         name: true,
@@ -173,7 +181,7 @@ async function getRecentActivity() {
             name: true
           }
         },
-        gym: {
+        place: {
           select: {
             name: true
           }
@@ -196,7 +204,7 @@ async function getRecentActivity() {
         id: true,
         title: true,
         createdAt: true,
-        gym: {
+        place: {
           select: {
             name: true
           }
@@ -232,14 +240,14 @@ async function getRecentActivity() {
       id: `review-${review.id}`,
       action: `New ${review.rating}-star review`,
       time: review.createdAt,
-      user: `${review.user?.name || 'Unknown'} for ${review.gym?.name || 'Unknown'}`,
+      user: `${review.user?.name || 'Unknown'} for ${review.place?.name || 'Unknown'}`,
       role: 'USER' as 'USER' | 'GYM_OWNER' | 'ADMIN'
     })),
     ...recentPromotions.map(promo => ({
       id: `promo-${promo.id}`,
       action: 'New promotion created',
       time: promo.createdAt,
-      user: `${promo.gym?.name || 'Unknown'}: ${promo.title}`,
+      user: `${promo.place?.name || 'Unknown'}: ${promo.title}`,
       role: 'GYM_OWNER' as 'USER' | 'GYM_OWNER' | 'ADMIN'
     }))
   ];

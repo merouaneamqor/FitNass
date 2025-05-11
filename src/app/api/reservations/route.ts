@@ -65,12 +65,13 @@ export async function GET(req: NextRequest) {
       include: {
         sportField: {
           include: {
-            club: {
+            place: {
               select: {
                 id: true,
                 name: true,
                 address: true,
                 city: true,
+                type: true,
               },
             },
           },

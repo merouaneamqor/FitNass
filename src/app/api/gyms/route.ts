@@ -13,7 +13,9 @@ export async function GET(request: Request) {
     const minRating = searchParams.get('minRating') ? parseFloat(searchParams.get('minRating')!) : undefined;
 
     // Build filter conditions
-    const where: Prisma.GymWhereInput = {};
+    const where: Prisma.PlaceWhereInput = {
+      type: 'GYM' // Filter only for places of type GYM
+    };
     
     if (city) {
       where.city = {
@@ -41,7 +43,7 @@ export async function GET(request: Request) {
     try {
       // Use prismaExec for safe database operations
       const gyms = await prismaExec(
-        () => prisma.gym.findMany({
+        () => prisma.place.findMany({
           where,
           include: {
             owner: {
@@ -73,7 +75,10 @@ export async function GET(request: Request) {
       console.error('Database error:', dbError);
       
       // Fallback query without problematic fields/relations
-      const simpleGyms = await prisma.gym.findMany({
+      const simpleGyms = await prisma.place.findMany({
+        where: {
+          type: 'GYM'
+        },
         select: {
           id: true,
           name: true,
@@ -84,6 +89,7 @@ export async function GET(request: Request) {
           priceRange: true,
           facilities: true,
           images: true,
+          type: true
         },
         orderBy: {
           rating: 'desc',

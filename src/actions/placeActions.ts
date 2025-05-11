@@ -1,6 +1,6 @@
 'use server';
 
-import { prisma } from '@/lib/prisma';
+import prisma from '@/lib/prisma';
 import { Place, PlaceType, PlaceFilters } from '@/types/place';
 
 export async function fetchPlaces(filters?: PlaceFilters): Promise<Place[]> {
@@ -99,18 +99,30 @@ export async function fetchPlacesByLocation(country: string, city: string, type?
         address: true,
         city: true,
         state: true,
+        zipCode: true,
+        phone: true,
+        website: true,
+        email: true,
         rating: true,
         priceRange: true,
         images: true,
         facilities: true,
+        openingHours: true,
         latitude: true,
         longitude: true,
         type: true,
         slug: true,
         citySlug: true,
+        isVerified: true,
+        status: true,
+        viewCount: true,
+        createdAt: true,
+        updatedAt: true,
         _count: {
           select: {
             reviews: true,
+            sportFields: true,
+            classes: true,
           },
         },
       },
@@ -119,7 +131,16 @@ export async function fetchPlacesByLocation(country: string, city: string, type?
       },
     });
     
-    return places;
+    // Map to ensure all fields match the Place type
+    return places.map(place => ({
+      ...place,
+      images: place.images as string[],
+      facilities: place.facilities as string[],
+      rating: place.rating as number,
+      latitude: place.latitude as number,
+      longitude: place.longitude as number,
+      openingHours: place.openingHours as any | null,
+    })) as Place[];
   } catch (error) {
     console.error('Error fetching places by location:', error);
     return [];

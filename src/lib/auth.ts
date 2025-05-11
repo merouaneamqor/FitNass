@@ -49,7 +49,7 @@ export const authOptions: NextAuthOptions = {
             id: user.id,
             name: user.name,
             email: user.email,
-            role: user.role as "USER" | "GYM_OWNER" | "ADMIN",
+            role: user.role as "USER" | "PLACE_OWNER" | "ADMIN",
             image: user.image
           } as User;
         } catch (error) {
@@ -82,7 +82,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = (user.role as "USER" | "GYM_OWNER" | "ADMIN") || 'USER';
+        token.role = (user.role as "USER" | "PLACE_OWNER" | "ADMIN") || 'USER';
       }
       return token;
     },
