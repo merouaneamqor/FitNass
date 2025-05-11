@@ -1,7 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { SubscriptionPlan } from '@prisma/client';
 import SubscriptionPlansClient from "@/components/subscriptions/SubscriptionPlans";
-import { CheckCircle } from 'lucide-react';
 import ScrollToPlansButton from '@/components/pricing/ScrollToPlansButton';
 
 async function fetchSubscriptionPlans(): Promise<SubscriptionPlan[]> {

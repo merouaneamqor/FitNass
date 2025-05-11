@@ -37,11 +37,16 @@ export default function SubscriptionPlansClient({ plans }: SubscriptionPlansProp
   const isLoggedIn = status === 'authenticated';
   const isAuthLoading = status === 'loading'; // Explicitly check auth loading status
 
-  // Filter plans based on the selected billing cycle
-  const filteredPlans = plans.filter(plan => plan.billingCycle === billingCycle);
+  // Filter plans based on the selected billing cycle with a safe fallback
+  const filteredPlans = plans.filter(plan => 
+    plan.billingCycle === billingCycle || 
+    // Fallback if the billingCycle doesn't match any plans
+    (plans.every(p => p.billingCycle !== billingCycle) && plan.billingCycle === 'MONTHLY')
+  );
   
   // Function to identify the recommended plan - typically the middle-tier plan
   const getRecommendedPlanId = () => {
+    if (!filteredPlans || filteredPlans.length === 0) return null;
     if (filteredPlans.length <= 2) return filteredPlans[filteredPlans.length - 1]?.id;
     return filteredPlans[Math.floor(filteredPlans.length / 2)]?.id;
   };
@@ -212,14 +217,14 @@ export default function SubscriptionPlansClient({ plans }: SubscriptionPlansProp
                     )}
                   </div>
                   <ul className="space-y-3">
-                    {plan.features.map((feature, index) => (
+                    {Array.isArray(plan.features) ? plan.features.map((feature, index) => (
                       <li key={index} className="flex items-start">
                         <CheckCircle className={`h-5 w-5 mr-2 flex-shrink-0 mt-0.5 ${
                           isRecommended ? 'text-blood-red' : 'text-neon-yellow'
                         }`} />
                         <span className="text-sm text-gray-600">{feature}</span>
                       </li>
-                    ))}
+                    )) : null}
                   </ul>
                 </CardContent>
                 <CardFooter className="mt-4 pt-4 border-t border-gray-200">
