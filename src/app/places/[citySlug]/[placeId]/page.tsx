@@ -239,7 +239,7 @@ export default async function PlaceDetailsPage({ params }: { params: { citySlug:
                 )}
               </div>
 
-              {place.location && (
+              {(place.latitude && place.longitude) && (
                 <div className="mt-6">
                   <h3 className="text-lg font-medium mb-3">Location</h3>
                   <div className="h-48 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden relative">

@@ -1,8 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import CloudinaryImage from '@/components/ui/CloudinaryImage';
 import { CldImage } from 'next-cloudinary';
+
+// Define the valid crop types that next-cloudinary accepts
+type CropMode = 'auto' | 'fill' | 'limit' | 'crop' | 'fill_pad' | 'fit' | 'imagga_crop' | 
+                'imagga_scale' | 'lfill' | 'lpad' | 'mfit' | 'mpad' | 'pad' | 'scale' | 'thumb';
 
 interface CloudinaryImageProps {
   src: string;
@@ -10,7 +13,7 @@ interface CloudinaryImageProps {
   width: number;
   height: number;
   crop?: {
-    type: string;
+    type: CropMode;
     source?: boolean;
   };
   sizes?: string;
@@ -18,7 +21,7 @@ interface CloudinaryImageProps {
   fallbackSrc?: string;
 }
 
-export default function CloudinaryImage({
+export default function ImageWithCloudinarySupport({
   src,
   alt,
   width,

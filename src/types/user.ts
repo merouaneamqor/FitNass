@@ -8,7 +8,7 @@ export interface User {
   memberSince?: string;
   bio?: string;
   city?: string;
-  favoriteGyms?: string[];
+  favoritePlaces?: { id: string; type: string }[];
 }
 
 export interface UserProfile extends User {
@@ -19,8 +19,8 @@ export interface UserProfile extends User {
 
 export interface Review {
   id: string;
-  gymId: string;
-  gymName: string;
+  placeId: string;
+  placeName: string;
   rating: number;
   comment: string;
   createdAt: string;
@@ -28,8 +28,8 @@ export interface Review {
 
 export interface Subscription {
   id: string;
-  gymId: string;
-  gymName: string;
+  placeId: string;
+  placeName: string;
   plan: string;
   startDate: string;
   endDate: string;
@@ -38,8 +38,8 @@ export interface Subscription {
 
 export interface Booking {
   id: string;
-  gymId: string;
-  gymName: string;
+  placeId: string;
+  placeName: string;
   className?: string;
   date: string;
   time: string;

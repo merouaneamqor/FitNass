@@ -6,7 +6,7 @@ import {
   ProfileHeader, 
   ProfileTabs, 
   ProfileEditForm,
-  FavoriteGyms, 
+  FavoritePlaces, 
   UserReviews,
   UserBookings,
   UserSubscriptions,
@@ -37,7 +37,7 @@ export const ProfileClient: React.FC<ProfileClientProps> = ({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Use the hook unconditionally
-  const { profile: apiProfile, loading, error, updateProfile, /* addFavoriteGym, */ removeFavoriteGym } = useProfile(initialProfile.id);
+  const { profile: apiProfile, loading, error, updateProfile, /* addFavoriteGym, */ removeFavoritePlace } = useProfile(initialProfile.id);
   
   // Then conditionally use the result
   const profile = isOwnProfile ? apiProfile : null;
@@ -132,21 +132,21 @@ export const ProfileClient: React.FC<ProfileClientProps> = ({
     }
   };
 
-  const handleRemoveFavorite = async (gymId: string) => {
+  const handleRemoveFavorite = async (placeId: string) => {
     if (!isOwnProfile) return;
     
     setIsLoading(true);
     
     try {
       // If we have the API function, use it
-      if (removeFavoriteGym) {
-        await removeFavoriteGym(gymId);
+      if (removeFavoritePlace) {
+        await removeFavoritePlace(placeId);
       }
       
       // Always update the UI optimistically
       setClientSideProfile(prev => ({
         ...prev,
-        favoriteGyms: prev.favoriteGyms?.filter(id => id !== gymId) || []
+        favoritePlaces: prev.favoritePlaces?.filter(place => place.id !== placeId) || []
       }));
     } catch (err) {
       console.error('Error removing favorite:', err);
@@ -277,7 +277,7 @@ export const ProfileClient: React.FC<ProfileClientProps> = ({
     switch (tab) {
       case 'favorites':
         return (
-          <FavoriteGyms
+          <FavoritePlaces
             profile={clientSideProfile}
             onRemoveFavorite={isOwnProfile ? handleRemoveFavorite : undefined}
           />
@@ -316,7 +316,7 @@ export const ProfileClient: React.FC<ProfileClientProps> = ({
         );
       default:
         return (
-          <FavoriteGyms
+          <FavoritePlaces
             profile={clientSideProfile}
             onRemoveFavorite={isOwnProfile ? handleRemoveFavorite : undefined}
           />

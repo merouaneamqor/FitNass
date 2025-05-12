@@ -5,6 +5,9 @@ import bcrypt from 'bcryptjs';
 import prisma from '@/lib/db';
 import { User } from 'next-auth';
 
+// Define valid roles
+type UserRole = "USER" | "ADMIN" | "GYM_OWNER";
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -49,7 +52,7 @@ export const authOptions: NextAuthOptions = {
             id: user.id,
             name: user.name,
             email: user.email,
-            role: user.role as "USER" | "PLACE_OWNER" | "ADMIN",
+            role: (user.role as UserRole) || "USER",
             image: user.image
           } as User;
         } catch (error) {
@@ -82,7 +85,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = (user.role as "USER" | "PLACE_OWNER" | "ADMIN") || 'USER';
+        token.role = (user.role as UserRole) || 'USER';
       }
       return token;
     },

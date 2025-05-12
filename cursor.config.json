@@ -192,7 +192,7 @@
     "user": {
       "core": ["id", "name", "email", "image", "role", "password"],
       "profile": ["bio", "city", "memberSince", "status"],
-      "relations": ["favoriteGyms", "reviews", "bookings", "subscriptions"]
+      "relations": ["favoritePlaces", "reviews", "bookings", "subscriptions"]
     },
     "gym": {
       "core": ["id", "name", "address", "city", "rating"],

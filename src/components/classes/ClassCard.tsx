@@ -23,8 +23,8 @@ const formatDateTime = (date: Date | null | undefined): string => {
 const ClassCard: React.FC<ClassCardProps> = ({ fitnessClass }) => {
   const defaultImage = '/images/default-class.png'; // Placeholder - Add a default class image
   const imageUrl = Array.isArray(fitnessClass.images) && fitnessClass.images.length > 0 ? fitnessClass.images[0] : defaultImage;
-  const locationName = fitnessClass.gym?.name || fitnessClass.club?.name || 'Location TBD';
-  const locationCity = fitnessClass.gym?.city || fitnessClass.club?.city || null;
+  const locationName = fitnessClass.place?.name || 'Location TBD';
+  const locationCity = fitnessClass.place?.city || null;
 
   return (
     <div className="border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white flex flex-col h-full">

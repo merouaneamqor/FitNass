@@ -6,8 +6,8 @@ interface UseProfileResult {
   loading: boolean;
   error: string | null;
   updateProfile: (updatedProfile: Partial<UserProfile>) => Promise<boolean>;
-  addFavoriteGym: (gymId: string) => Promise<boolean>;
-  removeFavoriteGym: (gymId: string) => Promise<boolean>;
+  addFavoritePlace: (placeId: string) => Promise<boolean>;
+  removeFavoritePlace: (placeId: string) => Promise<boolean>;
 }
 
 export function useProfile(userId: string): UseProfileResult {
@@ -69,46 +69,46 @@ export function useProfile(userId: string): UseProfileResult {
     }
   };
 
-  const addFavoriteGym = async (gymId: string): Promise<boolean> => {
+  const addFavoritePlace = async (placeId: string): Promise<boolean> => {
     try {
-      // Send request to add favorite gym
+      // Send update request to API
       const response = await fetch(`/api/profiles/${userId}/favorites`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ gymId }),
+        body: JSON.stringify({ placeId }),
       });
       
       if (!response.ok) {
-        throw new Error('Failed to add favorite gym');
+        throw new Error('Failed to add favorite place');
       }
       
       const data = await response.json();
       setProfile(data);
       return true;
     } catch (err) {
-      console.error('Error adding favorite gym:', err);
+      console.error('Error adding favorite place:', err);
       return false;
     }
   };
 
-  const removeFavoriteGym = async (gymId: string): Promise<boolean> => {
+  const removeFavoritePlace = async (placeId: string): Promise<boolean> => {
     try {
-      // Send request to remove favorite gym
-      const response = await fetch(`/api/profiles/${userId}/favorites/${gymId}`, {
+      // Send update request to API
+      const response = await fetch(`/api/profiles/${userId}/favorites/${placeId}`, {
         method: 'DELETE',
       });
       
       if (!response.ok) {
-        throw new Error('Failed to remove favorite gym');
+        throw new Error('Failed to remove favorite place');
       }
       
       const data = await response.json();
       setProfile(data);
       return true;
     } catch (err) {
-      console.error('Error removing favorite gym:', err);
+      console.error('Error removing favorite place:', err);
       return false;
     }
   };
@@ -118,8 +118,8 @@ export function useProfile(userId: string): UseProfileResult {
     loading, 
     error,
     updateProfile,
-    addFavoriteGym,
-    removeFavoriteGym
+    addFavoritePlace,
+    removeFavoritePlace
   };
 }
 

@@ -6,6 +6,8 @@ import { fetchCityOverviewData } from '@/actions/locationActions';
 import { capitalize } from '@/lib/utils';
 import GymCard from '@/components/gyms/GymCard';
 import TrainerCard from '@/components/trainers/TrainerCard';
+import { Gym } from '@/types/gym';
+import { Place } from '@/types/place';
 
 interface CityOverviewPageProps {
   params: {
@@ -64,7 +66,25 @@ export default async function CityOverviewPage({ params }: CityOverviewPageProps
      };
   }
 
-  const { featuredGyms, featuredTrainers, availableClassTypes } = overviewData;
+  // Convert Place[] to Gym[] for GymCard compatibility
+  const gyms: Gym[] = overviewData.featuredGyms.map((place: Place) => ({
+    id: place.id,
+    name: place.name,
+    description: place.description,
+    city: place.city,
+    address: place.address,
+    slug: place.slug,
+    citySlug: place.citySlug,
+    rating: place.rating,
+    priceRange: place.priceRange || '€', // Provide default value if null
+    facilities: place.facilities,
+    images: place.images,
+    latitude: place.latitude,
+    longitude: place.longitude,
+    _count: place._count
+  }));
+  
+  const { featuredTrainers, availableClassTypes } = overviewData;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -103,11 +123,11 @@ export default async function CityOverviewPage({ params }: CityOverviewPageProps
         </div>
       </div>
 
-      {featuredGyms.length > 0 && (
+      {gyms.length > 0 && (
         <div className="mt-12">
             <h2 className="text-2xl font-semibold mb-4">Featured Gyms in {decodedCity}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredGyms.map(gym => (
+              {gyms.map(gym => (
                   <GymCard key={gym.id} gym={gym} />
               ))}
             </div>
@@ -125,14 +145,14 @@ export default async function CityOverviewPage({ params }: CityOverviewPageProps
         </div>
       )}
 
-      {featuredGyms.length === 0 && featuredTrainers.length === 0 && !error && (
+      {gyms.length === 0 && featuredTrainers.length === 0 && !error && (
          <div className="mt-12 text-center py-10 bg-gray-50 rounded-lg">
             <p className="text-gray-500">No featured gyms or trainers available in {decodedCity} yet.</p>
             <p className="text-gray-500 text-sm mt-1">Check back soon or explore the main lists!</p>
          </div>
       )}
 
-       {error && featuredGyms.length === 0 && featuredTrainers.length === 0 && (
+       {error && gyms.length === 0 && featuredTrainers.length === 0 && (
          <div className="mt-12 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
             <strong className="font-bold">Error loading featured content: </strong>
             <span className="block sm:inline">{error}</span>

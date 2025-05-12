@@ -11,7 +11,7 @@ export { default as ClientSideHeader } from './ClientSideHeader';
 export { default as ProfileHeader } from './ProfileHeader';
 export { default as ProfileTabs } from './ProfileTabs';
 export { default as ProfileEditForm } from './ProfileEditForm';
-export { default as FavoriteGyms } from './FavoriteGyms';
+export { default as FavoritePlaces } from './FavoritePlaces';
 export { default as UserReviews } from './UserReviews';
 export { default as UserBookings } from './UserBookings';
 export { default as UserSubscriptions } from './UserSubscriptions';

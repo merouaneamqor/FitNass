@@ -175,13 +175,13 @@ export const sendReservationConfirmationEmail = async (
             email: true,
           }
         },
-        sportField: { // Select specific sportField and nested club fields
+        sportField: { // Select specific sportField and nested place fields
           select: {
             id: true,
             name: true,
             type: true,
             pricePerHour: true,
-            club: {
+            place: {
               select: {
                 id: true,
                 name: true,
@@ -196,13 +196,13 @@ export const sendReservationConfirmationEmail = async (
     });
 
     // Check if essential data exists after fetching
-    if (!reservation || !reservation.user || !reservation.sportField || !reservation.sportField.club) {
+    if (!reservation || !reservation.user || !reservation.sportField || !reservation.sportField.place) {
       // Log more specific error
       console.error(`Missing data for reservation ID: ${reservationId}. Found:`, {
         reservation: !!reservation,
         user: !!reservation?.user,
         sportField: !!reservation?.sportField,
-        club: !!reservation?.sportField?.club,
+        club: !!reservation?.sportField?.place,
       });
       throw new Error('Required data for reservation email not found');
     }
@@ -236,11 +236,11 @@ export const sendReservationConfirmationEmail = async (
     };
 
     const clubData: Club = {
-      id: reservation.sportField.club.id,
-      name: reservation.sportField.club.name ?? '',
-      address: reservation.sportField.club.address ?? '',
-      city: reservation.sportField.club.city ?? '',
-      zipCode: reservation.sportField.club.zipCode ?? undefined,
+      id: reservation.sportField.place.id,
+      name: reservation.sportField.place.name ?? '',
+      address: reservation.sportField.place.address ?? '',
+      city: reservation.sportField.place.city ?? '',
+      zipCode: reservation.sportField.place.zipCode ?? undefined,
     };
 
     const { subject, html, text } = reservationConfirmationTemplate(

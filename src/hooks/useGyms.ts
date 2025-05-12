@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Gym } from '@/types/gym';
-import { fetchGyms } from '@/actions/gymActions';
+import { Place } from '@/types/place';
+import { fetchGyms } from '@/actions/placeActions';
 
 interface UseGymsResult {
   gyms: Gym[];
@@ -12,6 +13,24 @@ interface UseGymsResult {
   filterGyms: (search: string, city: string, rating: number, facilities: string[], priceRanges: string[]) => Gym[];
 }
 
+// Convert Place to Gym
+const convertPlaceToGym = (place: Place): Gym => ({
+  id: place.id,
+  name: place.name,
+  description: place.description,
+  city: place.city,
+  address: place.address,
+  slug: place.slug,
+  citySlug: place.citySlug,
+  rating: place.rating,
+  priceRange: place.priceRange || '€', // Provide default value if null
+  facilities: place.facilities,
+  images: place.images,
+  latitude: place.latitude,
+  longitude: place.longitude,
+  _count: place._count
+});
+
 export const useGyms = (): UseGymsResult => {
   const [gyms, setGyms] = useState<Gym[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,8 +40,10 @@ export const useGyms = (): UseGymsResult => {
     async function loadGyms() {
       try {
         setLoading(true);
-        const data = await fetchGyms();
-        setGyms(data);
+        const placesData = await fetchGyms();
+        // Convert Place[] to Gym[]
+        const gymData = placesData.map(convertPlaceToGym);
+        setGyms(gymData);
       } catch (err) {
         setError('Error loading gyms. Please try again later.');
         console.error(err);

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import CloudinaryImage from '@/components/ui/CloudinaryImage';
+import ImageWithCloudinarySupport from '@/components/ui/CloudinaryImage';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
@@ -67,7 +67,7 @@ export default function ClientSideHeader() {
           <div className="flex items-center">
             <Link href="/" className="flex-shrink-0 flex items-center group mr-4">
               {/* Logo with red glow in dark mode */}
-              <CloudinaryImage
+              <ImageWithCloudinarySupport
                 src="fitnass-logo" 
                 alt="FitNASS"
                 width={120}
