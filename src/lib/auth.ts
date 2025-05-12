@@ -89,19 +89,17 @@ export const authOptions: NextAuthOptions = {
             // Create new user if they don't exist
             const newUser = await prisma.user.create({
               data: {
-                id: user.id, // Use the MongoDB compatible ID we generated
+                id: user.id,
                 email: user.email!,
                 name: user.name!,
                 image: user.image,
                 role: 'USER',
-                emailVerified: new Date(), // Google accounts are pre-verified
+                emailVerified: new Date(),
               },
             });
-            // Update user.id to match the database ID
             user.id = newUser.id;
             return true;
           } else {
-            // Update user.id to match the existing user's ID
             user.id = existingUser.id;
             return true;
           }
@@ -111,7 +109,6 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
-      // For credentials, just check if the user exists
       if (account?.provider === 'credentials') {
         try {
           const dbUser = await prisma.user.findUnique({
@@ -127,16 +124,15 @@ export const authOptions: NextAuthOptions = {
 
       return true;
     },
-    async jwt({ token, user, account, profile }) {
+    async jwt({ token, user, account }) {
       if (user) {
-        // Ensure we're using the correct ID
         token.id = user.id;
         token.role = (user.role as UserRole) || 'USER';
       }
 
       // If it's a Google sign in, update the user's profile image
-      if (account?.provider === 'google' && profile?.picture) {
-        token.picture = profile.picture;
+      if (account?.provider === 'google' && user?.image) {
+        token.picture = user.image;
       }
 
       return token;

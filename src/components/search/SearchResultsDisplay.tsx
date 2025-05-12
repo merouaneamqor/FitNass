@@ -5,12 +5,14 @@ import { FiSearch, FiMapPin, FiStar, FiAlertCircle, FiFilter, FiX, FiCpu, FiGrid
 import { GiSoccerField } from "react-icons/gi";
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useState, useTransition, useEffect } from 'react';
+import { PlaceType } from '@prisma/client';
 
 import AnimatedBackground from '@/components/ui/AnimatedBackground';
 import SearchResultsGrid from '@/components/search/SearchResultsGrid';
 import PaginationControls from '@/components/search/PaginationControls';
 import { SearchResult } from '@/types/search';
 import { search, SearchParams } from '@/app/actions/search';
+import SearchResultCard from './SearchResultCard';
 
 interface SearchResultsData {
   results: SearchResult[];
@@ -49,7 +51,7 @@ export function SearchResultsDisplay({ initialResults, searchParams }: SearchRes
       const searchQuery: SearchParams = {
         query: urlSearchParams.get('q') || '',
         city: urlSearchParams.get('city') || undefined,
-        types: getTypesFromParam(urlSearchParams.get('type') || 'all'),
+        type: getTypesFromParam(urlSearchParams.get('type') || 'all'),
         limit: 20
       };
       
@@ -126,7 +128,7 @@ export function SearchResultsDisplay({ initialResults, searchParams }: SearchRes
         const searchQuery: SearchParams = {
           query: newParams.q || '',
           city: newParams.city,
-          types: getTypesFromParam(newParams.type || 'all'),
+          type: getTypesFromParam(newParams.type || 'all'),
           limit: 20
         };
         
@@ -156,20 +158,12 @@ export function SearchResultsDisplay({ initialResults, searchParams }: SearchRes
   };
 
   // Helper function to convert type parameter to types array
-  const getTypesFromParam = (typeParam: string): string[] => {
-    switch (typeParam) {
-      case 'gym':
-        return ['PLACE']; // Search only places of type GYM
-      case 'club':
-        return ['PLACE']; // Search only places of type CLUB
-      case 'trainer':
-        return ['TRAINER'];
-      case 'class':
-        return ['CLASS'];
-      default:
-        return ['PLACE', 'TRAINER', 'CLASS']; // Default to all types
-    }
-  };
+  function getTypesFromParam(typeParam: string): PlaceType[] {
+    if (typeParam === 'all') return [];
+    return typeParam.split(',').filter((type): type is PlaceType => 
+      ['GYM', 'CLUB', 'STUDIO', 'CENTER'].includes(type.toUpperCase())
+    );
+  }
 
   // Icons for type filters
   const typeIcons = {
@@ -424,7 +418,11 @@ export function SearchResultsDisplay({ initialResults, searchParams }: SearchRes
                 
                 {results.length > 0 && (
                   <>
-                    <SearchResultsGrid results={results} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {results.map((result) => (
+                        <SearchResultCard key={result.id} result={result} />
+                      ))}
+                    </div>
                     <div className="mt-8 pt-4 border-t border-gray-200 dark:border-gray-700">
                       <PaginationControls 
                         currentPage={currentPage}
