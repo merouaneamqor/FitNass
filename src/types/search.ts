@@ -16,17 +16,38 @@ export type SearchResult = {
   pricePerHour: number;
   facilities: string[];
   slug: string | null;
+  distance?: number; // Distance from user's location if provided
+  availability?: {
+    date: string;
+    slots: string[];
+  };
+};
+
+export type SortOption = 'relevance' | 'rating' | 'price_asc' | 'price_desc' | 'distance';
+
+// Type for search parameters
+export type SearchParams = {
+  q?: string;
+  city?: string;
+  type?: PlaceType[];
+  date?: string;
+  time?: string;
+  priceRange?: {
+    min: number;
+    max: number;
+  };
+  rating?: number;
+  facilities?: string[];
+  distance?: number; // Distance in kilometers
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
+  sortBy?: SortOption;
+  page?: number;
+  limit?: number;
 };
 
 // For backward compatibility
 export type GymSearchResult = SearchResult & { type: 'GYM' };
-export type ClubSearchResult = SearchResult & { type: 'CLUB' };
-
-// Type for search parameters
-export type SearchParams = {
-    q?: string;
-    city?: string;
-    type?: PlaceType | string; // Allow specific types or 'all' (implied by empty string)
-    page?: string;
-    // Add other filters like minRating, facilities, etc.
-}; 
+export type ClubSearchResult = SearchResult & { type: 'CLUB' }; 

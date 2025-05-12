@@ -1,4 +1,11 @@
-export { default as SearchBar } from './SearchBar';
+export { default as UnifiedSearch } from './UnifiedSearch';
+export type { SearchVariant } from './UnifiedSearch';
+
+// Legacy exports for backward compatibility
+export { default as SearchBar } from './UnifiedSearch';
+export { default as EnhancedSearchBar } from './UnifiedSearch';
+export { default as NavbarSearchBar } from './UnifiedSearch';
+
 export { default as GymCard } from './GymCard';
 export { default as GymFilters } from './GymFilters';
 export { default as StatsBar } from './StatsBar';

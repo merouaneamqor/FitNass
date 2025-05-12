@@ -125,7 +125,7 @@ export default function HeroSection() {
           time={selectedTime}
           onTimeChange={setSelectedTime}
           onSearch={handleSearch}
-          className="rounded-xl bg-white dark:bg-gray-800 text-black dark:text-white shadow-lg"
+          className="rounded-xl bg-white dark:bg-gray-800 text-black dark:text-white shadow-lg p-4"
         />
       </motion.div>
 

@@ -12,7 +12,7 @@ import {
   FiShield, FiSettings, FiGrid, FiPlusCircle
 } from 'react-icons/fi';
 import { ThemeToggleButton } from './ThemeToggleButton'; // Updated to named import
-import NavbarSearchBar from './NavbarSearchBar'; // Import NavbarSearchBar
+import { UnifiedSearch } from '@/components/ui';
 
 // Helper function to convert auth role to our app roles
 const mapRoleToUserRole = (role: string | undefined): 'user' | 'admin' | 'owner' | null => {
@@ -36,7 +36,7 @@ export default function ClientSideHeader() {
   const userRole = mapRoleToUserRole(session?.user?.role);
   const isSearchPage = pathname === '/search';
   
-  // Get current search parameters for NavbarSearchBar
+  // Get current search parameters for UnifiedSearch
   const currentSearchQuery = searchParams.get('q') || '';
   const currentSport = searchParams.get('sport') || 'padel';
   const currentDate = searchParams.get('date') || '';
@@ -99,15 +99,6 @@ export default function ClientSideHeader() {
 
           {/* Right side: Search Bar (on search page), Auth Buttons, User Menu, Theme Toggle */}
           <div className="hidden md:flex items-center space-x-3">
-            {/* Add NavbarSearchBar when on search page */}
-            {isSearchPage && (
-              <NavbarSearchBar
-                initialQuery={currentSearchQuery}
-                initialSport={currentSport}
-                initialDate={currentDate}
-                initialTime={currentTime}
-              />
-            )}
             
             {/* Add Theme Toggle Button before auth buttons/menu */}
             <ThemeToggleButton /> 
@@ -176,10 +167,11 @@ export default function ClientSideHeader() {
       {/* More aggressive Mobile Menu Panel in dark mode */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-white/95 dark:bg-neutral-900/98 backdrop-blur-sm border-t border-gray-200/80 dark:border-red-900/30 shadow-[0_8px_16px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_20px_rgba(180,0,0,0.18)] absolute top-full left-0 right-0 z-20">
-          {/* Add NavbarSearchBar to mobile menu when on search page */}
+          {/* Add UnifiedSearch to mobile menu when on search page */}
           {isSearchPage && (
             <div className="px-4 pt-4 pb-2">
-              <NavbarSearchBar
+              <UnifiedSearch
+                variant="navbar"
                 initialQuery={currentSearchQuery}
                 initialSport={currentSport}
                 initialDate={currentDate}

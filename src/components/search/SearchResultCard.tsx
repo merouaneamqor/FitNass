@@ -74,12 +74,18 @@ export default function SearchResultCard({ result, className = '' }: SearchResul
           {/* Price */}
           <div className="mt-3 flex items-center justify-between">
             <div className="text-gray-900">
-              <span className="font-semibold">${result.pricePerHour}</span>
-              <span className="text-gray-600 text-sm">/hour</span>
+              {result.pricePerHour > 0 ? (
+                <>
+                  <span className="font-semibold">${result.pricePerHour.toFixed(2)}</span>
+                  <span className="text-gray-600 text-sm">/hour</span>
+                </>
+              ) : (
+                <span className="text-gray-600 text-sm">Price on request</span>
+              )}
             </div>
             {result.reviewCount > 0 && (
               <div className="text-sm text-gray-600">
-                {result.reviewCount} review{result.reviewCount !== 1 ? 's' : ''}
+                {result.reviewCount.toLocaleString()} {result.reviewCount === 1 ? 'review' : 'reviews'}
               </div>
             )}
           </div>
