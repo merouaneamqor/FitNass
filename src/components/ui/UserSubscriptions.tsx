@@ -79,9 +79,9 @@ export const UserSubscriptions: React.FC<UserSubscriptionsProps> = ({
             className="bg-white border border-neutral-200 rounded-xl p-6"
           >
             <div className="flex justify-between items-start">
-              <Link href={`/gyms/${subscription.gymId}`} className="group">
+              <Link href={`/places/${subscription.placeId}`} className="group">
                 <h3 className="text-lg font-medium text-neutral-800 group-hover:text-indigo-600 transition-colors">
-                  {subscription.gymName}
+                  {subscription.placeName}
                 </h3>
               </Link>
               

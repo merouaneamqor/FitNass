@@ -3,13 +3,13 @@ import { prisma } from './db';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-// In development, we allow a dummy key for easier local development
-if (!process.env.STRIPE_SECRET_KEY && !isDevelopment) {
-  throw new Error('Missing STRIPE_SECRET_KEY environment variable');
-}
+// In development, we use a dummy key
+const stripeSecretKey = isDevelopment 
+  ? 'dummy_key_for_development'
+  : process.env.STRIPE_SECRET_KEY;
 
-// Use a mock implementation in development if the key looks like a dummy
-const isDummyKey = process.env.STRIPE_SECRET_KEY?.includes('dummy');
+// Use a mock implementation in development
+const isDummyKey = isDevelopment || !stripeSecretKey;
 
 const stripe = isDummyKey
   ? (new Proxy({}, {
@@ -26,7 +26,7 @@ const stripe = isDummyKey
         return () => {}; // Return empty function for other methods
       }
     }) as unknown as Stripe)
-  : new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  : new Stripe(stripeSecretKey!, {
       apiVersion: '2025-03-31.basil',
     });
 
@@ -41,14 +41,14 @@ export async function createCheckoutSession(reservationId: string) {
         user: true,
         sportField: {
           include: {
-            club: true,
+            place: true,
           },
         },
       },
     });
 
-    if (!reservation || !reservation.user || !reservation.sportField || !reservation.sportField.club) {
-      throw new Error('Reservation, user, sport field, or club not found');
+    if (!reservation || !reservation.user || !reservation.sportField || !reservation.sportField.place) {
+      throw new Error('Reservation, user, sport field, or place not found');
     }
 
     // Format the line items for Stripe
@@ -57,7 +57,7 @@ export async function createCheckoutSession(reservationId: string) {
         price_data: {
           currency: 'mad',
           product_data: {
-            name: `${reservation.sportField.name} at ${reservation.sportField.club.name}`,
+            name: `${reservation.sportField.name} at ${reservation.sportField.place.name}`,
             description: `Reservation for ${new Date(reservation.startTime).toLocaleString()} to ${new Date(reservation.endTime).toLocaleString()}`,
           },
           unit_amount: Math.round(Number(reservation.totalPrice ?? 0) * 100),

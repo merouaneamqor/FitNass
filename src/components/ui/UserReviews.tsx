@@ -46,9 +46,9 @@ export const UserReviews: React.FC<UserReviewsProps> = ({
       {reviews.map((review) => (
         <div key={review.id} className="bg-white border border-neutral-200 rounded-xl p-6">
           <div className="flex justify-between items-start">
-            <Link href={`/gyms/${review.gymId}`} className="group">
+            <Link href={`/places/${review.placeId}`} className="group">
               <h3 className="text-lg font-medium text-neutral-800 group-hover:text-indigo-600 transition-colors">
-                {review.gymName}
+                {review.placeName}
               </h3>
             </Link>
             
@@ -67,8 +67,8 @@ export const UserReviews: React.FC<UserReviewsProps> = ({
               {/* Action buttons for own reviews */}
               {isOwnProfile && (
                 <div className="flex ml-4">
-                  <Link 
-                    href={`/gyms/${review.gymId}/reviews/edit/${review.id}`}
+                  <Link
+                    href={`/places/${review.placeId}/reviews/edit/${review.id}`}
                     className="text-neutral-500 hover:text-indigo-600 transition-colors p-1"
                     aria-label="Edit review"
                   >

@@ -6,8 +6,8 @@ import Link from 'next/link';
 // Define booking interface based on how it's used
 interface Booking {
   id: string;
-  gymId: string;
-  gymName: string;
+  placeId: string;
+  placeName: string;
   date: string;
   time: string;
   className?: string;
@@ -91,9 +91,9 @@ export const UserBookings: React.FC<UserBookingsProps> = ({
               }`}
             >
               <div className="flex justify-between items-start">
-                <Link href={`/gyms/${booking.gymId}`} className="group">
+                <Link href={`/places/${booking.placeId}`} className="group">
                   <h4 className="font-medium text-neutral-800 group-hover:text-indigo-600 transition-colors">
-                    {booking.gymName}
+                    {booking.placeName}
                   </h4>
                 </Link>
                 
