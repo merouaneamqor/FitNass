@@ -4,15 +4,28 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/db';
 import { User } from 'next-auth';
+import { ObjectId } from 'mongodb';
 
 // Define valid roles
 type UserRole = "USER" | "ADMIN" | "GYM_OWNER";
+
+// Helper function to generate MongoDB compatible ID
+const generateMongoId = () => new ObjectId().toString();
 
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      profile(profile) {
+        return {
+          id: generateMongoId(), // Generate MongoDB compatible ID
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+          role: "USER" as UserRole,
+        };
+      },
     }),
     CredentialsProvider({
       name: 'Credentials',
@@ -66,7 +79,7 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account, profile }) {
       if (account?.provider === 'google') {
         try {
-          // Check if user exists
+          // Check if user exists by email
           const existingUser = await prisma.user.findUnique({
             where: { email: user.email! },
             select: { id: true }
@@ -76,6 +89,7 @@ export const authOptions: NextAuthOptions = {
             // Create new user if they don't exist
             const newUser = await prisma.user.create({
               data: {
+                id: user.id, // Use the MongoDB compatible ID we generated
                 email: user.email!,
                 name: user.name!,
                 image: user.image,
@@ -83,9 +97,14 @@ export const authOptions: NextAuthOptions = {
                 emailVerified: new Date(), // Google accounts are pre-verified
               },
             });
+            // Update user.id to match the database ID
+            user.id = newUser.id;
+            return true;
+          } else {
+            // Update user.id to match the existing user's ID
+            user.id = existingUser.id;
             return true;
           }
-          return true;
         } catch (error) {
           console.error('Error in signIn callback:', error);
           return false;
@@ -110,6 +129,7 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, user, account, profile }) {
       if (user) {
+        // Ensure we're using the correct ID
         token.id = user.id;
         token.role = (user.role as UserRole) || 'USER';
       }
