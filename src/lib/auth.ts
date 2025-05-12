@@ -63,30 +63,62 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   callbacks: {
-    async signIn({ user, account }) {
-      // Allow OAuth without email verification
-      if (account?.provider !== "credentials") {
-        return true;
+    async signIn({ user, account, profile }) {
+      if (account?.provider === 'google') {
+        try {
+          // Check if user exists
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email! },
+            select: { id: true }
+          });
+
+          if (!existingUser) {
+            // Create new user if they don't exist
+            const newUser = await prisma.user.create({
+              data: {
+                email: user.email!,
+                name: user.name!,
+                image: user.image,
+                role: 'USER',
+                emailVerified: new Date(), // Google accounts are pre-verified
+              },
+            });
+            return true;
+          }
+          return true;
+        } catch (error) {
+          console.error('Error in signIn callback:', error);
+          return false;
+        }
       }
 
-      try {
-        // For credentials, just check if the user exists
-        const dbUser = await prisma.user.findUnique({
-          where: { email: user.email! },
-          select: { id: true }
-        });
-
-        return !!dbUser;
-      } catch (error) {
-        console.error('SignIn callback error:', error);
-        return false;
+      // For credentials, just check if the user exists
+      if (account?.provider === 'credentials') {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: user.email! },
+            select: { id: true }
+          });
+          return !!dbUser;
+        } catch (error) {
+          console.error('SignIn callback error:', error);
+          return false;
+        }
       }
+
+      return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, account, profile }) {
       if (user) {
         token.id = user.id;
         token.role = (user.role as UserRole) || 'USER';
       }
+
+      // If it's a Google sign in, update the user's profile image
+      if (account?.provider === 'google' && profile?.picture) {
+        token.picture = profile.picture;
+      }
+
       return token;
     },
     async session({ session, token }) {
@@ -96,6 +128,7 @@ export const authOptions: NextAuthOptions = {
           ...session.user,
           id: token.id,
           role: token.role || 'USER',
+          image: token.picture || session.user.image,
         },
       };
     },
@@ -105,4 +138,8 @@ export const authOptions: NextAuthOptions = {
     error: '/auth/error',
   },
   debug: process.env.NODE_ENV === 'development',
+  session: {
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
 }; 
