@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, Suspense } from 'react';
+import { useState, useRef, Suspense, useEffect } from 'react';
 import Map, { Marker, Popup, NavigationControl } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import Image from 'next/image';
@@ -41,6 +41,8 @@ export function GymClient({
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [gyms, setGyms] = useState<Gym[]>(initialGyms);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Filter states
   const [cityFilter, setCityFilter] = useState('');
@@ -50,51 +52,55 @@ export function GymClient({
 
   // Map states
   const [viewState, setViewState] = useState({
-    latitude: 31.7917, // Morocco's approximate center
+    latitude: 31.7917,
     longitude: -7.0926,
     zoom: 5
   });
   const [selectedGym, setSelectedGym] = useState<Gym | null>(null);
   const mapRef = useRef(null);
 
-  // Filter function
-  const filterGyms = (
-    search: string, 
-    city: string, 
-    rating: number, 
-    facilities: string[], 
-    priceRanges: string[]
-  ): Gym[] => {
-    return initialGyms.filter((gym) => {
-      // Basic search filter
-      const matchesSearch = search ? (
-        gym.name.toLowerCase().includes(search.toLowerCase()) ||
-        gym.city.toLowerCase().includes(search.toLowerCase()) ||
-        gym.description.toLowerCase().includes(search.toLowerCase())
-      ) : true;
-      
-      // Additional filters
-      const matchesCity = city ? gym.city.toLowerCase() === city.toLowerCase() : true;
-      const matchesRating = gym.rating >= rating;
-      const matchesFacilities = facilities.length > 0 
-        ? facilities.every(f => gym.facilities.some(gf => gf.toLowerCase().includes(f.toLowerCase())))
-        : true;
-      const matchesPrice = priceRanges.length > 0 
-        ? priceRanges.includes(gym.priceRange)
-        : true;
+  // Search debounce
+  const searchTimeout = useRef<NodeJS.Timeout>();
 
-      return matchesSearch && matchesCity && matchesRating && matchesFacilities && matchesPrice;
-    });
-  };
+  useEffect(() => {
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
 
-  // Apply all filters
-  const filteredGyms = filterGyms(
-    searchQuery,
-    cityFilter,
-    ratingFilter,
-    facilitiesFilter,
-    priceFilter
-  );
+    searchTimeout.current = setTimeout(async () => {
+      setIsLoading(true);
+      try {
+        const params = new URLSearchParams();
+        if (searchQuery) params.append('q', searchQuery);
+        if (cityFilter) params.append('city', cityFilter);
+        if (ratingFilter > 0) params.append('rating', ratingFilter.toString());
+        if (facilitiesFilter.length > 0) {
+          facilitiesFilter.forEach(facility => params.append('facilities', facility));
+        }
+        if (priceFilter.length > 0) {
+          const [min, max] = priceFilter[0].split('-');
+          params.append('minPrice', min);
+          params.append('maxPrice', max);
+        }
+
+        const response = await fetch(`/api/gyms/search?${params.toString()}`);
+        if (!response.ok) throw new Error('Failed to fetch gyms');
+        
+        const data = await response.json();
+        setGyms(data);
+      } catch (error) {
+        console.error('Error fetching gyms:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      if (searchTimeout.current) {
+        clearTimeout(searchTimeout.current);
+      }
+    };
+  }, [searchQuery, cityFilter, ratingFilter, facilitiesFilter, priceFilter]);
 
   const handleGymClick = (gym: Gym) => {
     setSelectedGym(gym);
@@ -158,7 +164,7 @@ export function GymClient({
 
       {/* Stats Bar */}
       <StatsBar 
-        filteredCount={filteredGyms.length}
+        filteredCount={gyms.length}
         citiesCount={uniqueCities.length}
         reviewsCount={totalReviews}
       />
@@ -166,19 +172,30 @@ export function GymClient({
       {/* Error State */}
       {initialError && <ErrorAlert message={initialError} />}
 
+      {/* Loading State */}
+      {isLoading && (
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-64 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-xl" />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Main Content Area */}
-      {!initialError && (
+      {!initialError && !isLoading && (
         <div className="flex-1 flex flex-col">
           {/* View Mode: List */}
           {viewMode === 'list' && (
             <div className="max-w-7xl mx-auto px-6 py-8">
-              {filteredGyms.length === 0 ? (
+              {gyms.length === 0 ? (
                 <div className="text-center py-28">
                   <p className="text-neutral-500 text-lg">No gyms found matching your search criteria.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {filteredGyms.map((gym) => (
+                  {gyms.map((gym) => (
                     <GymCard
                       key={gym.id}
                       gym={gym}
@@ -203,7 +220,7 @@ export function GymClient({
               >
                 <NavigationControl position="bottom-right" showCompass={false} />
                 
-                {filteredGyms.map((gym) => (
+                {gyms.map((gym) => (
                   <Marker
                     key={gym.id}
                     latitude={gym.latitude}
