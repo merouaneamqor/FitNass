@@ -181,33 +181,41 @@ export default function UnifiedSearch({
     setSuggestions([]);
   };
 
-  // Base styles
+  // Base styles with mobile-first approach
   const inputBaseClasses = `
-    block w-full pl-9 pr-3 py-2
-    bg-white/90 dark:bg-gray-900/90
-    backdrop-blur-xl
+    block w-full
+    px-4 py-3
+    bg-white/95 dark:bg-gray-900/95
+    backdrop-blur-lg
     border-0
+    text-base
     text-gray-900 dark:text-gray-100
     placeholder-gray-500 dark:placeholder-gray-400
     rounded-xl
-    shadow-[0_2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.2)]
-    transition-all duration-300
+    shadow-sm
+    transition-all duration-200
     focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:focus:ring-red-500/30
-    hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.3)]
-    text-sm
+    hover:shadow-md
+    touch-manipulation
+    -webkit-tap-highlight-color: transparent
+    sm:text-sm sm:py-2.5
   `;
 
   const buttonBaseClasses = `
-    px-4 py-2
+    w-full
+    px-4 py-3
     rounded-xl
-    font-medium text-sm
-    transition-all duration-300
+    font-medium
+    text-base
+    transition-all duration-200
     shadow-sm
     focus:outline-none
-    transform hover:scale-[1.02] active:scale-[0.98]
+    active:scale-[0.98]
+    touch-manipulation
+    sm:w-auto sm:text-sm sm:py-2.5
   `;
 
-  const iconBaseClasses = "h-4 w-4 text-gray-400 dark:text-gray-500 transition-colors duration-300";
+  const iconBaseClasses = "h-5 w-5 sm:h-4 sm:w-4 text-gray-400 dark:text-gray-500 transition-colors duration-200";
 
   // Render different variants
   const renderSearchInput = () => (
@@ -541,17 +549,17 @@ export default function UnifiedSearch({
   return (
     <div ref={searchRef} className={`relative ${className}`}>
       <motion.div 
-        className="flex flex-wrap lg:flex-nowrap items-center gap-2"
+        className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:gap-2"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: 'easeOut' }}
+        transition={{ duration: 0.3 }}
       >
         {/* Main search section */}
-        <div className="flex flex-1 min-w-0 items-center gap-2">
+        <div className="flex-1 flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:gap-2">
           {/* Search input - always visible */}
-          <div className="relative flex-1 min-w-[200px] group">
-            <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
-              <FiSearch className={`${iconBaseClasses} group-focus-within:text-indigo-500 dark:group-focus-within:text-red-500`} />
+          <div className="relative flex-1 min-w-0">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <FiSearch className={iconBaseClasses} />
             </div>
             <input
               type="text"
@@ -559,13 +567,13 @@ export default function UnifiedSearch({
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               placeholder={placeholder}
-              className={inputBaseClasses}
+              className={`${inputBaseClasses} pl-11`}
               autoComplete="off"
             />
             {query && (
               <button
                 onClick={() => setQuery('')}
-                className="absolute inset-y-0 right-0 pr-2.5 flex items-center opacity-60 hover:opacity-100 transition-opacity duration-200"
+                className="absolute inset-y-0 right-0 pr-4 flex items-center"
               >
                 <FiX className={iconBaseClasses} />
               </button>
@@ -574,29 +582,28 @@ export default function UnifiedSearch({
 
           {/* Additional inputs based on variant */}
           {variant !== 'simple' && variant !== 'dashboard' && (
-            <>
+            <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:gap-2">
               {/* Sport dropdown */}
-              <div className="relative w-full sm:w-32 lg:w-40">
+              <div className="relative w-full sm:w-40">
                 <button
                   onClick={() => setShowSportDropdown(!showSportDropdown)}
-                  className={`${inputBaseClasses} flex items-center justify-between group pr-2.5`}
+                  className={`${inputBaseClasses} flex items-center justify-between pr-4`}
                 >
                   <span className="truncate">{sportOptions.find(opt => opt.value === sport)?.label || 'Sport'}</span>
-                  <FiChevronDown className={`${iconBaseClasses} ml-1 transition-transform duration-300 ${showSportDropdown ? 'rotate-180' : ''}`} />
+                  <FiChevronDown className={`${iconBaseClasses} ml-2 transition-transform duration-200 ${showSportDropdown ? 'rotate-180' : ''}`} />
                 </button>
                 
-                {/* Sport dropdown menu */}
                 <AnimatePresence>
                   {showSportDropdown && (
                     <motion.div
-                      initial={{ opacity: 0, y: 4, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 4, scale: 0.95 }}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute z-50 w-full mt-1 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-lg shadow-lg overflow-hidden
-                        border border-gray-100/20 dark:border-gray-800/20"
+                      className="absolute z-50 w-full mt-1 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg rounded-xl shadow-lg
+                        border border-gray-100/20 dark:border-gray-800/20 overflow-hidden"
                     >
-                      <div className="max-h-48 overflow-y-auto">
+                      <div className="max-h-60 sm:max-h-48 overflow-y-auto overscroll-contain">
                         {sportOptions.map((option) => (
                           <button
                             key={option.value}
@@ -605,9 +612,11 @@ export default function UnifiedSearch({
                               setShowSportDropdown(false);
                             }}
                             className={`
-                              w-full text-left px-3 py-2 text-sm
-                              transition-all duration-200
+                              w-full text-left px-4 py-3 sm:py-2.5
+                              text-base sm:text-sm
+                              transition-colors duration-200
                               hover:bg-indigo-50/50 dark:hover:bg-red-900/30
+                              active:bg-indigo-100/50 dark:active:bg-red-900/50
                               ${sport === option.value ? 'bg-indigo-50/80 dark:bg-red-900/50 text-indigo-600 dark:text-red-500 font-medium' : ''}
                             `}
                           >
@@ -622,37 +631,37 @@ export default function UnifiedSearch({
 
               {/* Date and Time inputs for full variant */}
               {variant === 'full' && (
-                <>
-                  <div className="relative w-full sm:w-36 lg:w-40 group">
-                    <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
-                      <FiCalendar className={`${iconBaseClasses} group-focus-within:text-indigo-500 dark:group-focus-within:text-red-500`} />
+                <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:gap-2">
+                  <div className="relative w-full sm:w-40">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <FiCalendar className={iconBaseClasses} />
                     </div>
                     <input
                       type="date"
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
-                      className={`${inputBaseClasses} cursor-pointer`}
+                      className={`${inputBaseClasses} pl-11 cursor-pointer`}
                     />
                   </div>
-                  <div className="relative w-full sm:w-28 lg:w-32 group">
-                    <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
-                      <FiClock className={`${iconBaseClasses} group-focus-within:text-indigo-500 dark:group-focus-within:text-red-500`} />
+                  <div className="relative w-full sm:w-32">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <FiClock className={iconBaseClasses} />
                     </div>
                     <input
                       type="time"
                       value={time}
                       onChange={(e) => setTime(e.target.value)}
-                      className={`${inputBaseClasses} cursor-pointer`}
+                      className={`${inputBaseClasses} pl-11 cursor-pointer`}
                     />
                   </div>
-                </>
+                </div>
               )}
-            </>
+            </div>
           )}
         </div>
 
         {/* Action buttons */}
-        <div className="flex gap-2 w-full lg:w-auto">
+        <div className="flex gap-2">
           <button
             onClick={handleSearch}
             className={`
@@ -660,15 +669,13 @@ export default function UnifiedSearch({
               bg-gradient-to-r from-indigo-600 to-indigo-500 dark:from-red-600 dark:to-red-500
               text-white
               hover:from-indigo-500 hover:to-indigo-400 dark:hover:from-red-500 dark:hover:to-red-400
-              shadow-[0_2px_8px_rgba(99,102,241,0.25)] dark:shadow-[0_2px_8px_rgba(239,68,68,0.25)]
-              hover:shadow-[0_4px_12px_rgba(99,102,241,0.35)] dark:hover:shadow-[0_4px_12px_rgba(239,68,68,0.35)]
-              flex-1 lg:flex-none
-              min-w-[100px]
-              flex items-center justify-center gap-2
+              active:from-indigo-700 active:to-indigo-600 dark:active:from-red-700 dark:active:to-red-600
             `}
           >
-            <FiSearch className="h-4 w-4" />
-            <span>Search</span>
+            <span className="flex items-center justify-center gap-2">
+              <FiSearch className={iconBaseClasses.replace('text-gray-400', 'text-white')} />
+              <span>Search</span>
+            </span>
           </button>
 
           {variant === 'full' && showFilters && (
@@ -676,25 +683,66 @@ export default function UnifiedSearch({
               onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
               className={`
                 ${buttonBaseClasses}
-                bg-white/90 dark:bg-gray-900/90
+                bg-white/95 dark:bg-gray-900/95
                 border border-gray-200/50 dark:border-gray-700/50
-                hover:bg-gray-50/90 dark:hover:bg-gray-800/90
                 text-gray-700 dark:text-gray-300
-                flex-1 lg:flex-none
-                min-w-[100px]
-                flex items-center justify-center gap-2
-                backdrop-blur-xl
+                hover:bg-gray-50/95 dark:hover:bg-gray-800/95
+                active:bg-gray-100/95 dark:active:bg-gray-700/95
               `}
             >
-              <FiFilter className={`h-4 w-4 ${showAdvancedFilters ? 'text-indigo-500 dark:text-red-500' : ''}`} />
-              <span>Filters</span>
+              <span className="flex items-center justify-center gap-2">
+                <FiFilter className={`${iconBaseClasses} ${showAdvancedFilters ? 'text-indigo-500 dark:text-red-500' : ''}`} />
+                <span>Filters</span>
+              </span>
             </button>
           )}
         </div>
       </motion.div>
 
       {/* Suggestions */}
-      {renderSuggestions()}
+      <AnimatePresence>
+        {suggestions.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            className="absolute z-50 left-0 right-0 mt-2 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg rounded-xl shadow-lg 
+              border border-gray-200/50 dark:border-gray-700/50 overflow-hidden"
+          >
+            <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto overscroll-contain">
+              {suggestions.map((suggestion) => (
+                <button
+                  key={suggestion.id}
+                  onClick={() => handleSuggestionClick(suggestion)}
+                  className="w-full px-4 py-3 sm:py-2.5 hover:bg-gray-50/80 dark:hover:bg-gray-800/80 
+                    active:bg-gray-100/80 dark:active:bg-gray-700/80 flex items-center gap-3 text-left"
+                >
+                  {suggestion.type === 'place' && suggestion.image && (
+                    <div className="relative w-12 h-12 sm:w-10 sm:h-10 rounded-lg overflow-hidden flex-shrink-0">
+                      <Image
+                        src={suggestion.image}
+                        alt={suggestion.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <div className="font-medium text-base sm:text-sm text-gray-900 dark:text-gray-100">{suggestion.name}</div>
+                    {suggestion.subtitle && (
+                      <div className="text-sm sm:text-xs text-gray-500 dark:text-gray-400">{suggestion.subtitle}</div>
+                    )}
+                  </div>
+                  <span className="ml-auto text-xs uppercase text-gray-400 dark:text-gray-500 
+                    bg-gray-100/80 dark:bg-gray-800/80 px-2 py-1 rounded-md">
+                    {suggestion.type}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Advanced Filters */}
       {variant === 'full' && renderAdvancedFilters()}
