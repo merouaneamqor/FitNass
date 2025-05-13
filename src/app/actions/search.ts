@@ -18,37 +18,60 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 }
 
 async function checkAvailability(placeId: string, date: string, time: string) {
-  // Get the place's schedule and bookings for the specified date
-  const schedule = await prisma.schedule.findFirst({
-    where: {
-      placeId,
-      date: new Date(date),
-    },
+  // Get the place's opening hours and sport fields with their reservations
+  const place = await prisma.place.findUnique({
+    where: { id: placeId },
     include: {
-      bookings: true
+      sportFields: {
+        include: {
+          reservations: {
+            where: {
+              startTime: {
+                gte: new Date(date),
+                lt: new Date(new Date(date).setDate(new Date(date).getDate() + 1))
+              },
+              status: 'CONFIRMED'
+            }
+          }
+        }
+      }
     }
   });
 
-  if (!schedule) return null;
+  if (!place || !place.openingHours) return undefined;
+
+  // Get the day of week (0-6, where 0 is Sunday)
+  const dayOfWeek = new Date(date).getDay();
+  const daySchedule = (place.openingHours as any)[dayOfWeek];
+
+  if (!daySchedule || !daySchedule.isOpen) return undefined;
 
   // Convert time to minutes for easier comparison
   const requestedTime = parseInt(time.split(':')[0]) * 60 + parseInt(time.split(':')[1]);
-  const openingTime = parseInt(schedule.openingTime.split(':')[0]) * 60 + parseInt(schedule.openingTime.split(':')[1]);
-  const closingTime = parseInt(schedule.closingTime.split(':')[0]) * 60 + parseInt(schedule.closingTime.split(':')[1]);
+  const openingTime = parseInt(daySchedule.open.split(':')[0]) * 60 + parseInt(daySchedule.open.split(':')[1]);
+  const closingTime = parseInt(daySchedule.close.split(':')[0]) * 60 + parseInt(daySchedule.close.split(':')[1]);
 
   // Check if requested time is within opening hours
   if (requestedTime < openingTime || requestedTime >= closingTime) {
-    return null;
+    return undefined;
   }
 
   // Get available slots
   const slots = [];
   for (let i = openingTime; i < closingTime; i += 60) { // Assuming 1-hour slots
     const slotTime = `${Math.floor(i/60).toString().padStart(2, '0')}:${(i%60).toString().padStart(2, '0')}`;
-    const isBooked = schedule.bookings.some(booking => 
-      booking.startTime === slotTime
-    );
-    if (!isBooked) {
+    
+    // Check if any sport field is available at this time
+    const isTimeSlotAvailable = place.sportFields.some(field => {
+      const hasConflictingReservation = field.reservations.some(reservation => {
+        const reservationHour = reservation.startTime.getHours();
+        const slotHour = parseInt(slotTime.split(':')[0]);
+        return reservationHour === slotHour;
+      });
+      return !hasConflictingReservation;
+    });
+
+    if (isTimeSlotAvailable) {
       slots.push(slotTime);
     }
   }
@@ -65,7 +88,7 @@ export async function searchPlaces(params: SearchParams): Promise<{
   pages: number;
 }> {
   const {
-    query = '',
+    q = '',
     city,
     type,
     date,
@@ -84,8 +107,8 @@ export async function searchPlaces(params: SearchParams): Promise<{
     // Base query conditions
     const where: Prisma.PlaceWhereInput = {
       OR: [
-        { name: { contains: query, mode: 'insensitive' } },
-        { description: { contains: query, mode: 'insensitive' } },
+        { name: { contains: q, mode: 'insensitive' } },
+        { description: { contains: q, mode: 'insensitive' } },
       ],
       status: 'ACTIVE',
     };
@@ -136,14 +159,11 @@ export async function searchPlaces(params: SearchParams): Promise<{
         orderBy = { rating: 'desc' }; // Default secondary sort
         break;
       default:
-        orderBy = [
-          { rating: 'desc' },
-          { bookingCount: 'desc' }
-        ];
+        orderBy = { rating: 'desc' };
     }
 
     // Fetch results and total count
-    const [places, total] = await Promise.all([
+    const [places, totalCount] = await Promise.all([
       prisma.place.findMany({
         where,
         orderBy,
@@ -153,10 +173,8 @@ export async function searchPlaces(params: SearchParams): Promise<{
           _count: {
             select: {
               reviews: true,
-              bookings: true,
             },
           },
-          location: true, // Include location data for distance calculation
         },
       }),
       prisma.place.count({ where }),
@@ -166,12 +184,12 @@ export async function searchPlaces(params: SearchParams): Promise<{
     let results = await Promise.all(places.map(async (place) => {
       // Calculate distance if coordinates provided
       let distance: number | undefined;
-      if (coordinates && place.location) {
+      if (coordinates) {
         distance = calculateDistance(
           coordinates.lat,
           coordinates.lng,
-          place.location.latitude,
-          place.location.longitude
+          place.latitude,
+          place.longitude
         );
       }
 
@@ -180,6 +198,9 @@ export async function searchPlaces(params: SearchParams): Promise<{
       if (date && time) {
         availability = await checkAvailability(place.id, date, time);
       }
+
+      // Convert priceRange string to number
+      const pricePerHour = parseFloat(place.priceRange || '0');
 
       return {
         id: place.id,
@@ -190,8 +211,8 @@ export async function searchPlaces(params: SearchParams): Promise<{
         city: place.city,
         rating: place.rating,
         reviewCount: place._count.reviews,
-        bookingCount: place._count.bookings,
-        pricePerHour: parseFloat(place.priceRange || '0'),
+        bookingCount: 0, // Since we don't track this anymore
+        pricePerHour,
         facilities: place.facilities,
         slug: place.slug,
         distance,

@@ -10,8 +10,8 @@ import { PlaceType } from '@prisma/client';
 import AnimatedBackground from '@/components/ui/AnimatedBackground';
 import SearchResultsGrid from '@/components/search/SearchResultsGrid';
 import PaginationControls from '@/components/search/PaginationControls';
-import { SearchResult } from '@/types/search';
-import { search, SearchParams } from '@/app/actions/search';
+import { SearchResult, SearchParams } from '@/types/search';
+import { search } from '@/app/actions/search';
 import SearchResultCard from './SearchResultCard';
 
 interface SearchResultsData {
@@ -49,7 +49,7 @@ export function SearchResultsDisplay({ initialResults, searchParams }: SearchRes
       
       // Create a SearchParams object for the search function
       const searchQuery: SearchParams = {
-        query: urlSearchParams.get('q') || '',
+        q: urlSearchParams.get('q') || '',
         city: urlSearchParams.get('city') || undefined,
         type: getTypesFromParam(urlSearchParams.get('type') || 'all'),
         limit: 20
@@ -126,7 +126,7 @@ export function SearchResultsDisplay({ initialResults, searchParams }: SearchRes
       try {
         // Create a SearchParams object for the search function
         const searchQuery: SearchParams = {
-          query: newParams.q || '',
+          q: newParams.q || '',
           city: newParams.city,
           type: getTypesFromParam(newParams.type || 'all'),
           limit: 20

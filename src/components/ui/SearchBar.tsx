@@ -40,8 +40,8 @@ export default function SearchBar({
       initialDate={date}
       initialTime={time}
       placeholder={placeholder}
-      onSearch={({ query, sport, date, time }) => {
-        setSearchQuery(query);
+      onSearch={({ q, sport, date, time }) => {
+        setSearchQuery(q);
         onOptionSelect?.(sport);
         onDateChange?.(date);
         onTimeChange?.(time);

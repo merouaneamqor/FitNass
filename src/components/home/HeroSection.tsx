@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiCpu, FiMessageSquare } from 'react-icons/fi';
 import { motion } from 'framer-motion';
@@ -113,20 +113,22 @@ export default function HeroSection() {
         transition={{ duration: 0.7, delay: 0.2, ease: [0.1, 0.8, 0.2, 1] }}
         className="relative z-20 w-full max-w-5xl px-4 lg:px-0 mx-auto shrink-0"
       >
-        <SearchBar 
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          placeholder="Address, club name, city..."
-          options={sportOptions}
-          selectedOption={selectedSport}
-          onOptionSelect={setSelectedSport}
-          date={selectedDate}
-          onDateChange={setSelectedDate}
-          time={selectedTime}
-          onTimeChange={setSelectedTime}
-          onSearch={handleSearch}
-          className="rounded-xl bg-white dark:bg-gray-800 text-black dark:text-white shadow-lg p-4"
-        />
+        <Suspense fallback={<div className="rounded-xl bg-white/20 dark:bg-gray-800/20 backdrop-blur-lg shadow-lg p-4 h-16 animate-pulse" />}>
+          <SearchBar 
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            placeholder="Address, club name, city..."
+            options={sportOptions}
+            selectedOption={selectedSport}
+            onOptionSelect={setSelectedSport}
+            date={selectedDate}
+            onDateChange={setSelectedDate}
+            time={selectedTime}
+            onTimeChange={setSelectedTime}
+            onSearch={handleSearch}
+            className="rounded-xl bg-white dark:bg-gray-800 text-black dark:text-white shadow-lg p-4"
+          />
+        </Suspense>
       </motion.div>
 
       {/* Floating Action Button */}

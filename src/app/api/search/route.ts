@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     
     // Extract all search parameters
-    const query = searchParams.get('q') || '';
+    const q = searchParams.get('q') || '';
     const city = searchParams.get('city') || undefined;
     const type = searchParams.getAll('type') as PlaceType[];
     const date = searchParams.get('date') || undefined;
@@ -27,29 +27,28 @@ export async function GET(request: Request) {
     } : undefined;
     
     // Parse rating filter
-    const rating = searchParams.get('rating') ? 
-      parseFloat(searchParams.get('rating')!) : 
-      undefined;
+    const ratingStr = searchParams.get('rating');
+    const rating = ratingStr ? parseFloat(ratingStr) : undefined;
     
     // Parse facilities
     const facilities = searchParams.getAll('facilities');
     
     // Parse location data
-    const distance = searchParams.get('distance') ? 
-      parseFloat(searchParams.get('distance')) : 
-      undefined;
-    const lat = searchParams.get('lat');
-    const lng = searchParams.get('lng');
-    const coordinates = lat && lng ? {
-      lat: parseFloat(lat),
-      lng: parseFloat(lng)
+    const distanceStr = searchParams.get('distance');
+    const distance = distanceStr ? parseFloat(distanceStr) : undefined;
+    
+    const latStr = searchParams.get('lat');
+    const lngStr = searchParams.get('lng');
+    const coordinates = latStr && lngStr ? {
+      lat: parseFloat(latStr),
+      lng: parseFloat(lngStr)
     } : undefined;
     
     // Parse sort option
     const sortBy = (searchParams.get('sortBy') as SortOption) || 'relevance';
 
     const results = await searchPlaces({
-      query,
+      q,
       city,
       type,
       date,

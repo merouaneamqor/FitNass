@@ -16,6 +16,7 @@ interface UnifiedSearchProps {
   showFilters?: boolean;
   placeholder?: string;
   initialQuery?: string;
+  initialCity?: string;
   initialSport?: string;
   initialDate?: string;
   initialTime?: string;
@@ -56,6 +57,7 @@ export default function UnifiedSearch({
   showFilters = true,
   placeholder = 'Search gyms, clubs, trainers...',
   initialQuery = '',
+  initialCity = '',
   initialSport = 'padel',
   initialDate = new Date().toISOString().split('T')[0],
   initialTime = '19:00',
@@ -66,6 +68,7 @@ export default function UnifiedSearch({
   
   // State
   const [query, setQuery] = useState(initialQuery);
+  const [city, setCity] = useState(initialCity);
   const [sport, setSport] = useState(initialSport);
   const [date, setDate] = useState(initialDate);
   const [time, setTime] = useState(initialTime);
@@ -155,6 +158,7 @@ export default function UnifiedSearch({
     if (onSearch) {
       onSearch({
         query,
+        city,
         sport,
         date,
         time,
@@ -197,7 +201,7 @@ export default function UnifiedSearch({
     focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:focus:ring-red-500/30
     hover:shadow-md
     touch-manipulation
-    -webkit-tap-highlight-color: transparent
+    tap-highlight-transparent
     sm:text-sm sm:py-2.5
   `;
 

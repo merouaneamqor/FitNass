@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, Suspense } from 'react';
 import Map, { Marker, Popup, NavigationControl } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import Image from 'next/image';
@@ -15,7 +15,8 @@ import {
   GymFilters,
   StatsBar,
   ErrorAlert,
-  GymCard
+  GymCard,
+  UnifiedSearch
 } from '@/components/ui';
 
 // Mapbox token - use environment variable
@@ -128,14 +129,16 @@ export function GymClient({
       />
 
       {/* Search Bar */}
-      <SearchBar 
-        searchQuery={searchQuery} 
-        setSearchQuery={setSearchQuery} 
-        placeholder="Search gyms by name, city or features..."
-        showFiltersButton={true}
-        showFilters={showFilters}
-        setShowFilters={setShowFilters}
-      />
+      <Suspense fallback={<div className="max-w-7xl mx-auto px-6 py-4 h-16 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-xl" />}>
+        <UnifiedSearch
+          variant="full"
+          className="max-w-7xl mx-auto px-6 py-4"
+          initialQuery={searchQuery}
+          onSearch={({ query }) => setSearchQuery(query)}
+          placeholder="Search gyms by name, city or features..."
+          showFilters={showFilters}
+        />
+      </Suspense>
 
       {/* Filters Section */}
       {showFilters && (
