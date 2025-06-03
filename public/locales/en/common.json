@@ -1,0 +1,76 @@
+{
+  "bookCourt": "Book a Court",
+  "available": "Available",
+  "notAvailable": "Not available",
+  "selected": "Selected",
+  "reservation": "Your Reservation",
+  "court": "Court",
+  "date": "Date",
+  "time": "Time",
+  "duration": "Duration",
+  "totalPrice": "Total Price",
+  "confirmBooking": "Confirm Booking",
+  "about": "About",
+  "locationContact": "Location & Contact",
+  "nearbyClubs": "Nearby Clubs",
+  "photos": "Photos",
+  "noPhotos": "No photos available",
+  "facilityInfo": "Facility Information",
+  "openingHours": "Opening Hours",
+  "amenities": "Amenities",
+  "location": "Location",
+  "getDirections": "Get Directions",
+  "ratingReviews": "Rating & Reviews",
+  "basedOn": "Based on",
+  "reviews": "reviews",
+  "writeReview": "Write a Review",
+  "availableSports": "Available Sports",
+  "allRightsReserved": "All rights reserved",
+
+  "home": {
+    "hero": {
+      "title": "Find where and with whom to play <highlight>Padel</highlight> & <highlight>Tennis</highlight> instantly",
+      "subtitle": "Reach your best level, find equal level matches, courts around the world and teammates or rivals to play with",
+      "searchPlaceholder": "Address, club name, city..."
+    },
+    "features": {
+      "findCourt": "Find Your Court",
+      "findCourtDescription": "Search thousands of Padel & Tennis courts by location, time, and sport.",
+      "joinMatches": "Join Matches & Find Players",
+      "joinMatchesDescription": "Connect with players of your level and join public or private matches instantly.",
+      "easyBooking": "Easy Booking",
+      "easyBookingDescription": "Reserve your court or spot in a match with just a few clicks. Manage bookings easily."
+    },
+    "featuredVenues": "Featured Venues",
+    "viewAllVenues": "View All Venues",
+    "popularCities": "Popular Cities",
+    "viewAllCities": "View All Cities",
+    "findMatch": {
+      "title": "Find Your Perfect Match",
+      "subtitle": "Connect with players of similar skill level and enjoy competitive games",
+      "buttonText": "Find Players Now"
+    },
+    "stats": {
+      "clubsWorldwide": "Clubs Worldwide",
+      "activePlayers": "Active Players",
+      "matchesPlayed": "Matches Played",
+      "averageRating": "Average Rating"
+    },
+    "testimonials": {
+      "title": "What Our Players Say",
+      "subtitle": "Join thousands of satisfied players using our platform"
+    },
+    "mobileApp": {
+      "title": "Get Our Mobile App",
+      "subtitle": "Book courts, find matches, and manage your games on the go",
+      "downloadAppStore": "Download on App Store",
+      "downloadGooglePlay": "Get it on Google Play"
+    },
+    "cta": {
+      "title": "Ready to Play?",
+      "description": "Join the largest community of Padel & Tennis players. Find matches, book courts, and improve your game today!",
+      "primaryButton": "Find a Match Now",
+      "secondaryButton": "Sign Up Free"
+    }
+  }
+} 

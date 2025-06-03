@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { FiChevronLeft, FiChevronRight, FiStar, FiCpu } from 'react-icons/fi';
 import { motion } from 'framer-motion';
+import Cookies from 'js-cookie';
 
 // Testimonial type
 export type Testimonial = {
@@ -18,9 +19,47 @@ export type Testimonial = {
 
 type TestimonialsSectionProps = {
   testimonials: Testimonial[];
+  title?: string;
+  subtitle?: string;
 };
 
-export default function TestimonialsSection({ testimonials: initialTestimonials }: TestimonialsSectionProps) {
+// Get current locale from cookie
+function getCurrentLocale(): string {
+  if (typeof window !== 'undefined') {
+    return Cookies.get('NEXT_LOCALE') || 'en';
+  }
+  return 'en';
+}
+
+// Translation function for testimonials section
+const t = (key: string): string => {
+  const translations: Record<string, Record<string, string>> = {
+    en: {
+      "home.testimonials.title": "What Our Players Say",
+      "home.testimonials.subtitle": "Join thousands of satisfied players using our platform",
+      "aiPoweredResults": "AI-Powered Results"
+    },
+    fr: {
+      "home.testimonials.title": "Ce Que Disent Nos Joueurs",
+      "home.testimonials.subtitle": "Rejoignez des milliers de joueurs satisfaits utilisant notre plateforme",
+      "aiPoweredResults": "Résultats alimentés par l'IA"
+    },
+    ar: {
+      "home.testimonials.title": "ما يقوله لاعبونا",
+      "home.testimonials.subtitle": "انضم إلى آلاف اللاعبين الراضين الذين يستخدمون منصتنا",
+      "aiPoweredResults": "نتائج مدعومة بالذكاء الاصطناعي"
+    }
+  };
+
+  const locale = getCurrentLocale();
+  return translations[locale]?.[key] || translations.en[key] || key;
+};
+
+export default function TestimonialsSection({ 
+  testimonials: initialTestimonials,
+  title,
+  subtitle
+}: TestimonialsSectionProps) {
   // Use default testimonials if none provided
   const defaultTestimonials: Testimonial[] = [
     {
@@ -63,19 +102,25 @@ export default function TestimonialsSection({ testimonials: initialTestimonials 
     setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
   };
 
+  // Check if the current language is RTL (Arabic)
+  const isRTL = getCurrentLocale() === 'ar';
+
+  // Translate title and subtitle if they're keys
+  const translatedTitle = title ? (title.startsWith('home.') ? t(title) : title) : t('home.testimonials.title');
+  const translatedSubtitle = subtitle ? (subtitle.startsWith('home.') ? t(subtitle) : subtitle) : t('home.testimonials.subtitle');
+
   return (
-    // Conditional section background
-    <section className="py-16 md:py-24 bg-white dark:bg-gray-950 transition-colors duration-300">
+    // Conditional section background with RTL support
+    <section className={`py-16 md:py-24 bg-white dark:bg-gray-950 transition-colors duration-300 ${isRTL ? 'rtl' : 'ltr'}`}>
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-12 md:mb-16">
           {/* Conditional heading text color */}
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bebas text-gray-900 dark:text-white uppercase tracking-wider mb-4 transition-colors">
-            {/* Conditional accent text color */}
-            Data-Driven <span className="text-yellow-500 dark:text-red-500 transition-colors">Success Stories</span>
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold uppercase tracking-wider mb-4 transition-colors">
+            {translatedTitle}
           </h2>
           {/* Conditional paragraph text color */}
-          <p className="text-base md:text-lg text-gray-700 dark:text-neutral-300 font-medium max-w-2xl mx-auto transition-colors">
-            Hear from athletes who transformed their fitness journey with our AI-powered platform
+          <p className="text-base md:text-lg text-gray-700 dark:text-neutral-300 font-inter font-medium max-w-2xl mx-auto transition-colors">
+            {translatedSubtitle}
           </p>
         </div>
 
@@ -99,11 +144,13 @@ export default function TestimonialsSection({ testimonials: initialTestimonials 
                       {/* Conditional icon color */}
                       <FiCpu className="h-5 w-5 text-yellow-600 dark:text-red-500 mr-3 transition-colors" />
                       {/* Conditional text color */}
-                      <span className="text-xs uppercase tracking-wider text-yellow-700 dark:text-red-400 font-semibold transition-colors">AI-Powered Results</span>
+                      <span className="text-xs font-inter uppercase tracking-wider text-yellow-700 dark:text-red-400 font-semibold transition-colors">
+                        {t('aiPoweredResults')}
+                      </span>
                     </div>
                     
                     {/* Conditional quote text color */}
-                    <p className="text-lg md:text-xl text-gray-800 dark:text-gray-200 mb-8 italic font-medium transition-colors">&ldquo;{testimonial.comment}&rdquo;</p>
+                    <p className="text-lg md:text-xl text-gray-800 dark:text-gray-200 mb-8 italic font-inter font-medium transition-colors">&ldquo;{testimonial.comment}&rdquo;</p>
                     
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between">
                       <div className="flex items-center mb-4 sm:mb-0">
@@ -117,13 +164,13 @@ export default function TestimonialsSection({ testimonials: initialTestimonials 
                         </div>
                         <div className="ml-4">
                           {/* Conditional name text color */}
-                          <h4 className="text-gray-900 dark:text-white font-semibold transition-colors">{testimonial.name}</h4>
+                          <h4 className="text-gray-900 dark:text-white font-heading font-semibold transition-colors">{testimonial.name}</h4>
                           <div className="flex items-center flex-wrap">
                             {/* Conditional city text color */}
-                            <span className="text-gray-600 dark:text-neutral-400 text-sm mr-2 transition-colors">{testimonial.city}</span>
+                            <span className="text-gray-600 dark:text-neutral-400 text-sm font-inter mr-2 transition-colors">{testimonial.city}</span>
                             {testimonial.profession && (
                               // Conditional profession tag styling
-                              <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full font-medium mt-1 sm:mt-0 transition-colors">
+                              <span className="text-xs font-inter bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full font-medium mt-1 sm:mt-0 transition-colors">
                                 {testimonial.profession}
                               </span>
                             )}
@@ -148,13 +195,13 @@ export default function TestimonialsSection({ testimonials: initialTestimonials 
             </div>
           </div>
 
-          {/* Conditional controls styling */}
+          {/* Conditional controls styling with RTL support */}
           {testimonials.length > 1 && (
             <div className="flex justify-center items-center mt-8 gap-4">
               <button 
-                onClick={prevTestimonial}
+                onClick={isRTL ? nextTestimonial : prevTestimonial}
                 className="h-10 w-10 rounded-full bg-white dark:bg-gray-800 text-gray-600 dark:text-neutral-300 hover:text-gray-900 dark:hover:text-white flex items-center justify-center border border-gray-300 dark:border-neutral-600 hover:border-gray-400 dark:hover:border-neutral-500 transition-colors shadow-sm"
-                aria-label="Previous testimonial"
+                aria-label={isRTL ? "Next testimonial" : "Previous testimonial"}
               >
                 <FiChevronLeft className="h-5 w-5"/>
               </button>
@@ -172,9 +219,9 @@ export default function TestimonialsSection({ testimonials: initialTestimonials 
                 ))}
               </div>
               <button 
-                onClick={nextTestimonial}
+                onClick={isRTL ? prevTestimonial : nextTestimonial}
                 className="h-10 w-10 rounded-full bg-white dark:bg-gray-800 text-gray-600 dark:text-neutral-300 hover:text-gray-900 dark:hover:text-white flex items-center justify-center border border-gray-300 dark:border-neutral-600 hover:border-gray-400 dark:hover:border-neutral-500 transition-colors shadow-sm"
-                aria-label="Next testimonial"
+                aria-label={isRTL ? "Previous testimonial" : "Next testimonial"}
               >
                 <FiChevronRight className="h-5 w-5"/>
               </button>

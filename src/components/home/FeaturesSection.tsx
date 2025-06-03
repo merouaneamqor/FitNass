@@ -2,6 +2,7 @@
 
 import { FiCpu, FiBarChart2, FiTrendingUp } from 'react-icons/fi';
 import { motion } from 'framer-motion';
+import Cookies from 'js-cookie';
 
 type Feature = {
   icon: JSX.Element;
@@ -11,42 +12,98 @@ type Feature = {
 
 type FeaturesSectionProps = {
   features?: Feature[];
+  title?: string;
+  subtitle?: string;
 };
 
-export default function FeaturesSection({ features }: FeaturesSectionProps) {
-  // Updated features with conditional accent colors
+// Get current locale from cookie
+function getCurrentLocale(): string {
+  if (typeof window !== 'undefined') {
+    return Cookies.get('NEXT_LOCALE') || 'en';
+  }
+  return 'en';
+}
+
+// Translation function for features section
+const t = (key: string): string => {
+  const translations: Record<string, Record<string, string>> = {
+    en: {
+      "home.features.title": "Data-Driven Fitness Optimization",
+      "home.features.subtitle": "FitNass leverages machine learning to transform your fitness journey through intelligent data analysis and personalized insights.",
+      "home.features.findCourt": "Find Your Court",
+      "home.features.findCourtDescription": "Search thousands of Padel & Tennis courts by location, time, and sport.",
+      "home.features.joinMatches": "Join Matches & Find Players",
+      "home.features.joinMatchesDescription": "Connect with players of your level and join public or private matches instantly.",
+      "home.features.easyBooking": "Easy Booking",
+      "home.features.easyBookingDescription": "Reserve your court or spot in a match with just a few clicks. Manage bookings easily."
+    },
+    fr: {
+      "home.features.title": "Optimisation du fitness basée sur les données",
+      "home.features.subtitle": "FitNass utilise l'apprentissage automatique pour transformer votre parcours de fitness grâce à l'analyse intelligente des données et des informations personnalisées.",
+      "home.features.findCourt": "Trouvez Votre Terrain",
+      "home.features.findCourtDescription": "Recherchez des milliers de terrains de Padel et de Tennis par lieu, heure et sport.",
+      "home.features.joinMatches": "Rejoignez des Matchs & Trouvez des Joueurs",
+      "home.features.joinMatchesDescription": "Connectez-vous avec des joueurs de votre niveau et rejoignez instantanément des matchs publics ou privés.",
+      "home.features.easyBooking": "Réservation Facile",
+      "home.features.easyBookingDescription": "Réservez votre terrain ou votre place dans un match en quelques clics. Gérez facilement vos réservations."
+    },
+    ar: {
+      "home.features.title": "تحسين اللياقة البدنية القائم على البيانات",
+      "home.features.subtitle": "تستخدم فتنس التعلم الآلي لتحويل رحلة اللياقة البدنية من خلال التحليل الذكي للبيانات والرؤى الشخصية.",
+      "home.features.findCourt": "ابحث عن ملعبك",
+      "home.features.findCourtDescription": "ابحث عن آلاف ملاعب البادل والتنس حسب الموقع والوقت والرياضة.",
+      "home.features.joinMatches": "انضم إلى المباريات وابحث عن اللاعبين",
+      "home.features.joinMatchesDescription": "تواصل مع لاعبين من مستواك وانضم إلى المباريات العامة أو الخاصة فوراً.",
+      "home.features.easyBooking": "حجز سهل",
+      "home.features.easyBookingDescription": "احجز ملعبك أو مكانك في مباراة بنقرات قليلة. إدارة الحجوزات بسهولة."
+    }
+  };
+
+  const locale = getCurrentLocale();
+  return translations[locale]?.[key] || translations.en[key] || key;
+};
+
+export default function FeaturesSection({ features, title, subtitle }: FeaturesSectionProps) {
+  // Default features with translations
   const defaultFeatures = [
     {
       icon: <FiCpu className="h-8 w-8 text-red-500 dark:text-red-600 transition-colors" />,
-      title: "AI-Powered Matching",
-      description: "Our intelligent algorithm analyzes your fitness goals, training history, and preferences to recommend the perfect venues and coaches that match your unique needs."
+      title: t("home.features.findCourt"),
+      description: t("home.features.findCourtDescription")
     },
     {
       icon: <FiBarChart2 className="h-8 w-8 text-red-500 dark:text-red-600 transition-colors" />,
-      title: "Smart Performance Analytics",
-      description: "Track your progress with advanced metrics and visualizations. Our AI system identifies patterns in your training data to suggest optimization strategies for faster results."
+      title: t("home.features.joinMatches"),
+      description: t("home.features.joinMatchesDescription")
     },
     {
       icon: <FiTrendingUp className="h-8 w-8 text-red-500 dark:text-red-600 transition-colors" />,
-      title: "Predictive Training Insights",
-      description: "Receive personalized recommendations based on real-time data analysis from thousands of similar athletes. The platform continuously learns from performance patterns to enhance your journey."
+      title: t("home.features.easyBooking"),
+      description: t("home.features.easyBookingDescription")
     }
   ];
 
-  const displayFeatures = features || defaultFeatures;
+  // If features are provided with translation keys, resolve them
+  const displayFeatures = features ? features.map(feature => ({
+    icon: feature.icon,
+    title: t(feature.title),
+    description: t(feature.description)
+  })) : defaultFeatures;
+
+  const isRTL = getCurrentLocale() === 'ar';
 
   return (
-    // Conditional background
-    <section className="py-16 md:py-24 bg-white dark:bg-gray-950 transition-colors duration-300">
+    // Conditional background with RTL support
+    <section className={`py-16 md:py-24 bg-white dark:bg-gray-950 transition-colors duration-300 ${isRTL ? 'rtl' : 'ltr'}`}>
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-12 md:mb-16">
           {/* Conditional heading text color */}
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bebas text-gray-900 dark:text-white uppercase tracking-wider mb-4 transition-colors">
-            Data-Driven <span className="text-yellow-500 dark:text-yellow-400 transition-colors">Fitness Optimization</span>
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold uppercase tracking-wider mb-4 transition-colors">
+            {title || t("home.features.title")}
           </h2>
           {/* Conditional paragraph text color */}
-          <p className="text-base md:text-lg text-gray-700 dark:text-neutral-300 font-medium max-w-2xl mx-auto transition-colors">
-            FitNass leverages machine learning to transform your fitness journey through intelligent data analysis and personalized insights.
+          <p className="text-base md:text-lg text-gray-700 dark:text-neutral-300 font-inter font-medium max-w-2xl mx-auto transition-colors">
+            {subtitle || t("home.features.subtitle")}
           </p>
         </div>
 
@@ -67,9 +124,9 @@ export default function FeaturesSection({ features }: FeaturesSectionProps) {
                 {feature.icon}
               </div>
               {/* Conditional title text color */}
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 text-center transition-colors">{feature.title}</h3>
+              <h3 className="text-lg font-heading font-semibold text-gray-900 dark:text-white mb-2 text-center transition-colors">{feature.title}</h3>
               {/* Conditional description text color */}
-              <p className="text-gray-600 dark:text-neutral-400 text-sm text-center transition-colors">
+              <p className="text-gray-600 dark:text-neutral-400 text-sm font-inter text-center transition-colors">
                 {feature.description}
               </p>
             </motion.div>

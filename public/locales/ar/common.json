@@ -1,0 +1,76 @@
+{
+  "bookCourt": "حجز ملعب",
+  "available": "متاح",
+  "notAvailable": "غير متاح",
+  "selected": "محدد",
+  "reservation": "حجزك",
+  "court": "ملعب",
+  "date": "التاريخ",
+  "time": "الوقت",
+  "duration": "المدة",
+  "totalPrice": "السعر الإجمالي",
+  "confirmBooking": "تأكيد الحجز",
+  "about": "حول",
+  "locationContact": "الموقع والاتصال",
+  "nearbyClubs": "النوادي القريبة",
+  "photos": "الصور",
+  "noPhotos": "لا توجد صور متاحة",
+  "facilityInfo": "معلومات المنشأة",
+  "openingHours": "ساعات العمل",
+  "amenities": "المرافق",
+  "location": "الموقع",
+  "getDirections": "الحصول على الاتجاهات",
+  "ratingReviews": "التقييمات والمراجعات",
+  "basedOn": "بناءً على",
+  "reviews": "مراجعات",
+  "writeReview": "كتابة مراجعة",
+  "availableSports": "الرياضات المتاحة",
+  "allRightsReserved": "جميع الحقوق محفوظة",
+
+  "home": {
+    "hero": {
+      "title": "ابحث عن مكان ومع من تلعب <highlight>البادل</highlight> و <highlight>التنس</highlight> فوراً",
+      "subtitle": "حقق أفضل مستوى لك، وابحث عن مباريات بمستوى متساوٍ، وملاعب حول العالم وزملاء أو منافسين للعب معهم",
+      "searchPlaceholder": "العنوان، اسم النادي، المدينة..."
+    },
+    "features": {
+      "findCourt": "ابحث عن ملعبك",
+      "findCourtDescription": "ابحث عن آلاف ملاعب البادل والتنس حسب الموقع والوقت والرياضة.",
+      "joinMatches": "انضم إلى المباريات وابحث عن اللاعبين",
+      "joinMatchesDescription": "تواصل مع لاعبين من مستواك وانضم إلى المباريات العامة أو الخاصة فوراً.",
+      "easyBooking": "حجز سهل",
+      "easyBookingDescription": "احجز ملعبك أو مكانك في مباراة بنقرات قليلة. إدارة الحجوزات بسهولة."
+    },
+    "featuredVenues": "المواقع المميزة",
+    "viewAllVenues": "عرض جميع المواقع",
+    "popularCities": "المدن الشهيرة",
+    "viewAllCities": "عرض جميع المدن",
+    "findMatch": {
+      "title": "ابحث عن مباراتك المثالية",
+      "subtitle": "تواصل مع لاعبين من مستوى مهارة مماثل واستمتع بألعاب تنافسية",
+      "buttonText": "ابحث عن اللاعبين الآن"
+    },
+    "stats": {
+      "clubsWorldwide": "نوادٍ حول العالم",
+      "activePlayers": "لاعبون نشطون",
+      "matchesPlayed": "مباريات تم لعبها",
+      "averageRating": "متوسط التقييم"
+    },
+    "testimonials": {
+      "title": "ما يقوله لاعبونا",
+      "subtitle": "انضم إلى آلاف اللاعبين الراضين الذين يستخدمون منصتنا"
+    },
+    "mobileApp": {
+      "title": "احصل على تطبيقنا للهاتف المحمول",
+      "subtitle": "احجز الملاعب، وابحث عن المباريات، وأدر ألعابك أثناء التنقل",
+      "downloadAppStore": "تحميل من متجر التطبيقات",
+      "downloadGooglePlay": "الحصول عليه من جوجل بلاي"
+    },
+    "cta": {
+      "title": "مستعد للعب؟",
+      "description": "انضم إلى أكبر مجتمع للاعبي البادل والتنس. ابحث عن المباريات، واحجز الملاعب، وحسّن لعبتك اليوم!",
+      "primaryButton": "ابحث عن مباراة الآن",
+      "secondaryButton": "سجل مجاناً"
+    }
+  }
+} 

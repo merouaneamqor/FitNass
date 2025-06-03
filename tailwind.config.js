@@ -7,6 +7,12 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        heading: ['Montserrat', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        montserrat: ['Montserrat', 'sans-serif'],
+        inter: ['Inter', 'sans-serif'],
+      },
       colors: {
         // New color scheme based on the image
         fitnass: {
@@ -39,6 +45,9 @@ module.exports = {
       },
       backgroundImage: {
         'gradient-fitnass': 'linear-gradient(to right, var(--tw-gradient-stops))',
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'gradient-conic':
+          'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
       },
       gradientColorStops: theme => ({
         ...theme('colors'),
@@ -48,6 +57,20 @@ module.exports = {
     },
   },
   darkMode: 'class',
-  plugins: [],
+  plugins: [
+    function ({ addUtilities }) {
+      const newUtilities = {
+        '.rtl': {
+          direction: 'rtl',
+          textAlign: 'right',
+        },
+        '.ltr': {
+          direction: 'ltr',
+          textAlign: 'left',
+        },
+      };
+      addUtilities(newUtilities);
+    },
+  ],
 }
 

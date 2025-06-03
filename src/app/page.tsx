@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import HeroSection from '@/components/home/HeroSection';
 import PopularCitiesSection from '@/components/home/PopularCitiesSection';
 import FeaturesSection from '@/components/home/FeaturesSection';
@@ -10,6 +11,42 @@ import StatsSection from '@/components/home/StatsSection';
 import CTASection from '@/components/home/CTASection';
 import { FiSearch, FiUsers, FiCalendar, FiMapPin, FiStar, FiZap } from 'react-icons/fi';
 import FindMatchSection from '@/components/home/FindMatchSection';
+import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
+import Cookies from 'js-cookie';
+
+// Get current locale from cookie
+function getCurrentLocale(): string {
+  if (typeof window !== 'undefined') {
+    return Cookies.get('NEXT_LOCALE') || 'en';
+  }
+  return 'en';
+}
+
+// Mock translation function until real i18n is set up
+const t = (key: string, locale: string): string => {
+  const translations: Record<string, Record<string, string>> = {
+    en: {
+      "home.featuredVenues": "Featured Venues",
+      "home.viewAllVenues": "View All Venues",
+      "home.popularCities": "Popular Cities",
+      "home.viewAllCities": "View All Cities"
+    },
+    fr: {
+      "home.featuredVenues": "Établissements en Vedette",
+      "home.viewAllVenues": "Voir Tous les Établissements",
+      "home.popularCities": "Villes Populaires",
+      "home.viewAllCities": "Voir Toutes les Villes"
+    },
+    ar: {
+      "home.featuredVenues": "المواقع المميزة",
+      "home.viewAllVenues": "عرض جميع المواقع",
+      "home.popularCities": "المدن الشهيرة",
+      "home.viewAllCities": "عرض جميع المدن"
+    }
+  };
+
+  return translations[locale]?.[key] || translations.en[key] || key;
+};
 
 // Example featured venues (adjust to match Playtomic - Padel/Tennis focus)
 const featuredVenues: Venue[] = [
@@ -92,27 +129,62 @@ const popularCities = [
 ];
 
 export default function Home() {
+  // Check if the current language is RTL (Arabic)
+  const [isRTL, setIsRTL] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const [currentLocale, setCurrentLocale] = useState('en');
+
+  useEffect(() => {
+    // Mark as client-side rendered
+    setIsClient(true);
+    // Update locale and RTL state based on current locale
+    const locale = getCurrentLocale();
+    setCurrentLocale(locale);
+    setIsRTL(locale === 'ar');
+  }, []);
+
+  // Only apply RTL styling after client-side hydration
+  const rtlClass = isClient && isRTL ? 'rtl' : 'ltr';
+
+  // Only use translated strings after client-side hydration
+  const featuredVenuesTitle = isClient ? t('home.featuredVenues', currentLocale) : t('home.featuredVenues', 'en');
+  const viewAllVenuesText = isClient ? t('home.viewAllVenues', currentLocale) : t('home.viewAllVenues', 'en');
+  const popularCitiesTitle = isClient ? t('home.popularCities', currentLocale) : t('home.popularCities', 'en');
+  const viewAllCitiesText = isClient ? t('home.viewAllCities', currentLocale) : t('home.viewAllCities', 'en');
 
   return (
     // Consider adding a background color if needed, Hero might cover viewport initially
-    <div className="min-h-screen bg-gray-50 dark:bg-black overflow-hidden">
+    <div className={`min-h-screen bg-gray-50 dark:bg-black overflow-hidden ${rtlClass}`}>
+      {/* Language switcher positioned at top-right corner */}
+      <div className="absolute top-4 right-4 z-50">
+        <LanguageSwitcher />
+      </div>
+      
       {/* 1. Hero Section (Booking Entry Point) */}
       <HeroSection /> 
       
       {/* 2. Features / How it Works */}
       <FeaturesSection 
         features={[
-          { icon: <FiSearch className="h-8 w-8 text-blue-500" />, title: "Find Your Court", description: "Search thousands of Padel & Tennis courts by location, time, and sport." },
-          { icon: <FiUsers className="h-8 w-8 text-blue-500" />, title: "Join Matches & Find Players", description: "Connect with players of your level and join public or private matches instantly." },
-          { icon: <FiCalendar className="h-8 w-8 text-blue-500" />, title: "Easy Booking", description: "Reserve your court or spot in a match with just a few clicks. Manage bookings easily." }
+          { icon: <FiSearch className="h-8 w-8 text-blue-500" />, title: "home.features.findCourt", description: "home.features.findCourtDescription" },
+          { icon: <FiUsers className="h-8 w-8 text-blue-500" />, title: "home.features.joinMatches", description: "home.features.joinMatchesDescription" },
+          { icon: <FiCalendar className="h-8 w-8 text-blue-500" />, title: "home.features.easyBooking", description: "home.features.easyBookingDescription" }
         ]}
       />
 
       {/* 3. Discovery - Popular Clubs/Courts */}
-      <FeaturedVenuesSection venues={featuredVenues} /> 
+      <FeaturedVenuesSection 
+        venues={featuredVenues}
+        title={featuredVenuesTitle}
+        viewAllText={viewAllVenuesText}
+      /> 
 
       {/* 4. Discovery - Popular Cities */}
-      <PopularCitiesSection cities={popularCities} />
+      <PopularCitiesSection 
+        cities={popularCities} 
+        title={popularCitiesTitle}
+        viewAllText={viewAllCitiesText}
+      />
 
       {/* 5. Community/Engagement Hint */}
       <FindMatchSection /> 
@@ -120,26 +192,30 @@ export default function Home() {
       {/* 6. Platform Value - Stats */}
       <StatsSection 
          stats={[
-           { icon: <FiMapPin className="h-7 w-7 text-blue-500" />, value: "1,500+", label: "Clubs Worldwide" },
-           { icon: <FiUsers className="h-7 w-7 text-blue-500" />, value: "500K+", label: "Active Players" },
-           { icon: <FiCalendar className="h-7 w-7 text-blue-500" />, value: "10M+", label: "Matches Played" },
-           { icon: <FiStar className="h-7 w-7 text-blue-500" />, value: "4.8/5", label: "Average Rating" }
+           { icon: <FiMapPin className="h-7 w-7 text-blue-500" />, value: "1,500+", label: "home.stats.clubsWorldwide" },
+           { icon: <FiUsers className="h-7 w-7 text-blue-500" />, value: "500K+", label: "home.stats.activePlayers" },
+           { icon: <FiCalendar className="h-7 w-7 text-blue-500" />, value: "10M+", label: "home.stats.matchesPlayed" },
+           { icon: <FiStar className="h-7 w-7 text-blue-500" />, value: "4.8/5", label: "home.stats.averageRating" }
          ]}
       />
 
       {/* 7. Trust - Testimonials */}
-      <TestimonialsSection testimonials={testimonials} /> 
+      <TestimonialsSection 
+        testimonials={testimonials}
+        title="home.testimonials.title"
+        subtitle="home.testimonials.subtitle"
+      /> 
 
       {/* 8. Mobile App Promotion */}
       <MobileAppSection />
       
       {/* 9. Final Call to Action */}
       <CTASection 
-        title="Ready to Play?"
-        description="Join the largest community of Padel & Tennis players. Find matches, book courts, and improve your game today!"
-        primaryButtonText="Find a Match Now"
+        title="home.cta.title"
+        description="home.cta.description"
+        primaryButtonText="home.cta.primaryButton"
         primaryButtonUrl="/search?type=match" // Example link
-        secondaryButtonText="Sign Up Free"
+        secondaryButtonText="home.cta.secondaryButton"
         secondaryButtonUrl="/auth/signup"
         icon={<FiZap className="h-8 w-8 mb-4 text-blue-500" />}
       />

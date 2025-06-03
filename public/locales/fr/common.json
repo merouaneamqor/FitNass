@@ -1,0 +1,76 @@
+{
+  "bookCourt": "Réserver un terrain",
+  "available": "Disponible",
+  "notAvailable": "Non disponible",
+  "selected": "Sélectionné",
+  "reservation": "Votre réservation",
+  "court": "Terrain",
+  "date": "Date",
+  "time": "Heure",
+  "duration": "Durée",
+  "totalPrice": "Prix total",
+  "confirmBooking": "Confirmer la réservation",
+  "about": "À propos",
+  "locationContact": "Emplacement & Contact",
+  "nearbyClubs": "Clubs à proximité",
+  "photos": "Photos",
+  "noPhotos": "Aucune photo disponible",
+  "facilityInfo": "Informations sur l'établissement",
+  "openingHours": "Heures d'ouverture",
+  "amenities": "Équipements",
+  "location": "Emplacement",
+  "getDirections": "Obtenir l'itinéraire",
+  "ratingReviews": "Évaluations & Avis",
+  "basedOn": "Basé sur",
+  "reviews": "avis",
+  "writeReview": "Écrire un avis",
+  "availableSports": "Sports disponibles",
+  "allRightsReserved": "Tous droits réservés",
+
+  "home": {
+    "hero": {
+      "title": "Trouvez où et avec qui jouer au <highlight>Padel</highlight> et au <highlight>Tennis</highlight> instantanément",
+      "subtitle": "Atteignez votre meilleur niveau, trouvez des matchs de niveau égal, des terrains dans le monde entier et des coéquipiers ou des rivaux avec qui jouer",
+      "searchPlaceholder": "Adresse, nom du club, ville..."
+    },
+    "features": {
+      "findCourt": "Trouvez Votre Terrain",
+      "findCourtDescription": "Recherchez des milliers de terrains de Padel et de Tennis par lieu, heure et sport.",
+      "joinMatches": "Rejoignez des Matchs & Trouvez des Joueurs",
+      "joinMatchesDescription": "Connectez-vous avec des joueurs de votre niveau et rejoignez instantanément des matchs publics ou privés.",
+      "easyBooking": "Réservation Facile",
+      "easyBookingDescription": "Réservez votre terrain ou votre place dans un match en quelques clics. Gérez facilement vos réservations."
+    },
+    "featuredVenues": "Établissements en Vedette",
+    "viewAllVenues": "Voir Tous les Établissements",
+    "popularCities": "Villes Populaires",
+    "viewAllCities": "Voir Toutes les Villes",
+    "findMatch": {
+      "title": "Trouvez Votre Match Parfait",
+      "subtitle": "Connectez-vous avec des joueurs de niveau similaire et profitez de jeux compétitifs",
+      "buttonText": "Trouver des Joueurs Maintenant"
+    },
+    "stats": {
+      "clubsWorldwide": "Clubs dans le Monde",
+      "activePlayers": "Joueurs Actifs",
+      "matchesPlayed": "Matchs Joués",
+      "averageRating": "Note Moyenne"
+    },
+    "testimonials": {
+      "title": "Ce Que Disent Nos Joueurs",
+      "subtitle": "Rejoignez des milliers de joueurs satisfaits utilisant notre plateforme"
+    },
+    "mobileApp": {
+      "title": "Téléchargez Notre Application Mobile",
+      "subtitle": "Réservez des terrains, trouvez des matchs et gérez vos jeux en déplacement",
+      "downloadAppStore": "Télécharger sur l'App Store",
+      "downloadGooglePlay": "Télécharger sur Google Play"
+    },
+    "cta": {
+      "title": "Prêt à Jouer ?",
+      "description": "Rejoignez la plus grande communauté de joueurs de Padel et de Tennis. Trouvez des matchs, réservez des terrains et améliorez votre jeu dès aujourd'hui !",
+      "primaryButton": "Trouver un Match Maintenant",
+      "secondaryButton": "Inscription Gratuite"
+    }
+  }
+} 
