@@ -184,25 +184,7 @@ export default function PlaceDetailsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Top Navigation */}
-      <div className="bg-blue-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center">
-            <Link href="/" className="mr-8">
-              <Image src="/images/logo.svg" alt="Playtomic" width={120} height={24} />
-            </Link>
-            <nav className="hidden md:flex space-x-8">
-              <Link href="/book-padel-courts" className="font-medium hover:text-blue-200 transition-colors">Book padel courts</Link>
-              <Link href="/book-tennis-courts" className="font-medium hover:text-blue-200 transition-colors">Book tennis courts</Link>
-              <Link href="/clubs" className="font-medium hover:text-blue-200 transition-colors">Clubs</Link>
-              <Link href="/blog" className="font-medium hover:text-blue-200 transition-colors">Blog</Link>
-            </nav>
-          </div>
-          <Link href="/are-you-a-club-manager" className="text-sm font-medium hover:text-blue-200 transition-colors">
-            Are you a club manager?
-          </Link>
-        </div>
-      </div>
+     
 
       {/* Header Banner */}
       <div className="bg-blue-600 text-white relative">
