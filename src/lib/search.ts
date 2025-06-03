@@ -2,6 +2,9 @@ import { prisma } from '@/lib/db';
 import { SearchResult } from '@/types/search';
 import { Prisma, PlaceType } from '@prisma/client';
 
+// Valid PlaceType values from the enum
+const VALID_PLACE_TYPES = ['GYM', 'CLUB', 'STUDIO', 'CENTER', 'OTHER'];
+
 export type SearchFilters = {
   query?: string;
   city?: string;
@@ -59,7 +62,15 @@ export async function search(filters: SearchFilters): Promise<{
 
     // Add type filter
     if (type.length > 0) {
-      where.type = { in: type.map(t => t.toUpperCase()) as PlaceType[] };
+      // Filter out invalid types and convert to uppercase
+      const validTypes = type
+        .map(t => t.toUpperCase())
+        .filter(t => VALID_PLACE_TYPES.includes(t));
+      
+      // Only add type filter if we have valid types
+      if (validTypes.length > 0) {
+        where.type = { in: validTypes as PlaceType[] };
+      }
     }
 
     // Add price range filter

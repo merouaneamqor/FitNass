@@ -5,6 +5,9 @@ import { SearchParams, SearchResult, SortOption } from '@/types/search';
 import { PlaceType } from '@prisma/client';
 import { Prisma } from '@prisma/client';
 
+// Valid PlaceType values from the enum
+const VALID_PLACE_TYPES = ['GYM', 'CLUB', 'STUDIO', 'CENTER', 'OTHER'];
+
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371; // Earth's radius in kilometers
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -119,7 +122,15 @@ export async function searchPlaces(params: SearchParams): Promise<{
     }
 
     if (type?.length) {
-      where.type = { in: type };
+      // Filter out invalid types and convert to uppercase
+      const validTypes = type
+        .map(t => t.toUpperCase())
+        .filter(t => VALID_PLACE_TYPES.includes(t));
+      
+      // Only add type filter if we have valid types
+      if (validTypes.length > 0) {
+        where.type = { in: validTypes as PlaceType[] };
+      }
     }
 
     if (priceRange) {
