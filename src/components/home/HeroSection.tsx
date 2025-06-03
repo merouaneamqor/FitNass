@@ -4,7 +4,7 @@ import { useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiCpu, FiMessageSquare } from 'react-icons/fi';
 import { motion } from 'framer-motion';
-import SearchBar from '@/components/ui/SearchBar';
+import EnhancedSearchBar from '@/components/ui/EnhancedSearchBar';
 
 // Animation variants 
 const fadeInUp = {
@@ -114,7 +114,7 @@ export default function HeroSection() {
         className="relative z-20 w-full max-w-5xl px-4 lg:px-0 mx-auto shrink-0"
       >
         <Suspense fallback={<div className="rounded-xl bg-white/20 dark:bg-gray-800/20 backdrop-blur-lg shadow-lg p-4 h-16 animate-pulse" />}>
-          <SearchBar 
+          <EnhancedSearchBar 
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             placeholder="Address, club name, city..."
@@ -126,7 +126,7 @@ export default function HeroSection() {
             time={selectedTime}
             onTimeChange={setSelectedTime}
             onSearch={handleSearch}
-            className="rounded-xl bg-white dark:bg-gray-800 text-black dark:text-white shadow-lg p-4"
+            className="rounded-2xl bg-white/95 dark:bg-gray-800/95 backdrop-blur-md shadow-xl"
           />
         </Suspense>
       </motion.div>
