@@ -59,7 +59,7 @@ export async function search(filters: SearchFilters): Promise<{
 
     // Add type filter
     if (type.length > 0) {
-      where.type = { in: type as PlaceType[] };
+      where.type = { in: type.map(t => t.toUpperCase()) as PlaceType[] };
     }
 
     // Add price range filter

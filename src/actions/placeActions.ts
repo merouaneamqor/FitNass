@@ -1,7 +1,8 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-import { Place, PlaceType, PlaceFilters } from '@/types/place';
+import { Place, PlaceFilters } from '@/types/place';
+import { PlaceType } from '@prisma/client';
 
 export async function fetchPlaces(filters?: PlaceFilters): Promise<Place[]> {
   try {
@@ -83,13 +84,13 @@ export async function fetchClubs(filters?: PlaceFilters): Promise<Place[]> {
   return fetchPlaces({ ...filters, type: ['CLUB'] });
 }
 
-export async function fetchPlacesByLocation(country: string, city: string, type?: PlaceType[]): Promise<Place[]> {
+export async function fetchPlacesByLocation(country: string, city: string, type?: string[]): Promise<Place[]> {
   try {
     // You'll need to add a country field or use other location logic
     const places = await prisma.place.findMany({
       where: {
         city: city,
-        ...(type && type.length > 0 ? { type: { in: type } } : {}),
+        ...(type && type.length > 0 ? { type: { in: type.map(t => t.toUpperCase()) as PlaceType[] } } : {}),
         status: 'ACTIVE',
       },
       select: {
@@ -242,7 +243,7 @@ export async function fetchGymBySlug(citySlug: string, gymSlug: string): Promise
       where: {
         citySlug,
         slug: gymSlug,
-        type: 'GYM',
+        type: PlaceType.GYM,
       },
       include: {
         reviews: {

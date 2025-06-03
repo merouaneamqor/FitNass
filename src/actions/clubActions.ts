@@ -14,7 +14,6 @@ export const fetchClubById = async (clubId: string): Promise<Place | null> => {
     const place = await prisma.place.findUnique({
       where: {
         id: clubId,
-        type: 'CLUB',
       },
       select: {
         id: true,
