@@ -1,15 +1,43 @@
 // This file is the server component wrapper for the search page
 import { Metadata } from 'next';
 import { Suspense } from 'react';
-import { search, SearchFilters } from '@/lib/search';
+import { search, searchPlaces } from '@/app/actions/search';
 import { SearchResultsDisplay } from '@/components/search/SearchResultsDisplay';
 import EnhancedSearchBar from '@/components/ui/EnhancedSearchBar';
+import { SearchParams } from '@/types/search';
+import { PlaceType } from '@prisma/client';
+
+const sportOptions = [
+  { value: 'padel', label: 'Padel' },
+  { value: 'tennis', label: 'Tennis' },
+  { value: 'football', label: 'Football' },
+  { value: 'football7', label: 'Football 7' },
+  { value: 'futsal', label: 'Futsal' },
+  { value: 'padbol', label: 'Padbol' },
+];
+
+const cityOptions = [
+  { value: 'casablanca', label: 'Casablanca' },
+  { value: 'rabat', label: 'Rabat' },
+  { value: 'marrakech', label: 'Marrakech' },
+  { value: 'tangier', label: 'Tangier' },
+  { value: 'agadir', label: 'Agadir' },
+  { value: 'fes', label: 'Fes' }
+];
+
+// Function to convert string to PlaceType
+function getPlaceTypes(types: string[]): PlaceType[] {
+  const validTypes = ['GYM', 'CLUB', 'STUDIO', 'CENTER', 'OTHER'];
+  return types
+    .map(t => t.toUpperCase())
+    .filter(t => validTypes.includes(t)) as PlaceType[];
+}
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Search Results | FitNass',
-  description: 'Find gyms, clubs, trainers and fitness classes near you.',
+  title: 'Search Courts | FitNass',
+  description: 'Find and book sports courts and facilities across Morocco',
 };
 
 // Server component that fetches data server-side and renders the results
@@ -20,13 +48,13 @@ export default async function SearchPage({
 }) {
   try {
     // Extract and normalize search parameters
-    const filters: SearchFilters = {
-      query: typeof searchParams.q === 'string' ? searchParams.q : '',
+    const filters: SearchParams = {
+      q: typeof searchParams.q === 'string' ? searchParams.q : '',
       city: typeof searchParams.city === 'string' ? searchParams.city : undefined,
       type: Array.isArray(searchParams.type) 
-        ? searchParams.type 
+        ? getPlaceTypes(searchParams.type) 
         : typeof searchParams.type === 'string' 
-          ? [searchParams.type] 
+          ? getPlaceTypes([searchParams.type]) 
           : [],
       rating: typeof searchParams.rating === 'string' 
         ? parseInt(searchParams.rating) 
@@ -44,7 +72,7 @@ export default async function SearchPage({
     };
 
     // Fetch search results
-    const { results, total, pages } = await search(filters);
+    const { results, total, pages } = await searchPlaces(filters);
 
     // Format results for the display component
     const formattedResults = {
@@ -62,7 +90,12 @@ export default async function SearchPage({
           <Suspense fallback={<div>Loading search bar...</div>}>
             <EnhancedSearchBar
               className="max-w-4xl mx-auto"
-              showFilters={true}
+              options={sportOptions}
+              cityOptions={cityOptions}
+              selectedOption={typeof searchParams.type === 'string' ? searchParams.type : 'padel'}
+              selectedCity={typeof searchParams.city === 'string' ? searchParams.city : ''}
+              searchQuery={typeof searchParams.q === 'string' ? searchParams.q : ''}
+              compact={true}
             />
           </Suspense>
         </div>
@@ -86,7 +119,12 @@ export default async function SearchPage({
           <Suspense fallback={<div>Loading search bar...</div>}>
             <EnhancedSearchBar
               className="max-w-4xl mx-auto"
-              showFilters={true}
+              options={sportOptions}
+              cityOptions={cityOptions}
+              selectedOption="padel"
+              selectedCity=""
+              searchQuery=""
+              compact={true}
             />
           </Suspense>
         </div>

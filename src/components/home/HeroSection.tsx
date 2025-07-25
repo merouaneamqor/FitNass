@@ -88,6 +88,7 @@ const formatTitleWithHighlights = (title: string): React.ReactNode => {
 export default function HeroSection() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSport, setSelectedSport] = useState('padel');
+  const [selectedCity, setSelectedCity] = useState('casablanca');
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
     const offset = today.getTimezoneOffset();
@@ -114,6 +115,7 @@ export default function HeroSection() {
     const params = new URLSearchParams();
     if (searchQuery) params.append('q', searchQuery);
     if (selectedSport) params.append('sport', selectedSport);
+    if (selectedCity) params.append('city', selectedCity);
     if (selectedDate) params.append('date', selectedDate);
     if (selectedTime) params.append('time', selectedTime);
     
@@ -127,6 +129,15 @@ export default function HeroSection() {
     { value: 'futsal', label: 'Futsal' },
     { value: 'football', label: 'Football' },
     { value: 'padbol', label: 'Padbol' },
+  ];
+
+  const cityOptions = [
+    { value: 'casablanca', label: 'Casablanca' },
+    { value: 'rabat', label: 'Rabat' },
+    { value: 'marrakech', label: 'Marrakech' },
+    { value: 'tangier', label: 'Tangier' },
+    { value: 'agadir', label: 'Agadir' },
+    { value: 'fes', label: 'Fes' }
   ];
 
   // Always use English for server-side rendering to avoid hydration mismatch
@@ -184,12 +195,16 @@ export default function HeroSection() {
             options={sportOptions}
             selectedOption={selectedSport}
             onOptionSelect={setSelectedSport}
+            cityOptions={cityOptions}
+            selectedCity={selectedCity}
+            onCitySelect={setSelectedCity}
             date={selectedDate}
             onDateChange={setSelectedDate}
             time={selectedTime}
             onTimeChange={setSelectedTime}
             onSearch={handleSearch}
             className="rounded-2xl bg-white/95 dark:bg-gray-800/95 backdrop-blur-md shadow-xl"
+            compact={true}
           />
         </Suspense>
       </motion.div>

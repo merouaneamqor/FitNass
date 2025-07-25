@@ -13,6 +13,7 @@ import { FiSearch, FiUsers, FiCalendar, FiMapPin, FiStar, FiZap } from 'react-ic
 import FindMatchSection from '@/components/home/FindMatchSection';
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
 import Cookies from 'js-cookie';
+import EnhancedSearchBar from '@/components/ui/EnhancedSearchBar';
 
 // Get current locale from cookie
 function getCurrentLocale(): string {
